@@ -9,85 +9,98 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    body { overflow: hidden; height: 100dvh; display: flex; flex-direction: column; }
+    html, body { height: 100%; overflow: hidden; }
+    body { height: 100svh; display: flex; flex-direction: column; }
 
-    /* LOGIN */
+    /* ═══ LOGIN ═══════════════════════════════════════════════════════════ */
     #screen-login {
-      flex: 1; display: flex; flex-direction: column; overflow: hidden;
-      background: linear-gradient(180deg, #1a0030 0%, #0d0d1a 100%);
+      flex: 1; display: flex; flex-direction: column;
+      background: #0d0d1a;
+      /* reserve space for fixed button at bottom */
+      padding-bottom: calc(82px + env(safe-area-inset-bottom, 20px));
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
     }
 
-    /* Hero header — Aga photo + title */
+    /* HERO — full-width banner with Aga photo */
     #login-hero {
-      flex-shrink: 0;
-      display: flex; flex-direction: column; align-items: center;
-      padding: 24px 24px 16px;
-      background: linear-gradient(180deg, #2a0050 0%, #1a0030 100%);
-      gap: 10px;
+      position: relative; flex-shrink: 0;
+      background: linear-gradient(160deg, #2d0055 0%, #1a0030 60%, #0d0d1a 100%);
+      display: flex; align-items: center; gap: 18px;
+      padding: 28px 24px 22px;
     }
-    #screen-login .logo-text { font-size: 11px; letter-spacing: 2px; }
+    #login-hero::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+      background: linear-gradient(0deg, #0d0d1a, transparent);
+    }
     #aga-avatar {
-      width: 120px; height: 120px; border-radius: 50%;
+      width: 96px; height: 96px; border-radius: 50%; flex-shrink: 0;
       border: 3px solid var(--primary-light); object-fit: cover;
-      box-shadow: 0 0 40px rgba(233,30,140,0.6), 0 0 80px rgba(156,39,176,0.3);
+      box-shadow: 0 0 30px rgba(233,30,140,0.7), 0 0 60px rgba(156,39,176,0.3);
     }
-    .login-title { color: #fff; font-size: 20px; font-weight: 700; text-align: center; }
-    .login-sub { color: var(--primary-light); font-size: 13px; text-align: center; }
+    #login-hero-text { display: flex; flex-direction: column; gap: 4px; }
+    #screen-login .logo-text { font-size: 10px; letter-spacing: 2px; opacity: 0.8; }
+    .login-title { color: #fff; font-size: 22px; font-weight: 800; line-height: 1.1; }
+    .login-sub { color: var(--primary-light); font-size: 13px; margin-top: 2px; }
 
-    /* Scrollable form */
-    #login-scroll {
-      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-      display: flex; flex-direction: column; align-items: center;
-      padding: 20px 24px 8px; gap: 16px;
+    /* FORM BODY */
+    #login-body { padding: 20px 20px 0; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Avatar row — horizontal to save vertical space */
+    #avatar-row {
+      display: flex; align-items: center; gap: 16px;
+      background: var(--bg-mid); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px;
     }
-
-    /* Avatar selfie */
     #avatar-preview {
-      width: 88px; height: 88px; border-radius: 50%;
-      border: 2px dashed var(--border); background: var(--bg-mid);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      font-size: 28px; gap: 3px; overflow: hidden; flex-shrink: 0;
+      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+      border: 2px dashed var(--border); background: #0d0d1a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; overflow: hidden; cursor: pointer;
+      transition: border-color 0.2s;
     }
-    #avatar-preview.has-photo { border-style: solid; border-color: var(--primary); }
+    #avatar-preview.has-photo { border: 2.5px solid var(--primary); }
     #avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-actions { display: flex; gap: 10px; }
-    .avatar-actions .btn { font-size: 13px; padding: 10px 16px; }
+    #avatar-btns { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+    #btn-selfie { width: 100%; font-size: 13px; padding: 10px 14px; }
+    #btn-skip-avatar { width: 100%; font-size: 12px; padding: 8px 14px; }
+    #retake-hint { color: var(--primary-light); font-size: 11px; cursor: pointer; text-decoration: underline; text-align: center; }
 
     /* Name field */
-    .field-label { color: var(--primary-light); font-size: 10px; letter-spacing: 1.5px; font-weight: 700; }
+    .field-label { color: var(--primary-light); font-size: 10px; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 8px; display: block; }
     #name-input {
       width: 100%; background: var(--bg-mid); border: 2px solid var(--border);
-      border-radius: 12px; padding: 14px 18px; color: #fff;
-      font-size: 18px; outline: none; font-weight: 600;
+      border-radius: 12px; padding: 15px 18px; color: #fff;
+      font-size: 18px; font-weight: 600; outline: none;
     }
-    #name-input::placeholder { color: #555; font-weight: 400; }
+    #name-input::placeholder { color: #444; font-weight: 400; }
     #name-input:focus { border-color: var(--primary); background: #1a0a2a; }
 
     /* AGA FACT */
     .fact-box {
-      width: 100%; background: rgba(233,30,140,0.08);
-      border: 1px solid rgba(233,30,140,0.25); border-radius: 12px; padding: 14px 16px;
+      background: rgba(233,30,140,0.07);
+      border: 1px solid rgba(233,30,140,0.2); border-radius: 12px; padding: 12px 14px;
     }
-    .fact-label { color: var(--primary-light); font-size: 10px; font-weight: 700; margin-bottom: 6px; letter-spacing: 1px; }
-    .fact-text { color: #ccc; font-size: 13px; line-height: 1.6; }
+    .fact-label { color: var(--primary-light); font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
+    .fact-text { color: #bbb; font-size: 12px; line-height: 1.55; }
 
-    /* Sticky join button */
+    /* FIXED JOIN BUTTON — always above nav bar */
     #login-footer {
-      flex-shrink: 0;
-      padding: 14px 24px calc(14px + env(safe-area-inset-bottom, 16px));
-      background: linear-gradient(0deg, #0d0d1a 60%, transparent);
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 16px));
+      background: linear-gradient(0deg, #0d0d1a 65%, rgba(13,13,26,0));
+      pointer-events: none;
     }
     #btn-join {
       width: 100%; font-size: 18px; font-weight: 800;
       padding: 18px 24px; border-radius: 14px;
       box-shadow: 0 8px 28px rgba(233,30,140,0.5);
-      letter-spacing: 0.5px;
+      pointer-events: all;
     }
     #btn-join:not(:disabled) { animation: glow-pulse 2s ease-in-out infinite; }
-    #btn-join:disabled { opacity: 0.35; }
+    #btn-join:disabled { opacity: 0.3; }
     @keyframes glow-pulse {
       0%, 100% { box-shadow: 0 8px 28px rgba(233,30,140,0.5); }
-      50% { box-shadow: 0 8px 40px rgba(233,30,140,0.9), 0 0 0 5px rgba(233,30,140,0.12); }
+      50% { box-shadow: 0 8px 44px rgba(233,30,140,0.95), 0 0 0 6px rgba(233,30,140,0.1); }
     }
 
     /* CAMERA */
@@ -145,31 +158,45 @@
 
 <!-- LOGIN -->
 <div id="screen-login">
+
+  <!-- Hero banner -->
   <div id="login-hero">
-    <div class="logo-text">🎂 AGA TIMES GEOGUESSER</div>
     <img id="aga-avatar" src="assets/aga-login.jpg" alt="Aga" onerror="this.style.display='none'">
-    <div class="login-title">Witaj w grze Agi!</div>
-    <div class="login-sub">Zgadnij gdzie była 📍</div>
+    <div id="login-hero-text">
+      <div class="logo-text">🎂 AGA TIMES GEOGUESSER</div>
+      <div class="login-title">Witaj w grze Agi!</div>
+      <div class="login-sub">Zgadnij gdzie była 📍</div>
+    </div>
   </div>
-  <div id="login-scroll">
-    <div id="avatar-preview">
-      <span>📷</span>
-      <span style="font-size:9px;color:var(--text-muted)">avatar</span>
+
+  <!-- Form -->
+  <div id="login-body">
+
+    <!-- Avatar + selfie — horizontal row -->
+    <div id="avatar-row">
+      <div id="avatar-preview"><span style="font-size:26px">📷</span></div>
+      <div id="avatar-btns">
+        <button class="btn btn--primary" id="btn-selfie">📸 ZRÓB SELFIE</button>
+        <button class="btn btn--secondary" id="btn-skip-avatar">bez zdjęcia →</button>
+        <small id="retake-hint" class="hidden">📸 zrób ponownie</small>
+      </div>
     </div>
-    <div class="avatar-actions">
-      <button class="btn btn--primary" id="btn-selfie">📸 SELFIE</button>
-      <button class="btn btn--secondary" id="btn-skip-avatar">bez zdjęcia →</button>
-    </div>
-    <small id="retake-hint" class="hidden" style="color:var(--primary-light);font-size:11px;cursor:pointer;text-decoration:underline;">📸 zrób ponownie</small>
-    <div style="width:100%">
-      <div class="field-label" style="margin-bottom:8px;">TWOJE IMIĘ</div>
+
+    <!-- Name -->
+    <div>
+      <label class="field-label" for="name-input">TWOJE IMIĘ</label>
       <input id="name-input" type="text" placeholder="Wpisz imię..." maxlength="20" autocomplete="off" inputmode="text">
     </div>
+
+    <!-- AGA FACT -->
     <div class="fact-box">
       <div class="fact-label">💡 AGA FACT</div>
       <div class="fact-text" id="fact-text">Ładowanie...</div>
     </div>
+
   </div>
+
+  <!-- Fixed button always above nav bar -->
   <div id="login-footer">
     <button class="btn btn--primary" id="btn-join" disabled>DOŁĄCZ DO GRY 🎮</button>
   </div>
