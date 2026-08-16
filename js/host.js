@@ -136,8 +136,8 @@ async function startRound(index) {
 
   $('answer-count-num').textContent = '0';
   startHostTimer(startedAt, durationMs);
-  pollAnswerCount(index);
-  pollTop5();
+  subscribeAnswerCount(index);
+  subscribeTop5();
 }
 
 // ── Host timer ────────────────────────────────────────────────────────────
@@ -201,45 +201,67 @@ $('btn-end-round').addEventListener('click', () => {
   endRound();
 });
 
-// ── Live answer count ─────────────────────────────────────────────────────
-let answerPollInterval = null;
-function pollAnswerCount(questionIndex) {
-  clearInterval(answerPollInterval);
-  answerPollInterval = setInterval(async () => {
-    const { count } = await sb.from('pins')
-      .select('id', { count: 'exact', head: true })
-      .eq('session_id', SESSION_ID)
-      .eq('question_index', questionIndex);
-    $('answer-count-num').textContent = count || 0;
-    $('global-stat').textContent = `${count || 0}/${players.length} odpowiedziało`;
-  }, 1500);
+// ── Live answer count (Realtime) ──────────────────────────────────────────
+let answerChannel = null;
+let answerCount = 0;
+
+function subscribeAnswerCount(questionIndex) {
+  if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
+  answerCount = 0;
+  $('answer-count-num').textContent = '0';
+  $('global-stat').textContent = `0/${players.length} odpowiedziało`;
+
+  answerChannel = sb.channel(`pins:${SESSION_ID}:${questionIndex}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'pins',
+      filter: `session_id=eq.${SESSION_ID}`,
+    }, ({ new: pin }) => {
+      if (pin.question_index !== questionIndex) return;
+      answerCount++;
+      $('answer-count-num').textContent = answerCount;
+      $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
+    })
+    .subscribe();
 }
 
-// ── Live TOP5 ─────────────────────────────────────────────────────────────
-let top5PollInterval = null;
-function pollTop5() {
-  clearInterval(top5PollInterval);
-  top5PollInterval = setInterval(async () => {
-    const { data } = await sb.from('players')
-      .select('name, total_score, avatar_data_url, initials, avatar_color')
-      .eq('session_id', SESSION_ID)
-      .order('total_score', { ascending: false })
-      .limit(5);
-    if (!data) return;
-    const medals = ['🥇','🥈','🥉','4.','5.'];
-    $('top5-list').innerHTML = data.map((p, i) => `
-      <div class="top5-row">
-        <span>${medals[i]}</span>
-        <span style="flex:1;">${p.name}</span>
-        <span style="color:var(--primary-light);font-weight:700;">${p.total_score.toLocaleString('pl')}</span>
-      </div>`).join('');
-  }, 2000);
+// ── Live TOP5 (Realtime) ──────────────────────────────────────────────────
+let top5Channel = null;
+
+async function refreshTop5() {
+  const { data } = await sb.from('players')
+    .select('name, total_score, avatar_data_url, initials, avatar_color')
+    .eq('session_id', SESSION_ID)
+    .order('total_score', { ascending: false })
+    .limit(5);
+  if (!data) return;
+  const medals = ['🥇','🥈','🥉','4.','5.'];
+  $('top5-list').innerHTML = data.map((p, i) => `
+    <div class="top5-row">
+      <span>${medals[i]}</span>
+      <span style="flex:1;">${p.name}</span>
+      <span style="color:var(--primary-light);font-weight:700;">${p.total_score.toLocaleString('pl')}</span>
+    </div>`).join('');
+}
+
+function subscribeTop5() {
+  if (top5Channel) { top5Channel.unsubscribe(); top5Channel = null; }
+
+  top5Channel = sb.channel(`players-scores:${SESSION_ID}`)
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: 'players',
+      filter: `session_id=eq.${SESSION_ID}`,
+    }, () => refreshTop5())
+    .subscribe();
 }
 
 // ── End round ─────────────────────────────────────────────────────────────
 async function endRound() {
-  clearInterval(answerPollInterval);
-  clearInterval(top5PollInterval);
+  if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
+  if (top5Channel) { top5Channel.unsubscribe(); top5Channel = null; }
   await broadcast(gameChannel, 'round_end', {});
   await showResults(currentQuestionIndex);
 }
