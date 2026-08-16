@@ -39,6 +39,29 @@ async function reverseGeocode(lat, lng) {
   return parts.join(', ') || data.display_name?.split(',').slice(-3).join(',').trim() || 'Nieznane miejsce';
 }
 
+async function forwardGeocode(address) {
+  await sleep(DELAY_MS);
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&accept-language=pl`;
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'AGA-GEOGUESSER/1.0 (party game)' }
+  });
+  const data = await res.json();
+  if (!data[0]) throw new Error(`Nie znaleziono adresu: ${address}`);
+  return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+}
+
+// Load manual overrides from photos/manual.json (optional)
+// Format: { "filename.jpg": { "lat": 51.1, "lng": 17.0, "name": "Wrocław" } }
+//      or { "filename.jpg": { "address": "Fushimi Inari, Kioto, Japonia" } }
+let manual = {};
+try {
+  const manualPath = join(PHOTOS_DIR, 'manual.json');
+  manual = JSON.parse(await readFile(manualPath, 'utf8'));
+  console.log(`📋 Wczytano manual.json (${Object.keys(manual).length} wpisów)\n`);
+} catch {
+  // manual.json is optional — no error if missing
+}
+
 const files = (await readdir(PHOTOS_DIR))
   .filter(f => VALID_EXTS.includes(extname(f)));
 
@@ -56,29 +79,54 @@ for (let i = 0; i < files.length; i++) {
   const filePath = join(PHOTOS_DIR, file);
   console.log(`[${i + 1}/${files.length}] Przetwarzam: ${file}`);
 
-  // Extract GPS from EXIF
-  let gps;
-  try {
-    gps = await exifr.gps(filePath);
-  } catch (e) {
-    console.warn(`  ⚠️  Brak GPS w ${file} — pomijam.`);
-    continue;
-  }
-  if (!gps?.latitude || !gps?.longitude) {
-    console.warn(`  ⚠️  Brak współrzędnych GPS w ${file} — pomijam.`);
-    continue;
-  }
-  const { latitude: lat, longitude: lng } = gps;
-  console.log(`  📍 GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+  let lat, lng;
+  const override = manual[file];
 
-  // Reverse geocode
+  if (override?.address) {
+    // Forward geocode from address string
+    console.log(`  🗺️  Adres ręczny: "${override.address}"`);
+    try {
+      const coords = await forwardGeocode(override.address);
+      lat = coords.lat; lng = coords.lng;
+      console.log(`  📍 GPS (z adresu): ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    } catch (e) {
+      console.error(`  ❌ ${e.message} — pomijam.`);
+      continue;
+    }
+  } else if (override?.lat && override?.lng) {
+    // Manual coordinates
+    lat = override.lat; lng = override.lng;
+    console.log(`  📍 GPS (ręczne): ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+  } else {
+    // Extract GPS from EXIF
+    let gps;
+    try {
+      gps = await exifr.gps(filePath);
+    } catch (e) {
+      console.warn(`  ⚠️  Brak GPS w EXIF — pomijam. (dodaj do manual.json)`);
+      continue;
+    }
+    if (!gps?.latitude || !gps?.longitude) {
+      console.warn(`  ⚠️  Brak współrzędnych GPS — pomijam. (dodaj do manual.json)`);
+      continue;
+    }
+    lat = gps.latitude; lng = gps.longitude;
+    console.log(`  📍 GPS (EXIF): ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+  }
+
+  // Location name — use manual override if provided, else reverse geocode
   let locationName;
-  try {
-    locationName = await reverseGeocode(lat, lng);
-    console.log(`  🌍 Lokalizacja: ${locationName}`);
-  } catch (e) {
-    locationName = `${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`;
-    console.warn(`  ⚠️  Reverse geocoding nie powiódł się — używam współrzędnych.`);
+  if (override?.name) {
+    locationName = override.name;
+    console.log(`  🌍 Nazwa (ręczna): ${locationName}`);
+  } else {
+    try {
+      locationName = await reverseGeocode(lat, lng);
+      console.log(`  🌍 Lokalizacja: ${locationName}`);
+    } catch (e) {
+      locationName = `${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`;
+      console.warn(`  ⚠️  Reverse geocoding nie powiódł się — używam współrzędnych.`);
+    }
   }
 
   // Upload to Supabase Storage

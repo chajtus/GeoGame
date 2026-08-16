@@ -1,0 +1,18 @@
+{
+  "_komentarz": "Usuń ten klucz przed użyciem. Wpisz nazwę pliku zdjęcia jako klucz.",
+
+  "przyklad1.jpg": {
+    "address": "Fushimi Inari, Kioto, Japonia",
+    "name": "Fushimi Inari, Kioto"
+  },
+
+  "przyklad2.jpg": {
+    "lat": 52.2297,
+    "lng": 21.0122,
+    "name": "Warszawa, Polska"
+  },
+
+  "przyklad3.jpg": {
+    "address": "Wawel, Kraków"
+  }
+}
