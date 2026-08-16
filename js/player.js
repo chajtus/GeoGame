@@ -233,6 +233,20 @@ let lastPlayerCountdownSec = -1;
 let lastDistanceKm = 0;
 let lastPoints = 0;
 let lastEndedQuestionIndex = -1;
+let playerRank = null;
+
+async function fetchPlayerRank() {
+  try {
+    const { data } = await sb.from('players')
+      .select('id, total_score')
+      .eq('session_id', SESSION_ID)
+      .order('total_score', { ascending: false });
+    if (data) {
+      const idx = data.findIndex(p => p.id === playerState.id);
+      playerRank = idx >= 0 ? idx + 1 : null;
+    }
+  } catch (_) {}
+}
 
 // ── Round start ───────────────────────────────────────────────────────────
 async function handleRoundStart(payload, showFlash = false) {
@@ -299,6 +313,9 @@ async function handleRoundStart(payload, showFlash = false) {
     showHintAnimated();
     setTimeout(() => leafletMap.invalidateSize(), 60);
   }
+
+  // Show rank from previous round (or placeholder for first round)
+  $('leader-label').textContent = playerRank ? `🏆 #${playerRank}` : '🏆 —';
 
   startPlayerTimer(payload.started_at, payload.duration_ms);
 }
@@ -541,6 +558,9 @@ function showPlayerResult() {
     triggerAnim('submit-mini-map', 'minimap--in');
     initSubmitMiniMap(lastDistanceKm);
   }
+
+  // Fetch rank in background — will show on next round's map screen
+  fetchPlayerRank();
 }
 
 // ── Session restore (rejoin after accidental refresh) ─────────────────────

@@ -177,11 +177,9 @@
     #leader-label { color: var(--text-muted); font-size: 11px; }
     #map {
       position: absolute;
-      top: 0; bottom: 0; left: 0; right: 0;
+      top: var(--map-bar-h); bottom: 0; left: 0; right: 0;
       overflow: hidden;
     }
-    /* When top bar is visible, push map down */
-    #screen-map:not(.hidden) { padding-top: var(--map-bar-h); }
     #map-hint {
       position: absolute; bottom: calc(80px + env(safe-area-inset-bottom, 16px)); left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.82); color: #ccc; padding: 8px 16px;
@@ -639,6 +637,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=20"></script>
+<script type="module" src="js/player.js?v=21"></script>
 </body>
 </html>
