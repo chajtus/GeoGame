@@ -9,21 +9,71 @@
   <style>
     body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
+    /* ── ANIMATIONS ───────────────────────────────────────────────────── */
+    @keyframes chip-in {
+      from { opacity: 0; transform: scale(0.5) translateY(14px); }
+      to   { opacity: 1; transform: scale(1)   translateY(0); }
+    }
+    @keyframes count-pop {
+      0%   { transform: scale(1); }
+      30%  { transform: scale(1.7); color: var(--primary-light); text-shadow: 0 0 28px var(--primary); }
+      100% { transform: scale(1); }
+    }
+    @keyframes slide-from-right {
+      from { opacity: 0; transform: translateX(22px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slide-from-left {
+      from { opacity: 0; transform: translateX(-18px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes bar-reveal {
+      from { clip-path: inset(100% 0 0 0); }
+      to   { clip-path: inset(0% 0 0 0); }
+    }
+    @keyframes logo-glow {
+      0%, 100% { text-shadow: 0 0 24px rgba(233,30,140,0.45), 0 0 60px rgba(156,39,176,0.2); }
+      50%       { text-shadow: 0 0 48px rgba(233,30,140,0.95), 0 0 120px rgba(156,39,176,0.5), 0 0 200px rgba(233,30,140,0.2); }
+    }
+    @keyframes qr-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(233,30,140,0); border-color: var(--border); }
+      50%       { box-shadow: 0 0 32px 6px rgba(233,30,140,0.35); border-color: var(--primary); }
+    }
+
+    /* CSS animation classes */
+    .player-chip   { animation: chip-in 0.38s cubic-bezier(0.16,1,0.3,1) both; }
+    .result-row    { animation: slide-from-right 0.28s cubic-bezier(0.16,1,0.3,1) both; }
+    .lb-row        { animation: slide-from-left  0.28s cubic-bezier(0.16,1,0.3,1) both; }
+    .top5-row      { animation: slide-from-right 0.22s cubic-bezier(0.16,1,0.3,1) both; }
+    .podium-bar    { animation: bar-reveal 0.65s cubic-bezier(0.16,1,0.3,1) both; }
+    .count-pop-anim { animation: count-pop 0.5s cubic-bezier(0.16,1,0.3,1); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .player-chip, .result-row, .lb-row, .top5-row, .podium-bar, .count-pop-anim { animation: none; }
+    }
+
     /* ── LOBBY ── */
     #screen-lobby {
       flex: 1; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 24px; padding: 32px;
+      justify-content: center; gap: 20px; padding: 28px;
+    }
+    #lobby-game-title {
+      text-align: center; line-height: 1.15;
+      font-size: clamp(28px, 4vw, 52px); font-weight: 900;
+      letter-spacing: 3px; color: var(--primary-light);
+      animation: logo-glow 2.8s ease-in-out infinite;
     }
     #lobby-qr-wrap {
       background: var(--bg-mid); border: 2px solid var(--border);
       border-radius: 16px; padding: 20px; display: flex; flex-direction: column;
       align-items: center; gap: 12px;
+      animation: qr-pulse 3s ease-in-out infinite;
     }
     #qr-code canvas, #qr-code img { border-radius: 8px; }
     .lobby-url { color: var(--primary-light); font-size: 13px; font-family: monospace; }
     #player-list {
       display: flex; flex-wrap: wrap; gap: 10px;
-      justify-content: center; max-width: 700px;
+      justify-content: center; max-width: 800px;
     }
     .player-chip {
       background: var(--bg-mid); border: 1px solid var(--border);
@@ -31,7 +81,10 @@
       align-items: center; gap: 8px; font-size: 12px;
     }
     .player-chip .avatar-circle { width: 28px; height: 28px; font-size: 10px; }
-    #player-count { color: var(--text-muted); font-size: 13px; }
+    #player-count {
+      color: #fff; font-size: 18px; font-weight: 700;
+      letter-spacing: 1px;
+    }
 
     /* ── ROUND ── */
     #screen-round {
@@ -161,6 +214,7 @@
 
 <!-- ===== LOBBY ===== -->
 <div id="screen-lobby">
+  <div id="lobby-game-title">🎂 AGA TIMES<br>GEOGUESSER</div>
   <div id="lobby-qr-wrap">
     <div class="logo-text" style="font-size:15px;">Zeskanuj QR i dołącz!</div>
     <div id="qr-code"></div>
@@ -248,11 +302,11 @@
   <div id="finale-lb-wrap" style="width:100%;max-width:900px;flex:1;display:flex;flex-direction:column;"></div>
 </div>
 
-<script src="js/config.js?v=6"></script>
+<script src="js/config.js?v=7"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=6"></script>
+<script type="module" src="js/host.js?v=7"></script>
 </body>
 </html>

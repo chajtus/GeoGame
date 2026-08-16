@@ -82,12 +82,12 @@ function renderPlayerList() {
   $('btn-start').disabled = players.length < 2;
   $('btn-start-test').style.display = players.length >= 1 ? 'inline-flex' : 'none';
 
-  $('player-list').innerHTML = players.map(p => {
+  $('player-list').innerHTML = players.map((p, i) => {
     const avatar = p.avatar_data_url
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
       : `<span style="font-size:10px;font-weight:700;color:#fff;">${p.initials}</span>`;
     return `
-      <div class="player-chip">
+      <div class="player-chip" style="animation-delay:${i * 0.055}s;">
         <div class="avatar-circle" style="background:${p.avatar_color};width:28px;height:28px;font-size:10px;">${avatar}</div>
         <span>${p.name}</span>
       </div>`;
@@ -266,7 +266,11 @@ function subscribeAnswerCount(questionIndex) {
     }, ({ new: pin }) => {
       if (pin.question_index !== questionIndex) return;
       answerCount++;
-      $('answer-count-num').textContent = answerCount;
+      const numEl = $('answer-count-num');
+      numEl.textContent = answerCount;
+      numEl.classList.remove('count-pop-anim');
+      void numEl.offsetWidth;
+      numEl.classList.add('count-pop-anim');
       $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
       const player = players.find(p => p.id === pin.player_id);
       if (player) {
@@ -298,7 +302,7 @@ async function refreshTop5() {
     .slice(0, 5);
   const medals = ['🥇','🥈','🥉','4.','5.'];
   $('top5-list').innerHTML = top5.map((p, i) => `
-    <div class="top5-row">
+    <div class="top5-row" style="animation-delay:${i * 0.06}s;">
       <span>${medals[i]}</span>
       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
       <span style="color:var(--primary-light);font-weight:700;">${p.score.toLocaleString('pl')}</span>
@@ -388,7 +392,7 @@ async function showResults(questionIndex) {
   const MAX_ROWS = 12;
   const shown = pins.slice(0, MAX_ROWS);
   const rest = pins.length - shown.length;
-  $('results-list').innerHTML = shown.map((pin) => {
+  $('results-list').innerHTML = shown.map((pin, i) => {
     const p = pin.players;
     const avatar = p.avatar_data_url
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
@@ -397,7 +401,7 @@ async function showResults(questionIndex) {
       ? `${Math.round(pin.distance_km * 1000)} m`
       : `${Math.round(pin.distance_km).toLocaleString('pl')} km`;
     return `
-      <div class="result-row">
+      <div class="result-row" style="animation-delay:${i * 0.05}s;">
         <div class="avatar-circle" style="width:36px;height:36px;background:${p.avatar_color};flex-shrink:0;">${avatar}</div>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
@@ -493,7 +497,7 @@ async function showLeaderboard(isFinal) {
         </div>
         <div style="color:${color};font-size:${rank === 1 ? 14 : 12}px;font-weight:700;">${p.name}</div>
         <div style="color:${color};font-size:${rank === 1 ? 16 : 14}px;font-weight:700;">${p.total_score.toLocaleString('pl')}</div>
-        <div class="podium-bar" style="height:${height}px;background:${color};">${rank}</div>
+        <div class="podium-bar" style="height:${height}px;background:${color};animation-delay:${rank === 2 ? '0.05s' : rank === 1 ? '0.2s' : '0.35s'};">${rank}</div>
       </div>`;
   }).join('');
 
@@ -504,6 +508,7 @@ async function showLeaderboard(isFinal) {
   const lbExtra = lbRest.length - lbShown.length;
   $('lb-rest').innerHTML = lbShown.map((p, i) => {
     const rank = i + 4;
+    const rowDelay = `${(i * 0.04).toFixed(2)}s`;
     const prev = posMap[p.id];
     const change = prev ? prev - rank : 0;
     const changeHtml = change > 0
@@ -515,7 +520,7 @@ async function showLeaderboard(isFinal) {
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
       : `<span style="font-size:9px;font-weight:700;color:#fff;">${p.initials}</span>`;
     return `
-      <div class="lb-row">
+      <div class="lb-row" style="animation-delay:${rowDelay};">
         <span class="lb-rank">${rank}.</span>
         <div class="avatar-circle" style="width:26px;height:26px;background:${p.avatar_color};font-size:9px;">${avatarContent}</div>
         <span style="flex:1;">${p.name}</span>
