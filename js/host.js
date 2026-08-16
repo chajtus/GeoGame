@@ -7,14 +7,41 @@ const $ = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
-// ── Supabase + Session ────────────────────────────────────────────────────
+// ── Session persist (restore on accidental refresh) ───────────────────────
+const HOST_STATE_KEY = 'aga_host_state_v1';
+const STATE_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+function saveHostState(patch) {
+  try {
+    const current = loadHostState() || {};
+    localStorage.setItem(HOST_STATE_KEY, JSON.stringify({ ...current, ...patch, savedAt: Date.now() }));
+  } catch (_) {}
+}
+
+function loadHostState() {
+  try {
+    const raw = localStorage.getItem(HOST_STATE_KEY);
+    if (!raw) return null;
+    const state = JSON.parse(raw);
+    if (Date.now() - (state.savedAt || 0) > STATE_TTL_MS) {
+      localStorage.removeItem(HOST_STATE_KEY);
+      return null;
+    }
+    return state;
+  } catch (_) { return null; }
+}
+
+function clearHostState() {
+  localStorage.removeItem(HOST_STATE_KEY);
+}
+
+// ── Supabase ──────────────────────────────────────────────────────────────
 const { createClient } = supabase;
 const sb = createClient(window.CONFIG.supabaseUrl, window.CONFIG.supabaseAnonKey);
 
 function generateSessionId() {
   return 'aga-' + Math.random().toString(36).slice(2, 10);
 }
-const SESSION_ID = generateSessionId();
 
 // ── Questions ─────────────────────────────────────────────────────────────
 let questions = [];
@@ -38,9 +65,15 @@ let resultsMap = null;
 let heartbeatInterval = null;
 let lastCountdownSec = -1;
 let roundEnding = false;
+let roundPayload = null; // module-level so both startRound and restoreHostSession can set it
 
 // ── Init ──────────────────────────────────────────────────────────────────
 await loadQuestions();
+
+// Check for saved session (restore after accidental refresh)
+const _saved = loadHostState();
+const SESSION_ID = _saved?.sessionId ?? generateSessionId();
+const _isRestoring = !!(_saved?.sessionId);
 
 const playerUrl = `${location.origin}${location.pathname.replace('host.html', 'player.html')}?session=${SESSION_ID}`;
 $('lobby-url').textContent = playerUrl;
@@ -56,26 +89,45 @@ new QRCode($('qr-code'), {
   correctLevel: QRCode.CorrectLevel.H,
 });
 
-// Create game_state record
-await sb.from('game_state').insert({
-  session_id: SESSION_ID,
-  total_questions: questions.length,
-  phase: 'lobby',
-  round_duration_seconds: 30,
-});
+if (!_isRestoring) {
+  // Fresh session — create game_state record
+  saveHostState({ sessionId: SESSION_ID, phase: 'lobby' });
+  await sb.from('game_state').insert({
+    session_id: SESSION_ID,
+    total_questions: questions.length,
+    phase: 'lobby',
+    round_duration_seconds: 30,
+  });
+}
+
+// Always subscribe to player join events (new joins even during restored session)
+subscribeToPlayers();
+
+if (_isRestoring) {
+  // Re-fetch existing players then jump to the saved screen
+  const { data } = await sb.from('players').select('*').eq('session_id', SESSION_ID);
+  players = data || [];
+  renderPlayerList();
+  await restoreHostSession(_saved);
+}
 
 // ── Player list subscription ───────────────────────────────────────────────
-sb.channel(`players:${SESSION_ID}`)
-  .on('postgres_changes', {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'players',
-    filter: `session_id=eq.${SESSION_ID}`,
-  }, ({ new: player }) => {
-    players.push(player);
-    renderPlayerList();
-  })
-  .subscribe();
+function subscribeToPlayers() {
+  sb.channel(`players:${SESSION_ID}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'players',
+      filter: `session_id=eq.${SESSION_ID}`,
+    }, ({ new: player }) => {
+      // Avoid duplicates (can happen if subscription fires for pre-existing player on restore)
+      if (!players.find(p => p.id === player.id)) {
+        players.push(player);
+      }
+      renderPlayerList();
+    })
+    .subscribe();
+}
 
 function renderPlayerList() {
   $('player-count').textContent = `${players.length} gracz${players.length === 1 ? '' : players.length < 5 ? 'e' : 'y'} dołączyło`;
@@ -92,6 +144,107 @@ function renderPlayerList() {
         <span>${p.name}</span>
       </div>`;
   }).join('');
+}
+
+// ── Session restore ───────────────────────────────────────────────────────
+async function restoreHostSession(state) {
+  if (state.phase === 'lobby') {
+    // Already in lobby, players re-fetched — nothing more to do
+    showRestoreToast();
+    return;
+  }
+
+  // Need game channel for all non-lobby phases
+  gameChannel = createChannel(sb, SESSION_ID);
+  await new Promise(resolve => gameChannel.subscribe(status => {
+    if (status === 'SUBSCRIBED') resolve();
+  }));
+
+  currentQuestionIndex = state.questionIndex ?? 0;
+  $('player-total').textContent = players.length;
+  hide('screen-lobby');
+
+  if (state.phase === 'round') {
+    const q = questions[state.questionIndex];
+    $('round-photo').src = q.photo_url;
+    $('phase-label').textContent = `RUNDA ${state.questionIndex + 1} / ${questions.length}`;
+    $('global-stat').textContent = '';
+    $('answer-count-num').textContent = '0';
+    hide('host-countdown-overlay');
+    lastCountdownSec = -1;
+
+    // Reconstruct timer from saved values
+    roundStartedAt = state.roundStartedAt ?? Date.now();
+    roundDurationMs = state.roundDurationMs ?? 30_000;
+    extraMs = state.extraMs ?? 0;
+    paused = false;
+
+    // Reconstruct heartbeat payload
+    roundPayload = {
+      question_index: state.questionIndex,
+      lat: q.lat, lng: q.lng,
+      location_name: q.location_name,
+      photo_url: q.photo_url,
+      started_at: roundStartedAt - extraMs,
+      duration_ms: roundDurationMs,
+    };
+
+    // Check if round has already expired during the refresh
+    const elapsed = Date.now() - roundStartedAt + extraMs;
+    if (elapsed >= roundDurationMs) {
+      // Time ran out while refreshing — go straight to results
+      show('screen-round'); // needed so hide() in showResults works
+      await showResults(state.questionIndex);
+    } else {
+      show('screen-round');
+
+      // Re-fetch already-answered pins
+      const { data: pins } = await sb.from('pins')
+        .select('player_id')
+        .eq('session_id', SESSION_ID)
+        .eq('question_index', state.questionIndex);
+      if (pins) {
+        answerCount = pins.length;
+        answeredNames = pins.map(p => players.find(pl => pl.id === p.player_id)?.name).filter(Boolean);
+        $('answer-count-num').textContent = answerCount;
+        $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
+        $('answered-names').textContent = answeredNames.join(' · ');
+      }
+
+      // Resume heartbeat
+      clearInterval(heartbeatInterval);
+      heartbeatInterval = setInterval(() => {
+        const effectiveStartedAt = roundStartedAt - extraMs;
+        if (roundPayload.started_at !== effectiveStartedAt || roundPayload.duration_ms !== roundDurationMs) {
+          roundPayload = { ...roundPayload, started_at: effectiveStartedAt, duration_ms: roundDurationMs };
+        }
+        broadcast(gameChannel, 'round_heartbeat', roundPayload).catch(() => null);
+        saveHostState({ roundStartedAt, roundDurationMs, extraMs });
+      }, 2000);
+
+      // Resume timer
+      roundEnding = false;
+      timerRunning = true;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(tickTimer, 100);
+      subscribeAnswerCount(state.questionIndex);
+      refreshTop5();
+    }
+  } else if (state.phase === 'results') {
+    show('screen-round'); // so hide() in showResults works cleanly
+    await showResults(state.questionIndex);
+  } else if (state.phase === 'leaderboard') {
+    await showLeaderboard(state.isFinal ?? false);
+  }
+
+  showRestoreToast();
+}
+
+function showRestoreToast() {
+  const toast = $('restore-toast');
+  if (!toast) return;
+  toast.classList.remove('hidden');
+  setTimeout(() => toast.classList.add('hidden'), 3500);
 }
 
 // ── Start game ────────────────────────────────────────────────────────────
@@ -129,8 +282,8 @@ async function startRound(index) {
   const durationMs = 30_000;
   const startedAt = Date.now();
 
-  // Use let so we can update started_at/duration_ms on pause/extend — heartbeat broadcasts current state
-  let roundPayload = {
+  // Module-level — shared with restore path and heartbeat
+  roundPayload = {
     question_index: index,
     lat: q.lat,
     lng: q.lng,
@@ -142,16 +295,19 @@ async function startRound(index) {
 
   await broadcast(gameChannel, 'round_start', roundPayload);
 
+  // Save state for restore-on-refresh
+  saveHostState({ phase: 'round', questionIndex: index, roundStartedAt: startedAt, roundDurationMs: durationMs, extraMs: 0 });
+
   // Heartbeat every 2s — catches players who missed round_start (e.g. page refresh)
-  // Always reflects current started_at/duration_ms so timer syncs correctly
+  // Also saves current timer state so host can restore after their own refresh
   clearInterval(heartbeatInterval);
   heartbeatInterval = setInterval(() => {
-    // Keep heartbeat payload in sync with current timer state (accounts for pauses/extensions)
     const effectiveStartedAt = roundStartedAt - extraMs;
     if (roundPayload.started_at !== effectiveStartedAt || roundPayload.duration_ms !== roundDurationMs) {
       roundPayload = { ...roundPayload, started_at: effectiveStartedAt, duration_ms: roundDurationMs };
     }
     broadcast(gameChannel, 'round_heartbeat', roundPayload).catch(() => null);
+    saveHostState({ roundStartedAt, roundDurationMs, extraMs });
   }, 2000);
 
   $('answer-count-num').textContent = '0';
@@ -223,26 +379,27 @@ $('btn-pause').addEventListener('click', () => {
     extraMs -= (Date.now() - pausedAt);
     paused = false;
     $('btn-pause').textContent = '⏸ PAUZA';
-    // Tell players new effective start (accounts for pause duration)
     broadcast(gameChannel, 'round_resumed', {
       started_at: roundStartedAt - extraMs,
       duration_ms: roundDurationMs,
     }).catch(() => null);
+    saveHostState({ roundStartedAt, roundDurationMs, extraMs });
   } else {
     pausedAt = Date.now();
     paused = true;
     $('btn-pause').textContent = '▶ WZNÓW';
     broadcast(gameChannel, 'round_paused', {}).catch(() => null);
+    saveHostState({ roundStartedAt, roundDurationMs, extraMs });
   }
 });
 
 $('btn-add-time').addEventListener('click', () => {
   roundDurationMs += 5_000;
-  // Tell players about new duration; adjusted start compensates for pauses
   broadcast(gameChannel, 'time_extended', {
     started_at: roundStartedAt - extraMs,
     duration_ms: roundDurationMs,
   }).catch(() => null);
+  saveHostState({ roundDurationMs });
 });
 
 $('btn-end-round').addEventListener('click', () => {
@@ -335,6 +492,8 @@ async function endRound() {
 
 // ── Results ───────────────────────────────────────────────────────────────
 async function showResults(questionIndex) {
+  saveHostState({ phase: 'results', questionIndex });
+
   const q = questions[questionIndex];
 
   hide('screen-round');
@@ -362,7 +521,6 @@ async function showResults(questionIndex) {
 
   // Init / reset results map
   if (resultsMap) { resultsMap.remove(); resultsMap = null; }
-  // Wait for DOM to render and paint the visible container before Leaflet reads dimensions
   await new Promise(r => setTimeout(r, 200));
   resultsMap = initMap('results-map', { center: [q.lat, q.lng], zoom: 4, skipTiles: true });
 
@@ -378,7 +536,6 @@ async function showResults(questionIndex) {
   });
   L.control.layers({ 'Kolorowa': voyager, 'Ciemna': dark, 'OSM': osm }, {}, { position: 'topleft' }).addTo(resultsMap);
 
-  // Multiple invalidateSize calls — layout may not settle in a single tick
   setTimeout(() => resultsMap.invalidateSize(), 100);
   setTimeout(() => resultsMap.invalidateSize(), 350);
   setTimeout(() => resultsMap.invalidateSize(), 700);
@@ -420,7 +577,7 @@ async function showResults(questionIndex) {
     ? `<div style="text-align:center;color:var(--text-muted);font-size:11px;padding:8px 0;">+ ${rest} pozostałych</div>`
     : '');
 
-  // Add player pins + polylines (km shown in tooltip on hover — labels cluttered with many players)
+  // Add player pins + polylines
   pins.forEach(pin => {
     addPlayerPin(resultsMap, pin.players, pin.lat, pin.lng, pin.distance_km);
     drawPolyline(resultsMap, [pin.lat, pin.lng], [q.lat, q.lng], pin.players.avatar_color, pin.distance_km);
@@ -451,9 +608,10 @@ async function showResults(questionIndex) {
 
 // ── Leaderboard ───────────────────────────────────────────────────────────
 async function showLeaderboard(isFinal) {
-  await broadcast(gameChannel, 'show_leaderboard', {});
+  saveHostState({ phase: 'leaderboard', questionIndex: currentQuestionIndex, isFinal });
 
-  // Compute total scores directly from pins — reliable, no RPC dependency
+  await broadcast(gameChannel, 'show_leaderboard', { isFinal });
+
   const [{ data: playersData }, { data: pinsData }] = await Promise.all([
     sb.from('players').select('*').eq('session_id', SESSION_ID),
     sb.from('pins').select('player_id, points').eq('session_id', SESSION_ID),
@@ -485,26 +643,26 @@ async function showLeaderboard(isFinal) {
   const posMap = {};
   prevRankings.forEach((p, i) => { posMap[p.id] = i + 1; });
 
-  // Podium (TOP 3)
+  // Podium (TOP 3) — epic sizing
   const podiumData = [
-    { player: ranked[1], rank: 2, height: 55, color: 'var(--silver)', avatarSize: 54 },
-    { player: ranked[0], rank: 1, height: 75, color: 'var(--gold)', avatarSize: 66, crown: true },
-    { player: ranked[2], rank: 3, height: 42, color: 'var(--bronze)', avatarSize: 54 },
+    { player: ranked[1], rank: 2, height: 80,  barW: 110, color: 'var(--silver)', avatarSize: 78,  namePx: 15, scorePx: 18, barPx: 36 },
+    { player: ranked[0], rank: 1, height: 115, barW: 130, color: 'var(--gold)',   avatarSize: 100, namePx: 18, scorePx: 22, barPx: 44, crown: true },
+    { player: ranked[2], rank: 3, height: 55,  barW: 100, color: 'var(--bronze)', avatarSize: 70,  namePx: 14, scorePx: 16, barPx: 32 },
   ].filter(d => d.player);
 
-  $('podium').innerHTML = podiumData.map(({ player: p, rank, height, color, avatarSize, crown }) => {
+  $('podium').innerHTML = podiumData.map(({ player: p, rank, height, barW, color, avatarSize, namePx, scorePx, barPx, crown }) => {
     const avatarContent = p.avatar_data_url
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
-      : `<span style="font-size:${avatarSize * 0.38}px;font-weight:700;color:#fff;">${p.initials}</span>`;
+      : `<span style="font-size:${Math.round(avatarSize * 0.38)}px;font-weight:700;color:#fff;">${p.initials}</span>`;
     return `
       <div class="podium-place">
-        ${crown ? '<div style="font-size:22px;">👑</div>' : ''}
-        <div class="podium-avatar" style="width:${avatarSize}px;height:${avatarSize}px;border:3px solid ${color};background:${p.avatar_color};box-shadow:0 0 18px ${color}44;">
+        ${crown ? '<div class="podium-crown">👑</div>' : '<div style="height:36px;"></div>'}
+        <div class="podium-avatar" style="width:${avatarSize}px;height:${avatarSize}px;border:4px solid ${color};background:${p.avatar_color};box-shadow:0 0 28px ${color}66,0 0 60px ${color}22;">
           ${avatarContent}
         </div>
-        <div style="color:${color};font-size:${rank === 1 ? 14 : 12}px;font-weight:700;">${p.name}</div>
-        <div style="color:${color};font-size:${rank === 1 ? 16 : 14}px;font-weight:700;">${p.total_score.toLocaleString('pl')}</div>
-        <div class="podium-bar" style="height:${height}px;background:${color};animation-delay:${rank === 2 ? '0.05s' : rank === 1 ? '0.2s' : '0.35s'};">${rank}</div>
+        <div class="podium-name" style="color:${color};font-size:${namePx}px;max-width:${barW + 10}px;">${p.name}</div>
+        <div class="podium-score" style="color:${color};font-size:${scorePx}px;">${p.total_score.toLocaleString('pl')} pkt</div>
+        <div class="podium-bar" style="height:${height}px;width:${barW}px;background:${color};font-size:${barPx}px;animation-delay:${rank === 2 ? '0.05s' : rank === 1 ? '0.2s' : '0.35s'};">${rank}</div>
       </div>`;
   }).join('');
 
@@ -555,15 +713,14 @@ async function showLeaderboard(isFinal) {
 
 // ── Finale ────────────────────────────────────────────────────────────────
 async function showFinale(winner) {
+  clearHostState(); // Game over — clear restore state
+
   hide('screen-leaderboard');
   show('screen-finale');
   $('phase-label').textContent = '🏆 FINAŁ';
 
-  // Maja video — place maja.mp4 in assets/ and upload to Supabase Storage
-  // or host directly in repo (if <25MB)
   const videoEl = $('finale-video');
-  videoEl.src = 'assets/maja.mp4'; // fallback local path
-  // Try Supabase Storage URL:
+  videoEl.src = 'assets/maja.mp4';
   const { data: { publicUrl } } = sb.storage.from('photos').getPublicUrl('maja.mp4');
   if (publicUrl) videoEl.src = publicUrl;
   videoEl.play().catch(() => null);

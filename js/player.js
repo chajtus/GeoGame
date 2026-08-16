@@ -5,6 +5,15 @@ const $ = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
+function showMap() {
+  show('screen-map');
+  $('map-top-bar').classList.add('map-bar--visible');
+}
+function hideMap() {
+  hide('screen-map');
+  $('map-top-bar').classList.remove('map-bar--visible');
+}
+
 const AVATAR_COLORS = ['#e91e8c','#9c27b0','#3f51b5','#009688','#ff5722','#ff9800','#2196f3'];
 function randomColor() { return AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]; }
 function getInitials(name) { return name.trim().split(/\s+/).map(w => w[0]).join('').slice(0,2).toUpperCase(); }
@@ -194,13 +203,19 @@ function subscribeToGame() {
       }
     })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
-    .on('broadcast', { event: 'show_leaderboard' }, () => {
+    .on('broadcast', { event: 'show_leaderboard' }, ({ payload }) => {
       clearInterval(submittedCountdownInterval);
       hide('screen-submitted');
-      hide('screen-map');
+      hideMap();
       hide('screen-round-flash');
-      show('screen-waiting');
-      document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
+      if (payload?.isFinal) {
+        hide('screen-waiting');
+        $('finale-player-name').textContent = playerState.name;
+        show('screen-player-finale');
+      } else {
+        show('screen-waiting');
+        document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
+      }
     })
     .subscribe();
 }
@@ -217,11 +232,29 @@ let submittedCountdownInterval = null;
 let lastPlayerCountdownSec = -1;
 let lastDistanceKm = 0;
 let lastPoints = 0;
+let lastEndedQuestionIndex = -1;
 
 // ── Round start ───────────────────────────────────────────────────────────
 async function handleRoundStart(payload, showFlash = false) {
   clearInterval(submittedCountdownInterval);
   if (playerResultMap) { playerResultMap.remove(); playerResultMap = null; }
+
+  // Guard: round already ended (late delivery of round_start after round_end)
+  if (payload.question_index <= lastEndedQuestionIndex) return;
+
+  // Guard: round already expired by the time we received it
+  const msRemaining = payload.duration_ms - (Date.now() - new Date(payload.started_at).getTime());
+  if (msRemaining <= 0) {
+    lastEndedQuestionIndex = payload.question_index;
+    currentQuestion = payload;
+    submitted = true;
+    lastDistanceKm = 0;
+    lastPoints = 0;
+    hide('screen-waiting');
+    hide('screen-round-flash');
+    showPlayerResult();
+    return;
+  }
 
   currentQuestion = payload;
   playerPinLatLng = null;
@@ -238,11 +271,12 @@ async function handleRoundStart(payload, showFlash = false) {
     hide('screen-waiting');
     hide('screen-submitted');
     hide('map-submitted-overlay');
-    hide('screen-map');
+    hideMap();
     show('screen-round-flash');
     triggerAnim('screen-round-flash', 'flash--in');
     await new Promise(r => setTimeout(r, 2200));
     hide('screen-round-flash');
+    if (submitted) return; // host ended round during flash — skip map
   } else {
     hide('screen-waiting');
     hide('screen-submitted');
@@ -250,7 +284,7 @@ async function handleRoundStart(payload, showFlash = false) {
     hide('screen-round-flash');
   }
 
-  show('screen-map');
+  showMap();
   $('round-label').textContent = `RUNDA ${payload.question_index + 1}`;
   $('btn-submit').disabled = true;
   $('btn-submit').textContent = '✅ ZATWIERDŹ ODPOWIEDŹ';
@@ -340,7 +374,8 @@ function startPlayerTimer(startedAt, durationMs) {
       $('player-timer').textContent = 'Czas!';
       $('player-timer').classList.add('urgent');
       hide('player-countdown-overlay');
-      // Do NOT auto-submit — wait for round_end from host
+      // Timer expired — handle immediately (round_end broadcast is not guaranteed delivery)
+      handleRoundEnd();
     }
   }, 100); // 100ms for tight sync with host
 }
@@ -492,15 +527,20 @@ function showPlayerResult() {
   $('aga-quote-text').textContent = `„${quote}"`;
   $('aga-quote-author').textContent = '— z archiwum życia Agi 🎂';
 
-  hide('screen-map');
+  hideMap();
   show('screen-submitted');
 
   // Animate results fly-in with stagger
   triggerAnim('submit-points', 'result--in');
   triggerAnim('submit-distance', 'result--in');
-  triggerAnim('submit-mini-map', 'minimap--in');
 
-  initSubmitMiniMap(lastDistanceKm);
+  if (noPin) {
+    hide('submit-mini-map');
+  } else {
+    show('submit-mini-map');
+    triggerAnim('submit-mini-map', 'minimap--in');
+    initSubmitMiniMap(lastDistanceKm);
+  }
 }
 
 // ── Session restore (rejoin after accidental refresh) ─────────────────────
@@ -520,6 +560,7 @@ function showPlayerResult() {
 
 // ── Round end from host ───────────────────────────────────────────────────
 function handleRoundEnd() {
+  if (currentQuestion) lastEndedQuestionIndex = currentQuestion.question_index;
   clearInterval(timerInterval);
   clearInterval(submittedCountdownInterval);
   hide('player-countdown-overlay');
@@ -527,14 +568,33 @@ function handleRoundEnd() {
   $('player-timer').classList.add('urgent');
 
   if (!submitted) {
+    submitted = true;
     if (!playerPinLatLng) {
-      // No pin placed — skip DB insert, show 0 points directly
-      submitted = true;
+      // No pin placed — 0 points, skip DB
       lastDistanceKm = 0;
       lastPoints = 0;
       showPlayerResult();
     } else {
-      submitAnswer().then(() => showPlayerResult());
+      // Pin placed — calculate instantly, show result now, write DB in background
+      import('./scoring.js').then(({ haversineKm, calculatePoints }) => {
+        lastDistanceKm = haversineKm(
+          playerPinLatLng[0], playerPinLatLng[1],
+          currentQuestion.lat, currentQuestion.lng
+        );
+        lastPoints = calculatePoints(lastDistanceKm);
+
+        // fire-and-forget DB writes
+        sb.from('pins').insert({
+          session_id: SESSION_ID,
+          player_id: playerState.id,
+          question_index: currentQuestion.question_index,
+          lat: playerPinLatLng[0], lng: playerPinLatLng[1],
+          distance_km: lastDistanceKm, points: lastPoints,
+        }).catch(() => null);
+        sb.rpc('increment_score', { player_id: playerState.id, amount: lastPoints }).catch(() => null);
+
+        showPlayerResult();
+      });
     }
   } else {
     showPlayerResult();
