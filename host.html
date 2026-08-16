@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HOST — AGA TIMES GEOGUESSER</title>
+  <title>HOST — Znajdź Agnieszkę!</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Dancing+Script:wght@600;700&family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
@@ -163,23 +163,25 @@
     .logo-stars-row span:nth-child(5) { animation-delay: 2s; }
 
     #lobby-game-title {
-      text-align: center; line-height: 1.05;
+      text-align: center; line-height: 1.1;
       font-family: 'Pacifico', cursive;
-      font-size: clamp(34px, 5vw, 72px);
+      font-size: clamp(30px, 4.5vw, 68px);
       background: linear-gradient(135deg, #ffd700 0%, #ffec6e 25%, #ff79c6 55%, #ffd700 80%, #fff9c4 100%);
       background-size: 300% auto;
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
       animation: shimmer 3.5s linear infinite;
       filter: drop-shadow(0 0 22px rgba(233,30,140,0.45)) drop-shadow(0 0 60px rgba(255,215,0,0.2));
+      white-space: nowrap; /* never clips mid-word */
     }
     #lobby-subtitle {
       font-family: 'Dancing Script', cursive;
-      font-size: clamp(16px, 2.2vw, 28px);
+      font-size: clamp(14px, 1.9vw, 26px);
       color: rgba(255,215,0,0.88);
       letter-spacing: 1px;
       text-shadow: 0 0 18px rgba(255,215,0,0.4);
       margin-top: 2px;
+      text-align: center;
     }
     .logo-divider {
       font-size: 16px; letter-spacing: 8px; opacity: 0.65;
@@ -489,8 +491,8 @@
   <div class="top-bar-logo">
     <span class="cake-icon">🎂</span>
     <div>
-      <span class="brand-title top-bar-title" style="font-size:18px;background:linear-gradient(90deg,#ffd700,#ff79c6,#ffd700);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;display:block;line-height:1.1;">Aga Times GeoGuesser</span>
-      <span class="brand-sub" style="font-size:11px;color:rgba(255,215,0,0.6);display:block;">Urodzinowy Quiz Lokalizacyjny</span>
+      <span class="brand-title top-bar-title" style="font-size:18px;background:linear-gradient(90deg,#ffd700,#ff79c6,#ffd700);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;display:block;line-height:1.1;">🏰 Znajdź Agnieszkę!</span>
+      <span class="brand-sub" style="font-size:11px;color:rgba(255,215,0,0.6);display:block;">Kto jest najlepszym stalkerem? 🔍</span>
     </div>
   </div>
   <div id="phase-label" style="color:rgba(255,215,0,0.8);font-size:13px;font-weight:800;letter-spacing:2px;font-family:'Cinzel Decorative',serif;"></div>
@@ -515,11 +517,11 @@
   <!-- ── LOGO ── -->
   <div id="lobby-logo">
     <div class="logo-stars-row">
-      <span>✨</span><span>⭐</span><span>🎂</span><span>⭐</span><span>✨</span>
+      <span>🏰</span><span>✨</span><span>🐭</span><span>✨</span><span>🏰</span>
     </div>
-    <div id="lobby-game-title">Aga Times<br>GeoGuesser</div>
+    <div id="lobby-game-title">Znajdź Agnieszkę!</div>
     <div class="logo-divider">· · ·</div>
-    <div id="lobby-subtitle">🗺️ Urodzinowy Quiz Lokalizacyjny</div>
+    <div id="lobby-subtitle">🔍 Kto jest najlepszym stalkerem?</div>
   </div>
 
   <!-- ── QR ── -->
@@ -596,7 +598,7 @@
   <div id="lb-header">
     <div class="lb-logo-row">
       <span style="font-size:18px;">✨</span>
-      <span class="brand-title lb-logo-text" style="font-size:15px;background:linear-gradient(90deg,#ffd700,#ff79c6,#ffd700);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;">Aga Times GeoGuesser</span>
+      <span class="brand-title lb-logo-text" style="font-size:15px;background:linear-gradient(90deg,#ffd700,#ff79c6,#ffd700);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;">🏰 Znajdź Agnieszkę!</span>
       <span style="font-size:18px;">✨</span>
     </div>
     <div id="lb-title">👑 Ranking 👑</div>
@@ -623,6 +625,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=14"></script>
+<script type="module" src="js/host.js?v=15"></script>
 </body>
 </html>
