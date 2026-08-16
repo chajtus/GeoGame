@@ -277,6 +277,15 @@ async function submitAnswer() {
   await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
     .catch(() => null);
 
+  // Show result summary
+  const distLabel = distanceKm < 1
+    ? `${Math.round(distanceKm * 1000)} m od celu`
+    : `${Math.round(distanceKm).toLocaleString('pl')} km od celu`;
+
+  $('submit-points').textContent = points > 0 ? `+${points.toLocaleString('pl')}` : '0';
+  $('submit-distance').textContent = distLabel;
+  $('submit-location').textContent = currentQuestion.location_name || '';
+
   hide('screen-map');
   show('screen-submitted');
 }

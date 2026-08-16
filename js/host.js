@@ -125,6 +125,7 @@ async function startRound(index) {
     question_index: index,
     lat: q.lat,
     lng: q.lng,
+    location_name: q.location_name,
     started_at: startedAt,
     duration_ms: durationMs,
   });
@@ -258,11 +259,17 @@ async function showResults(questionIndex) {
     ? '🏆 RANKING'
     : `▶ PYTANIE ${questionIndex + 2}`;
 
+  // Show question photo thumbnail in side panel
+  const thumb = $('results-photo-thumb');
+  thumb.src = q.photo_url;
+  thumb.style.display = 'block';
+
   // Init / reset results map
   if (resultsMap) { resultsMap.remove(); resultsMap = null; }
-  // Wait for DOM
-  await new Promise(r => setTimeout(r, 50));
+  // Wait for DOM to render the visible container
+  await new Promise(r => setTimeout(r, 120));
   resultsMap = initMap('results-map', { center: [q.lat, q.lng], zoom: 4 });
+  setTimeout(() => resultsMap.invalidateSize(), 100);
 
   // True location marker
   createTrueLocationMarker(resultsMap, q.lat, q.lng);

@@ -40,7 +40,7 @@
     #round-photo-wrap {
       flex: 1; position: relative; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
-      background: #000;
+      background: #000; max-height: calc(100vh - 160px);
     }
     #round-photo {
       max-width: 100%; max-height: 100%;
@@ -77,7 +77,7 @@
 
     /* ── RESULTS ── */
     #screen-results { flex: 1; display: flex; flex-direction: column; }
-    #results-map { flex: 1; }
+    #results-map { position: absolute; inset: 0; }
     #location-label {
       position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.88); border: 2px solid var(--primary);
@@ -169,16 +169,19 @@
 </div>
 
 <!-- ===== RESULTS ===== -->
-<div id="screen-results" class="hidden" style="position:relative;">
-  <div style="flex:1;display:flex;min-height:0;">
-    <div style="flex:1;position:relative;">
+<div id="screen-results" class="hidden">
+  <div style="flex:1;display:flex;min-height:0;overflow:hidden;">
+    <!-- Map fills all available space -->
+    <div style="flex:1;position:relative;min-width:0;">
       <div id="results-map"></div>
       <div id="location-label">
         <div class="lbl-sub">📍 PRAWDZIWE MIEJSCE</div>
         <div class="lbl-name" id="location-name-text">—</div>
       </div>
     </div>
+    <!-- Side panel: photo thumbnail + scores -->
     <div id="results-side">
+      <img id="results-photo-thumb" src="" alt="" style="width:100%;border-radius:8px;margin-bottom:10px;object-fit:cover;max-height:130px;display:none;">
       <h4>PUNKTY ZA RUNDĘ</h4>
       <div id="results-list"></div>
     </div>
