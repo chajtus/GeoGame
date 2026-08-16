@@ -377,8 +377,11 @@ async function showResults(questionIndex) {
 
   if (!pins) return;
 
-  // Render side panel
-  $('results-list').innerHTML = pins.map((pin, i) => {
+  // Render side panel — cap at 12 rows, show "+ X pozostałych" if more
+  const MAX_ROWS = 12;
+  const shown = pins.slice(0, MAX_ROWS);
+  const rest = pins.length - shown.length;
+  $('results-list').innerHTML = shown.map((pin) => {
     const p = pin.players;
     const avatar = p.avatar_data_url
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
@@ -395,7 +398,9 @@ async function showResults(questionIndex) {
         </div>
         <div class="pts">+${pin.points.toLocaleString('pl')}</div>
       </div>`;
-  }).join('');
+  }).join('') + (rest > 0
+    ? `<div style="text-align:center;color:var(--text-muted);font-size:11px;padding:8px 0;">+ ${rest} pozostałych</div>`
+    : '');
 
   // Fit map to show all pins + true location
   const allLatLngs = [[q.lat, q.lng], ...pins.map(p => [p.lat, p.lng])];
