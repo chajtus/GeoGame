@@ -159,8 +159,21 @@ function subscribeToGame() {
       }
     })
     .on('broadcast', { event: 'time_extended' }, ({ payload }) => {
-      // Host added time — update player timer
-      if (!submitted && currentQuestion) {
+      if (currentQuestion) {
+        currentQuestion.started_at = payload.started_at;
+        currentQuestion.duration_ms = payload.duration_ms;
+        if (!submitted) startPlayerTimer(payload.started_at, payload.duration_ms);
+      }
+    })
+    .on('broadcast', { event: 'round_paused' }, () => {
+      clearInterval(timerInterval);
+      $('player-timer').style.opacity = '0.45';
+      $('player-timer').style.textDecoration = 'line-through';
+    })
+    .on('broadcast', { event: 'round_resumed' }, ({ payload }) => {
+      $('player-timer').style.opacity = '';
+      $('player-timer').style.textDecoration = '';
+      if (currentQuestion && !submitted) {
         currentQuestion.started_at = payload.started_at;
         currentQuestion.duration_ms = payload.duration_ms;
         startPlayerTimer(payload.started_at, payload.duration_ms);

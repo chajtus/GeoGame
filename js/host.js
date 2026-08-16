@@ -213,10 +213,16 @@ $('btn-pause').addEventListener('click', () => {
     extraMs -= (Date.now() - pausedAt);
     paused = false;
     $('btn-pause').textContent = '⏸ PAUZA';
+    // Tell players new effective start (accounts for pause duration)
+    broadcast(gameChannel, 'round_resumed', {
+      started_at: roundStartedAt - extraMs,
+      duration_ms: roundDurationMs,
+    }).catch(() => null);
   } else {
     pausedAt = Date.now();
     paused = true;
     $('btn-pause').textContent = '▶ WZNÓW';
+    broadcast(gameChannel, 'round_paused', {}).catch(() => null);
   }
 });
 
@@ -295,7 +301,6 @@ async function endRound() {
   clearInterval(heartbeatInterval);
   hide('host-countdown-overlay');
   if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
-  if (top5Channel) { top5Channel.unsubscribe(); top5Channel = null; }
   await broadcast(gameChannel, 'round_end', {});
   await showResults(currentQuestionIndex);
 }
