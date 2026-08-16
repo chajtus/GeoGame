@@ -48,23 +48,26 @@
     /* FORM BODY */
     #login-body { padding: 20px 20px 0; display: flex; flex-direction: column; gap: 16px; }
 
-    /* Avatar row — horizontal to save vertical space */
+    /* Avatar — vertical layout with large preview */
     #avatar-row {
-      display: flex; align-items: center; gap: 16px;
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
       background: var(--bg-mid); border: 1px solid var(--border);
-      border-radius: 14px; padding: 14px 16px;
+      border-radius: 14px; padding: 18px 16px;
     }
     #avatar-preview {
-      width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
-      border: 2px dashed var(--border); background: #0d0d1a;
+      width: 180px; height: 180px; border-radius: 50%; flex-shrink: 0;
+      border: 3px dashed var(--border); background: #0d0d1a;
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px; overflow: hidden; cursor: pointer;
-      transition: border-color 0.2s;
+      font-size: 52px; overflow: hidden; cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    #avatar-preview.has-photo { border: 2.5px solid var(--primary); }
+    #avatar-preview.has-photo {
+      border: 3px solid var(--primary);
+      box-shadow: 0 0 24px rgba(233,30,140,0.5);
+    }
     #avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-    #avatar-btns { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-    #btn-selfie { width: 100%; font-size: 13px; padding: 10px 14px; }
+    #avatar-btns { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    #btn-selfie { width: 100%; font-size: 15px; padding: 12px 14px; }
     #btn-skip-avatar { width: 100%; font-size: 12px; padding: 8px 14px; }
     #retake-hint { color: var(--primary-light); font-size: 11px; cursor: pointer; text-decoration: underline; text-align: center; }
 
