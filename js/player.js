@@ -334,6 +334,8 @@ async function initPlayerMap() {
   leafletMap = initMap('map', { center: [20, 0], zoom: 2 });
   leafletMap.on('click', onMapClick);
   showHintAnimated();
+  // Resize when browser chrome hides/shows (e.g. Android address bar)
+  window.addEventListener('resize', () => { if (leafletMap) leafletMap.invalidateSize(); });
 }
 
 function showHintAnimated() {

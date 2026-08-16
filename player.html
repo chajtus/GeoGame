@@ -13,7 +13,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
     html, body { height: 100%; overflow: hidden; }
-    body { height: 100svh; display: flex; flex-direction: column; }
+    body { height: 100dvh; display: flex; flex-direction: column; }
+    .leaflet-container { background: #a8c8e8 !important; } /* ocean color instead of grey */
 
     /* ═══ LOGIN ═══════════════════════════════════════════════════════════ */
     #screen-login {
@@ -637,6 +638,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=21"></script>
+<script type="module" src="js/player.js?v=22"></script>
 </body>
 </html>
