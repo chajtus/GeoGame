@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>AGA TIMES GEOGUESSER</title>
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    body { overflow: hidden; height: 100dvh; display: flex; flex-direction: column; }
+
+    /* LOGIN */
+    #screen-login {
+      flex: 1; background: linear-gradient(180deg, #1a0030 0%, var(--bg) 100%);
+      display: flex; flex-direction: column; align-items: center;
+      padding: 20px 20px 28px; gap: 14px; overflow-y: auto;
+    }
+    #screen-login .logo-text { font-size: 11px; text-align: center; }
+    #aga-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary-light); object-fit: cover; box-shadow: 0 0 24px rgba(233,30,140,0.5); }
+    .login-title { color: #fff; font-size: 15px; font-weight: 700; text-align: center; }
+    .login-sub { color: var(--text-muted); font-size: 11px; text-align: center; }
+    #avatar-preview {
+      width: 72px; height: 72px; border-radius: 50%;
+      border: 2px dashed var(--border); background: var(--bg-mid);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 22px; gap: 2px; overflow: hidden;
+    }
+    #avatar-preview.has-photo { border-style: solid; border-color: var(--primary); }
+    #avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-actions { display: flex; gap: 8px; }
+    .field-label { color: var(--primary-light); font-size: 9px; letter-spacing: 1px; font-weight: 600; }
+    #name-input {
+      width: 100%; background: var(--bg-mid); border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 14px; outline: none;
+    }
+    #name-input:focus { border-color: var(--primary); }
+    .fact-box { width: 100%; background: #1a0030; border: 1px solid rgba(233,30,140,0.3); border-radius: 10px; padding: 12px 14px; }
+    .fact-label { color: var(--primary-light); font-size: 9px; font-weight: 700; margin-bottom: 5px; letter-spacing: 1px; }
+    .fact-text { color: #ddd; font-size: 11px; line-height: 1.5; }
+    #btn-join { width: 100%; margin-top: auto; }
+
+    /* CAMERA */
+    #camera-overlay {
+      position: fixed; inset: 0; background: #000; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    }
+    #camera-overlay video { width: 100%; max-height: 70vh; object-fit: cover; }
+    #snap-canvas { display: none; }
+
+    /* WAITING */
+    #screen-waiting {
+      flex: 1; background: linear-gradient(180deg, #1a0030 0%, var(--bg) 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; padding: 24px;
+    }
+    #waiting-avatar { width: 72px; height: 72px; }
+    .waiting-name { font-size: 18px; font-weight: 700; }
+    .waiting-sub { color: var(--text-muted); font-size: 12px; text-align: center; }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* MAP */
+    #screen-map { flex: 1; display: flex; flex-direction: column; }
+    #map-top-bar {
+      background: #1a0030; padding: 8px 14px;
+      display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+    }
+    #round-label { color: var(--primary-light); font-size: 10px; font-weight: 700; }
+    #player-timer {
+      background: var(--primary); color: #fff; padding: 4px 12px;
+      border-radius: 12px; font-size: 12px; font-weight: 700; min-width: 56px; text-align: center;
+    }
+    #player-timer.urgent { background: var(--red); animation: pulse 0.5s ease-in-out infinite alternate; }
+    @keyframes pulse { to { opacity: 0.7; } }
+    #leader-label { color: var(--text-muted); font-size: 10px; }
+    #map { flex: 1; }
+    #map-hint {
+      position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.75); color: var(--text-muted); padding: 5px 12px;
+      border-radius: 6px; font-size: 11px; white-space: nowrap; pointer-events: none; z-index: 1000;
+    }
+    #screen-map .bottom-bar { background: var(--bg-panel); padding: 12px 16px; flex-shrink: 0; position: relative; }
+    #btn-submit { width: 100%; }
+
+    /* SUBMITTED */
+    #screen-submitted {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px; padding: 24px;
+    }
+    #answer-count { color: var(--text-muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login">
+  <div class="logo-text">🎂 AGA TIMES GEOGUESSER</div>
+  <img id="aga-avatar" src="assets/aga-login.jpg" alt="Aga" onerror="this.style.display='none'">
+  <div>
+    <div class="login-title">Witaj w grze Agi!</div>
+    <div class="login-sub">Zgadnij gdzie była 📍</div>
+  </div>
+  <div id="avatar-preview">
+    <span>📷</span>
+    <span style="font-size:8px;color:var(--text-muted)">avatar</span>
+  </div>
+  <div class="avatar-actions">
+    <button class="btn btn--primary" id="btn-selfie" style="font-size:11px;padding:8px 14px;">📸 ZRÓB SELFIE</button>
+    <button class="btn btn--secondary" id="btn-skip-avatar" style="font-size:11px;padding:8px 14px;">pomiń →</button>
+  </div>
+  <small id="retake-hint" class="hidden" style="color:var(--primary-light);font-size:10px;cursor:pointer;text-decoration:underline;">📸 zrób ponownie</small>
+  <div style="width:100%">
+    <div class="field-label" style="margin-bottom:5px;">TWOJE IMIĘ</div>
+    <input id="name-input" type="text" placeholder="Wpisz imię..." maxlength="20" autocomplete="off">
+  </div>
+  <div class="fact-box">
+    <div class="fact-label">💡 AGA FACT</div>
+    <div class="fact-text" id="fact-text">Ładowanie...</div>
+  </div>
+  <button class="btn btn--primary" id="btn-join" disabled>DOŁĄCZ DO GRY 🎮</button>
+</div>
+
+<!-- CAMERA -->
+<div id="camera-overlay" class="hidden">
+  <video id="camera-video" autoplay playsinline muted></video>
+  <canvas id="snap-canvas"></canvas>
+  <div style="display:flex;gap:12px;">
+    <button class="btn btn--primary" id="btn-snap">📸 ZRÓB ZDJĘCIE</button>
+    <button class="btn btn--secondary" id="btn-cancel-camera">Anuluj</button>
+  </div>
+</div>
+
+<!-- WAITING -->
+<div id="screen-waiting" class="hidden">
+  <div class="avatar-circle waiting-avatar" id="waiting-avatar-display" style="width:72px;height:72px;font-size:24px;font-weight:700;border:2px solid var(--primary);"></div>
+  <div class="waiting-name" id="waiting-name-display"></div>
+  <div class="waiting-sub">Czekamy na start gry...</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- MAP -->
+<div id="screen-map" class="hidden" style="position:relative;">
+  <div id="map-top-bar">
+    <div id="round-label">RUNDA 1</div>
+    <div id="player-timer">0:30</div>
+    <div id="leader-label">🏆 —</div>
+  </div>
+  <div id="map"></div>
+  <div id="map-hint">Dotknij mapę aby postawić pinezkę</div>
+  <div class="bottom-bar">
+    <button class="btn btn--primary" id="btn-submit" disabled>✅ ZATWIERDŹ ODPOWIEDŹ</button>
+  </div>
+</div>
+
+<!-- SUBMITTED -->
+<div id="screen-submitted" class="hidden">
+  <div class="spinner"></div>
+  <div style="color:var(--green);font-size:18px;font-weight:700;">Odpowiedź wysłana ✓</div>
+  <div id="answer-count" class="waiting-sub">Czekamy na pozostałych graczy...</div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script type="module" src="js/player.js"></script>
+</body>
+</html>
