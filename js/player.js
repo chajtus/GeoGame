@@ -182,6 +182,15 @@ function subscribeToGame() {
     .on('broadcast', { event: 'player_answered' }, ({ payload }) => {
       if (!$('map-submitted-overlay').classList.contains('hidden')) {
         $('overlay-count').textContent = `${payload.answered} / ${payload.total} odpowiedziało`;
+        // Floating ✅ animation for each new answer
+        const icons = ['✅','🎯','✔️','💚'];
+        const el = document.createElement('div');
+        el.className = 'vote-float';
+        el.textContent = icons[Math.floor(Math.random() * icons.length)];
+        el.style.left = (10 + Math.random() * 80) + '%';
+        el.style.bottom = (5 + Math.random() * 40) + '%';
+        $('overlay-vote-bg').appendChild(el);
+        el.addEventListener('animationend', () => el.remove(), { once: true });
       }
     })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
@@ -421,14 +430,14 @@ async function initSubmitMiniMap(distanceKm) {
     color: '#ff79c6', weight: 2, opacity: 0.8, dashArray: '6, 4',
   }).addTo(playerResultMap);
 
-  // Km label at midpoint
+  // Km label at midpoint — transform:translateX(-50%) centers it over the marker point
   const distKm = distanceKm < 1
     ? `${Math.round(distanceKm * 1000)} m`
     : `${Math.round(distanceKm).toLocaleString('pl')} km`;
   L.marker([midLat, midLng], {
     icon: L.divIcon({
-      html: `<div style="background:rgba(0,0,0,0.82);color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;">${distKm} w linii prostej</div>`,
-      className: '', iconAnchor: [40, 10],
+      html: `<div style="transform:translateX(-50%);background:#fff;color:#111;border:1.5px solid #ddd;padding:5px 12px;border-radius:8px;font-size:13px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.25);">📍 ${distKm} w linii prostej</div>`,
+      className: '', iconSize: [0, 0], iconAnchor: [0, 0],
     }),
     interactive: false,
   }).addTo(playerResultMap);
