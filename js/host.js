@@ -77,6 +77,7 @@ sb.channel(`players:${SESSION_ID}`)
 function renderPlayerList() {
   $('player-count').textContent = `${players.length} gracz${players.length === 1 ? '' : players.length < 5 ? 'e' : 'y'} dołączyło`;
   $('btn-start').disabled = players.length < 2;
+  $('btn-start-test').style.display = players.length >= 1 ? 'inline-flex' : 'none';
 
   $('player-list').innerHTML = players.map(p => {
     const avatar = p.avatar_data_url
@@ -91,9 +92,9 @@ function renderPlayerList() {
 }
 
 // ── Start game ────────────────────────────────────────────────────────────
-$('btn-start').addEventListener('click', async () => {
+async function startGame() {
   $('btn-start').disabled = true;
-  // Fetch all players who joined (in case subscription missed some)
+  $('btn-start-test').disabled = true;
   const { data } = await sb.from('players').select('*').eq('session_id', SESSION_ID);
   players = data || players;
 
@@ -106,7 +107,10 @@ $('btn-start').addEventListener('click', async () => {
   show('screen-round');
   $('player-total').textContent = players.length;
   startRound(0);
-});
+}
+
+$('btn-start').addEventListener('click', startGame);
+$('btn-start-test').addEventListener('click', startGame);
 
 // ── Round ─────────────────────────────────────────────────────────────────
 async function startRound(index) {
