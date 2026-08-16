@@ -327,4 +327,132 @@ async function showResults(questionIndex) {
   };
 }
 
-function showLeaderboard(isFinal) { console.log('showLeaderboard stub', isFinal); }
+// ── Leaderboard ───────────────────────────────────────────────────────────
+async function showLeaderboard(isFinal) {
+  await broadcast(gameChannel, 'show_leaderboard', {});
+
+  const { data: ranked } = await sb.from('players')
+    .select('*')
+    .eq('session_id', SESSION_ID)
+    .order('total_score', { ascending: false });
+
+  if (!ranked) return;
+
+  hide('screen-results');
+  hide('screen-round');
+  show('screen-leaderboard');
+
+  const nextQ = currentQuestionIndex + 1;
+  $('lb-title').textContent = isFinal ? 'WYNIKI KOŃCOWE 🏆' : `RANKING PO PYTANIU ${nextQ} / ${questions.length}`;
+  $('lb-subtitle').textContent = isFinal
+    ? 'Dziękujemy za grę!'
+    : nextQ % questions.length === 0
+    ? 'Ostatni sprint!'
+    : `Jeszcze ${questions.length - nextQ} pytań do końca.`;
+
+  // Compute position changes
+  const posMap = {};
+  prevRankings.forEach((p, i) => { posMap[p.id] = i + 1; });
+
+  // Podium (TOP 3)
+  const podiumData = [
+    { player: ranked[1], rank: 2, height: 55, color: 'var(--silver)', avatarSize: 54 },
+    { player: ranked[0], rank: 1, height: 75, color: 'var(--gold)', avatarSize: 66, crown: true },
+    { player: ranked[2], rank: 3, height: 42, color: 'var(--bronze)', avatarSize: 54 },
+  ].filter(d => d.player);
+
+  $('podium').innerHTML = podiumData.map(({ player: p, rank, height, color, avatarSize, crown }) => {
+    const avatarContent = p.avatar_data_url
+      ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+      : `<span style="font-size:${avatarSize * 0.38}px;font-weight:700;color:#fff;">${p.initials}</span>`;
+    return `
+      <div class="podium-place">
+        ${crown ? '<div style="font-size:22px;">👑</div>' : ''}
+        <div class="podium-avatar" style="width:${avatarSize}px;height:${avatarSize}px;border:3px solid ${color};background:${p.avatar_color};box-shadow:0 0 18px ${color}44;">
+          ${avatarContent}
+        </div>
+        <div style="color:${color};font-size:${rank === 1 ? 14 : 12}px;font-weight:700;">${p.name}</div>
+        <div style="color:${color};font-size:${rank === 1 ? 16 : 14}px;font-weight:700;">${p.total_score.toLocaleString('pl')}</div>
+        <div class="podium-bar" style="height:${height}px;background:${color};">${rank}</div>
+      </div>`;
+  }).join('');
+
+  // Rest of ranking
+  $('lb-rest').innerHTML = ranked.slice(3).map((p, i) => {
+    const rank = i + 4;
+    const prev = posMap[p.id];
+    const change = prev ? prev - rank : 0;
+    const changeHtml = change > 0
+      ? `<span class="lb-change up">▲${change}</span>`
+      : change < 0
+      ? `<span class="lb-change down">▼${Math.abs(change)}</span>`
+      : `<span class="lb-change" style="color:var(--text-muted)">—</span>`;
+    const avatarContent = p.avatar_data_url
+      ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+      : `<span style="font-size:9px;font-weight:700;color:#fff;">${p.initials}</span>`;
+    return `
+      <div class="lb-row">
+        <span class="lb-rank">${rank}.</span>
+        <div class="avatar-circle" style="width:26px;height:26px;background:${p.avatar_color};font-size:9px;">${avatarContent}</div>
+        <span style="flex:1;">${p.name}</span>
+        <span class="lb-pts">${p.total_score.toLocaleString('pl')}</span>
+        ${changeHtml}
+      </div>`;
+  }).join('');
+
+  prevRankings = ranked;
+
+  if (isFinal) {
+    $('btn-after-lb').textContent = '🎉 FINAŁ';
+    $('btn-after-lb').onclick = () => showFinale(ranked[0]);
+  } else {
+    $('btn-after-lb').textContent = `▶ PYTANIE ${currentQuestionIndex + 2}`;
+    $('btn-after-lb').onclick = () => {
+      hide('screen-leaderboard');
+      show('screen-round');
+      startRound(currentQuestionIndex + 1);
+    };
+  }
+}
+
+// ── Finale ────────────────────────────────────────────────────────────────
+async function showFinale(winner) {
+  hide('screen-leaderboard');
+  show('screen-finale');
+  $('phase-label').textContent = '🏆 FINAŁ';
+
+  // Maja video — place maja.mp4 in assets/ and upload to Supabase Storage
+  // or host directly in repo (if <25MB)
+  const videoEl = $('finale-video');
+  videoEl.src = 'assets/maja.mp4'; // fallback local path
+  // Try Supabase Storage URL:
+  const { data: { publicUrl } } = sb.storage.from('photos').getPublicUrl('maja.mp4');
+  if (publicUrl) videoEl.src = publicUrl;
+  videoEl.play().catch(() => null);
+
+  // Confetti burst
+  const burst = () => confetti({
+    particleCount: 180,
+    spread: 100,
+    origin: { y: 0.4 },
+    colors: ['#ff79c6', '#9c27b0', '#e91e8c', '#ffffff', '#ffd700'],
+  });
+  burst();
+  setTimeout(burst, 800);
+  setTimeout(burst, 1600);
+
+  // Show winner banner
+  $('finale-lb-wrap').innerHTML = `
+    <div style="text-align:center;padding:24px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+      <div style="font-size:18px;color:var(--primary-light);font-weight:700;letter-spacing:2px;">🥇 ZWYCIĘZCA</div>
+      <div class="avatar-circle" style="width:96px;height:96px;background:${winner.avatar_color};font-size:32px;font-weight:700;border:4px solid var(--gold);box-shadow:0 0 30px var(--gold)44;">
+        ${winner.avatar_data_url
+          ? `<img src="${winner.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+          : winner.initials}
+      </div>
+      <div style="font-size:32px;font-weight:700;color:var(--gold);">${winner.name}</div>
+      <div style="font-size:22px;color:var(--gold);">${winner.total_score.toLocaleString('pl')} pkt</div>
+      <div style="color:var(--text-muted);font-size:14px;">Brawo! 🎂 Sto lat Aga! 🎂</div>
+    </div>
+  `;
+}
