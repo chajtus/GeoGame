@@ -221,7 +221,12 @@ function startPlayerTimer(startedAt, durationMs) {
     const s = secs % 60;
     $('player-timer').textContent = `${mins}:${String(s).padStart(2, '0')}`;
     $('player-timer').classList.toggle('urgent', secs <= 10);
-    if (remaining <= 0) { clearInterval(timerInterval); autoSubmit(); }
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      $('player-timer').textContent = 'Czas!';
+      $('player-timer').classList.add('urgent');
+      // Do NOT auto-submit — wait for round_end from host
+    }
   }, 250);
 }
 
@@ -271,5 +276,10 @@ async function submitAnswer() {
 // ── Round end from host ───────────────────────────────────────────────────
 function handleRoundEnd() {
   clearInterval(timerInterval);
-  // Host will broadcast next_question or show_leaderboard next
+  $('player-timer').textContent = 'Czas!';
+  if (!submitted) {
+    // Auto-submit now — use [0,0] fallback if no pin placed
+    if (!playerPinLatLng) playerPinLatLng = [0, 0];
+    submitAnswer();
+  }
 }
