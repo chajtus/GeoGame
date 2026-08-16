@@ -1,1 +1,3 @@
-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
+[REMOVED SECRET]
+This file previously contained a secret token which has been removed.
+If this token was ever used, revoke it immediately and rotate any credentials that depended on it.
