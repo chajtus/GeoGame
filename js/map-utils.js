@@ -17,7 +17,7 @@ export function initMap(elementId, { center = [20, 0], zoom = 2, skipTiles = fal
     L.tileLayer(window.CONFIG.mapTileUrl, {
       attribution: window.CONFIG.mapAttribution,
       subdomains: window.CONFIG.mapTileSubdomains || 'abc',
-      maxZoom: 17,
+      maxZoom: 19,
     }).addTo(map);
   }
 
