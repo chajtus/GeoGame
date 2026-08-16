@@ -323,6 +323,19 @@
     }
     #submit-countdown-label { color: var(--text-muted); font-size: 11px; }
     #submit-countdown-secs { color: var(--primary-light); font-size: 16px; font-weight: 800; min-width: 36px; }
+    /* km distance tooltip on maps */
+    .km-dist-tip {
+      background: rgba(10,0,30,0.92) !important;
+      color: #ff79c6 !important;
+      border: 2px solid rgba(255,121,198,0.55) !important;
+      border-radius: 18px !important;
+      font-size: 13px !important; font-weight: 800 !important;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.65) !important;
+      white-space: nowrap !important;
+      padding: 5px 14px !important;
+    }
+    .km-dist-tip::before { display: none !important; } /* hide tooltip arrow */
+
     /* Aga quote — shown while waiting */
     #aga-quote-box {
       margin: 0 16px; padding: 14px 18px;
@@ -537,6 +550,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=12"></script>
+<script type="module" src="js/player.js?v=13"></script>
 </body>
 </html>

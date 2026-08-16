@@ -457,6 +457,19 @@
     }
     #finale-video { max-width: 400px; max-height: 40vh; border-radius: 16px; box-shadow: 0 0 60px rgba(233,30,140,0.45); }
 
+    /* km distance tooltip on results map */
+    .km-dist-tip {
+      background: rgba(8,0,24,0.92) !important;
+      color: #ff79c6 !important;
+      border: 1.5px solid rgba(255,121,198,0.6) !important;
+      border-radius: 16px !important;
+      font-size: 12px !important; font-weight: 800 !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.6) !important;
+      white-space: nowrap !important;
+      padding: 4px 12px !important;
+    }
+    .km-dist-tip::before { display: none !important; }
+
     /* ══ SHARED ════════════════════════════════════════════════════════ */
     .bottom-bar {
       background: linear-gradient(90deg, #080020, #130040, #080020);
@@ -610,6 +623,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=13"></script>
+<script type="module" src="js/host.js?v=14"></script>
 </body>
 </html>
