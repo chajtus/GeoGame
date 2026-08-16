@@ -416,7 +416,7 @@ async function showResults(questionIndex) {
   // Add player pins + polylines (km shown in tooltip on hover — labels cluttered with many players)
   pins.forEach(pin => {
     addPlayerPin(resultsMap, pin.players, pin.lat, pin.lng, pin.distance_km);
-    drawPolyline(resultsMap, [pin.lat, pin.lng], [q.lat, q.lng], pin.players.avatar_color);
+    drawPolyline(resultsMap, [pin.lat, pin.lng], [q.lat, q.lng], pin.players.avatar_color, pin.distance_km);
   });
 
   // Fit map after invalidateSize settles
