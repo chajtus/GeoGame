@@ -151,11 +151,19 @@ export { gameChannel, playerState, SESSION_ID, sb };
 function subscribeToGame() {
   gameChannel = sb.channel(`game:${SESSION_ID}`, { config: { broadcast: { self: false } } });
   gameChannel
-    .on('broadcast', { event: 'round_start' }, ({ payload }) => handleRoundStart(payload))
+    .on('broadcast', { event: 'round_start' }, ({ payload }) => handleRoundStart(payload, true))
     .on('broadcast', { event: 'round_heartbeat' }, ({ payload }) => {
-      // Fallback: arrived if player missed round_start (channel reconnect etc.)
+      // Fallback: if player missed round_start (channel reconnect etc.)
       if (!currentQuestion || currentQuestion.question_index !== payload.question_index) {
-        handleRoundStart(payload);
+        handleRoundStart(payload, false); // No flash on heartbeat recovery
+      }
+    })
+    .on('broadcast', { event: 'time_extended' }, ({ payload }) => {
+      // Host added time — update player timer
+      if (!submitted && currentQuestion) {
+        currentQuestion.started_at = payload.started_at;
+        currentQuestion.duration_ms = payload.duration_ms;
+        startPlayerTimer(payload.started_at, payload.duration_ms);
       }
     })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
@@ -163,6 +171,7 @@ function subscribeToGame() {
       clearInterval(submittedCountdownInterval);
       hide('screen-submitted');
       hide('screen-map');
+      hide('screen-round-flash');
       show('screen-waiting');
       document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
     })
@@ -181,31 +190,45 @@ let submittedCountdownInterval = null;
 let lastPlayerCountdownSec = -1;
 
 // ── Round start ───────────────────────────────────────────────────────────
-async function handleRoundStart(payload) {
+async function handleRoundStart(payload, showFlash = false) {
   clearInterval(submittedCountdownInterval);
   if (playerResultMap) { playerResultMap.remove(); playerResultMap = null; }
 
   currentQuestion = payload;
-  hide('screen-waiting');
-  hide('screen-submitted');
-  show('screen-map');
-
-  $('round-label').textContent = `RUNDA ${payload.question_index + 1}`;
-  $('btn-submit').disabled = true;
-  $('btn-submit').textContent = '✅ ZATWIERDŹ ODPOWIEDŹ';
   playerPinLatLng = null;
   submitted = false;
   hide('player-countdown-overlay');
   lastPlayerCountdownSec = -1;
 
+  // Brief photo flash with round number
+  if (showFlash && payload.photo_url) {
+    $('flash-round-num').textContent = payload.question_index + 1;
+    $('flash-photo').src = payload.photo_url;
+    hide('screen-waiting');
+    hide('screen-submitted');
+    hide('screen-map');
+    show('screen-round-flash');
+    await new Promise(r => setTimeout(r, 2200));
+    hide('screen-round-flash');
+  } else {
+    hide('screen-waiting');
+    hide('screen-submitted');
+    hide('screen-round-flash');
+  }
+
+  show('screen-map');
+  $('round-label').textContent = `RUNDA ${payload.question_index + 1}`;
+  $('btn-submit').disabled = true;
+  $('btn-submit').textContent = '✅ ZATWIERDŹ ODPOWIEDŹ';
+
   // Init map on first round
   if (!leafletMap) {
     await initPlayerMap();
   } else {
-    // Remove previous pin
+    // Remove previous pin, reset view to world
     if (playerPin) { leafletMap.removeLayer(playerPin); playerPin = null; }
+    leafletMap.setView([20, 0], 2);
     show('map-hint');
-    // Re-calculate size after screen becomes visible
     setTimeout(() => leafletMap.invalidateSize(), 60);
   }
 
@@ -269,7 +292,7 @@ function startPlayerTimer(startedAt, durationMs) {
       hide('player-countdown-overlay');
       // Do NOT auto-submit — wait for round_end from host
     }
-  }, 250);
+  }, 100); // 100ms for tight sync with host
 }
 
 // ── Submit answer ─────────────────────────────────────────────────────────

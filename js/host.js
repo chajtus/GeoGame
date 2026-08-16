@@ -132,6 +132,7 @@ async function startRound(index) {
     lat: q.lat,
     lng: q.lng,
     location_name: q.location_name,
+    photo_url: q.photo_url,
     started_at: startedAt,
     duration_ms: durationMs,
   };
@@ -149,7 +150,7 @@ async function startRound(index) {
   lastCountdownSec = -1;
   startHostTimer(startedAt, durationMs);
   subscribeAnswerCount(index);
-  subscribeTop5();
+  refreshTop5(); // Show scores from previous rounds immediately
 }
 
 // ── Host timer ────────────────────────────────────────────────────────────
@@ -221,6 +222,11 @@ $('btn-pause').addEventListener('click', () => {
 
 $('btn-add-time').addEventListener('click', () => {
   roundDurationMs += 5_000;
+  // Tell players about new duration; adjusted start compensates for pauses
+  broadcast(gameChannel, 'time_extended', {
+    started_at: roundStartedAt - extraMs,
+    duration_ms: roundDurationMs,
+  }).catch(() => null);
 });
 
 $('btn-end-round').addEventListener('click', () => {
@@ -262,36 +268,26 @@ function subscribeAnswerCount(questionIndex) {
     .subscribe();
 }
 
-// ── Live TOP5 (Realtime) ──────────────────────────────────────────────────
-let top5Channel = null;
-
+// ── TOP5 — computed from pins (no RPC dependency) ─────────────────────────
 async function refreshTop5() {
-  const { data } = await sb.from('players')
-    .select('name, total_score, avatar_data_url, initials, avatar_color')
-    .eq('session_id', SESSION_ID)
-    .order('total_score', { ascending: false })
-    .limit(5);
-  if (!data) return;
+  const [{ data: pls }, { data: pins }] = await Promise.all([
+    sb.from('players').select('id, name, total_score, avatar_data_url, initials, avatar_color').eq('session_id', SESSION_ID),
+    sb.from('pins').select('player_id, points').eq('session_id', SESSION_ID),
+  ]);
+  if (!pls) return;
+  const byPlayer = {};
+  (pins || []).forEach(p => { byPlayer[p.player_id] = (byPlayer[p.player_id] || 0) + (p.points || 0); });
+  const top5 = pls
+    .map(p => ({ ...p, score: byPlayer[p.id] || 0 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
   const medals = ['🥇','🥈','🥉','4.','5.'];
-  $('top5-list').innerHTML = data.map((p, i) => `
+  $('top5-list').innerHTML = top5.map((p, i) => `
     <div class="top5-row">
       <span>${medals[i]}</span>
-      <span style="flex:1;">${p.name}</span>
-      <span style="color:var(--primary-light);font-weight:700;">${p.total_score.toLocaleString('pl')}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</span>
+      <span style="color:var(--primary-light);font-weight:700;">${p.score.toLocaleString('pl')}</span>
     </div>`).join('');
-}
-
-function subscribeTop5() {
-  if (top5Channel) { top5Channel.unsubscribe(); top5Channel = null; }
-
-  top5Channel = sb.channel(`players-scores:${SESSION_ID}`)
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'players',
-      filter: `session_id=eq.${SESSION_ID}`,
-    }, () => refreshTop5())
-    .subscribe();
 }
 
 // ── End round ─────────────────────────────────────────────────────────────
@@ -399,7 +395,7 @@ async function showResults(questionIndex) {
       : `${Math.round(pin.distance_km)} km`;
     L.marker([midLat, midLng], {
       icon: L.divIcon({
-        html: `<div style="background:rgba(0,0,0,0.78);color:#fff;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;white-space:nowrap;border:1px solid rgba(255,255,255,0.15);">${distKm}</div>`,
+        html: `<div style="background:#fff;color:#111;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,0.35);border:1px solid rgba(0,0,0,0.12);">${distKm}</div>`,
         className: '',
         iconAnchor: [22, 10],
       }),
@@ -425,12 +421,21 @@ async function showResults(questionIndex) {
 async function showLeaderboard(isFinal) {
   await broadcast(gameChannel, 'show_leaderboard', {});
 
-  const { data: ranked } = await sb.from('players')
-    .select('*')
-    .eq('session_id', SESSION_ID)
-    .order('total_score', { ascending: false });
+  // Compute total scores directly from pins — reliable, no RPC dependency
+  const [{ data: playersData }, { data: pinsData }] = await Promise.all([
+    sb.from('players').select('*').eq('session_id', SESSION_ID),
+    sb.from('pins').select('player_id, points').eq('session_id', SESSION_ID),
+  ]);
 
-  if (!ranked) return;
+  if (!playersData) return;
+
+  const byPlayer = {};
+  (pinsData || []).forEach(p => { byPlayer[p.player_id] = (byPlayer[p.player_id] || 0) + (p.points || 0); });
+  const ranked = playersData
+    .map(p => ({ ...p, total_score: byPlayer[p.id] || 0 }))
+    .sort((a, b) => b.total_score - a.total_score);
+
+  if (!ranked.length) return;
 
   hide('screen-results');
   hide('screen-round');

@@ -66,14 +66,15 @@
     }
     /* TOP5 overlay */
     #top5-panel {
-      position: absolute; top: 12px; right: 12px;
-      background: rgba(0,0,0,0.88); backdrop-filter: blur(6px);
-      border: 1.5px solid rgba(233,30,140,0.55); border-radius: 12px;
-      padding: 14px 18px; min-width: 200px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      position: absolute; top: 12px; right: 12px; z-index: 200;
+      background: rgba(10,10,30,0.94); backdrop-filter: blur(8px);
+      border: 2px solid rgba(233,30,140,0.7); border-radius: 14px;
+      padding: 14px 18px; min-width: 210px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.7), 0 0 20px rgba(233,30,140,0.15);
     }
-    #top5-panel h4 { color: var(--primary-light); font-size: 11px; letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 800; }
+    #top5-panel h4 { color: var(--primary-light); font-size: 11px; letter-spacing: 2px; margin-bottom: 10px; font-weight: 800; text-transform: uppercase; }
     .top5-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+    .top5-row:last-child { margin-bottom: 0; }
     /* Answer count overlay — bigger, with names */
     #answer-count-badge {
       position: absolute; bottom: 12px; left: 12px;
