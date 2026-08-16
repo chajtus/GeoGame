@@ -270,6 +270,11 @@ function subscribeAnswerCount(questionIndex) {
         answeredNames.push(player.name);
         $('answered-names').textContent = answeredNames.join(' · ');
       }
+      refreshTop5();
+      // Auto-end round when everyone has answered
+      if (players.length > 0 && answerCount >= players.length) {
+        endRound();
+      }
     })
     .subscribe();
 }

@@ -27,6 +27,20 @@ let playerState = {
 };
 let cameraStream = null;
 
+// ── Session restore (rejoin after accidental refresh) ─────────────────────
+(function tryRestoreSession() {
+  const saved = sessionStorage.getItem('player');
+  if (!saved) return;
+  try {
+    const p = JSON.parse(saved);
+    if (!p.id || !p.name) return;
+    Object.assign(playerState, p);
+    showWaiting();
+    document.querySelector('#screen-waiting .waiting-sub').textContent = 'Łączenie ponownie...';
+    subscribeToGame();
+  } catch { /* ignore parse errors */ }
+})();
+
 // ── AGA FACT ──────────────────────────────────────────────────────────────
 $('fact-text').textContent = AGA_FACTS[Math.floor(Math.random() * AGA_FACTS.length)];
 
@@ -201,6 +215,8 @@ let submitted = false;
 let playerResultMap = null;
 let submittedCountdownInterval = null;
 let lastPlayerCountdownSec = -1;
+let lastDistanceKm = 0;
+let lastPoints = 0;
 
 // ── Round start ───────────────────────────────────────────────────────────
 async function handleRoundStart(payload, showFlash = false) {
@@ -210,6 +226,8 @@ async function handleRoundStart(payload, showFlash = false) {
   currentQuestion = payload;
   playerPinLatLng = null;
   submitted = false;
+  lastDistanceKm = 0;
+  lastPoints = 0;
   hide('player-countdown-overlay');
   lastPlayerCountdownSec = -1;
 
@@ -334,6 +352,8 @@ async function submitAnswer() {
     currentQuestion.lat, currentQuestion.lng
   );
   const points = calculatePoints(distanceKm);
+  lastDistanceKm = distanceKm;
+  lastPoints = points;
 
   await sb.from('pins').insert({
     session_id: SESSION_ID,
@@ -429,13 +449,37 @@ async function initSubmitMiniMap(distanceKm) {
   }, 100);
 }
 
+// ── Show player result map after round ends ───────────────────────────────
+function showPlayerResult() {
+  clearInterval(submittedCountdownInterval);
+  hide('map-submitted-overlay');
+
+  const distLabel = lastDistanceKm < 1
+    ? `${Math.round(lastDistanceKm * 1000)} m od celu`
+    : `${Math.round(lastDistanceKm).toLocaleString('pl')} km od celu`;
+  $('submit-points').textContent = lastPoints > 0 ? `+${lastPoints.toLocaleString('pl')} pkt` : '0 pkt';
+  $('submit-distance').textContent = distLabel;
+  $('submit-location').textContent = currentQuestion?.location_name || '';
+  $('submit-countdown-label').textContent = 'Poczekaj na leaderboard...';
+  $('submit-countdown-secs').textContent = '';
+
+  hide('screen-map');
+  show('screen-submitted');
+  initSubmitMiniMap(lastDistanceKm);
+}
+
 // ── Round end from host ───────────────────────────────────────────────────
 function handleRoundEnd() {
   clearInterval(timerInterval);
+  clearInterval(submittedCountdownInterval);
+  hide('player-countdown-overlay');
   $('player-timer').textContent = 'Czas!';
+  $('player-timer').classList.add('urgent');
+
   if (!submitted) {
-    // Auto-submit now — use [0,0] fallback if no pin placed
     if (!playerPinLatLng) playerPinLatLng = [0, 0];
-    submitAnswer();
+    submitAnswer().then(() => showPlayerResult());
+  } else {
+    showPlayerResult();
   }
 }
