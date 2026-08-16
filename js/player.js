@@ -489,6 +489,11 @@ function showPlayerResult() {
   $('submit-countdown-label').textContent = 'Poczekaj na leaderboard...';
   $('submit-countdown-secs').textContent = '';
 
+  // Random Aga quote while waiting for next round
+  const quote = AGA_FACTS[Math.floor(Math.random() * AGA_FACTS.length)];
+  $('aga-quote-text').textContent = `„${quote}"`;
+  $('aga-quote-author').textContent = '— z archiwum życia Agi 🎂';
+
   hide('screen-map');
   show('screen-submitted');
 

@@ -323,6 +323,25 @@
     }
     #submit-countdown-label { color: var(--text-muted); font-size: 11px; }
     #submit-countdown-secs { color: var(--primary-light); font-size: 16px; font-weight: 800; min-width: 36px; }
+    /* Aga quote — shown while waiting */
+    #aga-quote-box {
+      margin: 0 16px; padding: 14px 18px;
+      background: rgba(233,30,140,0.08); border: 1px solid rgba(233,30,140,0.22);
+      border-radius: 16px; text-align: center;
+    }
+    #aga-quote-label {
+      font-size: 9px; letter-spacing: 2px; font-weight: 700;
+      color: rgba(255,121,198,0.6); text-transform: uppercase; margin-bottom: 8px;
+    }
+    #aga-quote-text {
+      font-family: 'Dancing Script', cursive;
+      font-size: 19px; line-height: 1.45;
+      color: #fff; font-weight: 600;
+    }
+    #aga-quote-author {
+      font-size: 11px; color: rgba(255,121,198,0.7);
+      margin-top: 8px; font-style: italic;
+    }
     /* Mini map fills remaining space — always visible */
     #submit-mini-map {
       flex: 1; min-height: 160px;
@@ -506,6 +525,11 @@
       <div id="submit-countdown-secs"></div>
     </div>
   </div>
+  <div id="aga-quote-box">
+    <div id="aga-quote-label">💬 Cytat z życia Agi</div>
+    <div id="aga-quote-text"></div>
+    <div id="aga-quote-author"></div>
+  </div>
   <!-- Mini map fills remaining space -->
   <div id="submit-mini-map"></div>
 </div>
@@ -513,6 +537,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=11"></script>
+<script type="module" src="js/player.js?v=12"></script>
 </body>
 </html>

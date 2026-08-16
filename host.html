@@ -301,18 +301,18 @@
       background: linear-gradient(160deg, rgba(15,0,45,0.97), rgba(28,0,65,0.97));
       backdrop-filter: blur(12px);
       border: 2px solid rgba(255,215,0,0.4);
-      border-radius: 20px; padding: 18px 24px; min-width: 290px;
-      box-shadow: 0 6px 32px rgba(0,0,0,0.8), 0 0 28px rgba(255,215,0,0.1);
+      border-radius: 22px; padding: 22px 30px; min-width: 380px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.85), 0 0 36px rgba(255,215,0,0.12);
     }
     #top5-panel h4 {
       font-family: 'Cinzel Decorative', serif;
-      font-size: 13px; letter-spacing: 2px; margin-bottom: 14px;
+      font-size: 16px; letter-spacing: 3px; margin-bottom: 18px;
       font-weight: 700; text-transform: uppercase;
       background: linear-gradient(90deg, #ffd700, #ff79c6);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .top5-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 17px; }
+    .top5-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; font-size: 22px; }
     .top5-row:last-child { margin-bottom: 0; }
 
     /* answer count */
@@ -361,29 +361,29 @@
     #location-label .lbl-sub { color: rgba(255,215,0,0.75); font-size: 9px; letter-spacing: 2px; font-weight: 800; }
     #location-label .lbl-name { color: #fff; font-size: 16px; font-weight: 900; }
     #results-side {
-      width: 400px;
+      width: 500px;
       background: linear-gradient(160deg, #080020, #10003a);
       border-left: 2px solid rgba(255,215,0,0.18);
-      padding: 18px; display: flex; flex-direction: column; gap: 8px;
+      padding: 22px; display: flex; flex-direction: column; gap: 10px;
       overflow-y: auto; flex-shrink: 0;
       box-shadow: -4px 0 22px rgba(0,0,0,0.45);
     }
     #results-side h4 {
       font-family: 'Cinzel Decorative', serif;
-      font-size: 13px; letter-spacing: 2px; margin-bottom: 8px;
+      font-size: 16px; letter-spacing: 3px; margin-bottom: 10px;
       font-weight: 700; text-transform: uppercase;
       background: linear-gradient(90deg, #ffd700, #ff79c6);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .result-row {
-      display: flex; align-items: center; gap: 12px;
+      display: flex; align-items: center; gap: 14px;
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,215,0,0.09);
-      padding: 10px 14px; border-radius: 12px; font-size: 14px;
+      padding: 12px 18px; border-radius: 14px; font-size: 18px;
     }
-    .result-row .pts { color: #ffd700; font-weight: 800; font-size: 17px; margin-left: auto; white-space: nowrap; }
-    .result-row .dist-label { color: var(--text-muted); font-size: 12px; margin-top: 1px; }
+    .result-row .pts { color: #ffd700; font-weight: 800; font-size: 22px; margin-left: auto; white-space: nowrap; }
+    .result-row .dist-label { color: var(--text-muted); font-size: 14px; margin-top: 2px; }
 
     /* ══ LEADERBOARD — royal court ════════════════════════════════════ */
     #screen-leaderboard { flex: 1; display: flex; flex-direction: column; }
@@ -610,6 +610,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=12"></script>
+<script type="module" src="js/host.js?v=13"></script>
 </body>
 </html>
