@@ -108,4 +108,135 @@ $('btn-start').addEventListener('click', async () => {
   startRound(0);
 });
 
-function startRound(index) { console.log('startRound stub', index); }
+// ── Round ─────────────────────────────────────────────────────────────────
+async function startRound(index) {
+  currentQuestionIndex = index;
+  const q = questions[index];
+  $('phase-label').textContent = `RUNDA ${index + 1} / ${questions.length}`;
+  $('global-stat').textContent = '';
+
+  // Show photo
+  $('round-photo').src = q.photo_url;
+
+  const durationMs = 30_000;
+  const startedAt = Date.now();
+
+  await broadcast(gameChannel, 'round_start', {
+    question_index: index,
+    lat: q.lat,
+    lng: q.lng,
+    started_at: startedAt,
+    duration_ms: durationMs,
+  });
+
+  $('answer-count-num').textContent = '0';
+  startHostTimer(startedAt, durationMs);
+  pollAnswerCount(index);
+  pollTop5();
+}
+
+// ── Host timer ────────────────────────────────────────────────────────────
+let roundStartedAt = 0;
+let roundDurationMs = 30_000;
+let extraMs = 0;
+let paused = false;
+let pausedAt = 0;
+
+function startHostTimer(startedAt, durationMs) {
+  roundStartedAt = startedAt;
+  roundDurationMs = durationMs;
+  extraMs = 0;
+  paused = false;
+  timerRunning = true;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(tickTimer, 100);
+}
+
+function tickTimer() {
+  if (paused) return;
+  const elapsed = Date.now() - roundStartedAt + extraMs;
+  const remaining = Math.max(0, roundDurationMs - elapsed);
+  const secs = Math.ceil(remaining / 1000);
+  const mins = Math.floor(secs / 60);
+  const s = secs % 60;
+  $('host-timer-display').textContent = `${mins}:${String(s).padStart(2,'0')}`;
+  const pct = (remaining / roundDurationMs) * 100;
+  $('timer-bar').style.width = `${pct}%`;
+  $('timer-bar').style.background = secs <= 10
+    ? 'linear-gradient(90deg,#f44336,#ff5722)'
+    : 'linear-gradient(90deg,var(--primary),var(--primary-light))';
+
+  if (remaining <= 0) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    endRound();
+  }
+}
+
+$('btn-pause').addEventListener('click', () => {
+  if (!timerRunning) return;
+  if (paused) {
+    extraMs -= (Date.now() - pausedAt);
+    paused = false;
+    $('btn-pause').textContent = '⏸ PAUZA';
+  } else {
+    pausedAt = Date.now();
+    paused = true;
+    $('btn-pause').textContent = '▶ WZNÓW';
+  }
+});
+
+$('btn-add-time').addEventListener('click', () => {
+  roundDurationMs += 30_000;
+});
+
+$('btn-end-round').addEventListener('click', () => {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  endRound();
+});
+
+// ── Live answer count ─────────────────────────────────────────────────────
+let answerPollInterval = null;
+function pollAnswerCount(questionIndex) {
+  clearInterval(answerPollInterval);
+  answerPollInterval = setInterval(async () => {
+    const { count } = await sb.from('pins')
+      .select('id', { count: 'exact', head: true })
+      .eq('session_id', SESSION_ID)
+      .eq('question_index', questionIndex);
+    $('answer-count-num').textContent = count || 0;
+    $('global-stat').textContent = `${count || 0}/${players.length} odpowiedziało`;
+  }, 1500);
+}
+
+// ── Live TOP5 ─────────────────────────────────────────────────────────────
+let top5PollInterval = null;
+function pollTop5() {
+  clearInterval(top5PollInterval);
+  top5PollInterval = setInterval(async () => {
+    const { data } = await sb.from('players')
+      .select('name, total_score, avatar_data_url, initials, avatar_color')
+      .eq('session_id', SESSION_ID)
+      .order('total_score', { ascending: false })
+      .limit(5);
+    if (!data) return;
+    const medals = ['🥇','🥈','🥉','4.','5.'];
+    $('top5-list').innerHTML = data.map((p, i) => `
+      <div class="top5-row">
+        <span>${medals[i]}</span>
+        <span style="flex:1;">${p.name}</span>
+        <span style="color:var(--primary-light);font-weight:700;">${p.total_score.toLocaleString('pl')}</span>
+      </div>`).join('');
+  }, 2000);
+}
+
+// ── End round ─────────────────────────────────────────────────────────────
+async function endRound() {
+  clearInterval(answerPollInterval);
+  clearInterval(top5PollInterval);
+  await broadcast(gameChannel, 'round_end', {});
+  await showResults(currentQuestionIndex);
+}
+
+async function showResults(index) { console.log('showResults stub', index); }
