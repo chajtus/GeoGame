@@ -301,7 +301,11 @@ async function endRound() {
   clearInterval(heartbeatInterval);
   hide('host-countdown-overlay');
   if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
-  await broadcast(gameChannel, 'round_end', {});
+  // Broadcast with 2s timeout — showResults must always run even on network hiccup
+  await Promise.race([
+    broadcast(gameChannel, 'round_end', {}).catch(() => null),
+    new Promise(r => setTimeout(r, 2000)),
+  ]);
   await showResults(currentQuestionIndex);
 }
 
