@@ -239,4 +239,92 @@ async function endRound() {
   await showResults(currentQuestionIndex);
 }
 
-async function showResults(index) { console.log('showResults stub', index); }
+// ── Results ───────────────────────────────────────────────────────────────
+async function showResults(questionIndex) {
+  const q = questions[questionIndex];
+
+  hide('screen-round');
+  show('screen-results');
+  $('phase-label').textContent = `WYNIKI ${questionIndex + 1}/${questions.length}`;
+  $('location-name-text').textContent = q.location_name;
+  $('results-file-label').textContent = `📷 Lokalizacja z EXIF GPS`;
+
+  // Determine next action label
+  const isLast = questionIndex + 1 >= questions.length;
+  const isLeaderboard = (questionIndex + 1) % 5 === 0;
+  $('btn-next-question').textContent = isLast
+    ? '🏆 WYNIKI KOŃCOWE'
+    : isLeaderboard
+    ? '🏆 RANKING'
+    : `▶ PYTANIE ${questionIndex + 2}`;
+
+  // Init / reset results map
+  if (resultsMap) { resultsMap.remove(); resultsMap = null; }
+  // Wait for DOM
+  await new Promise(r => setTimeout(r, 50));
+  resultsMap = initMap('results-map', { center: [q.lat, q.lng], zoom: 4 });
+
+  // True location marker
+  createTrueLocationMarker(resultsMap, q.lat, q.lng);
+
+  // Fetch all pins for this question
+  const { data: pins } = await sb.from('pins')
+    .select('*, players(name, avatar_data_url, initials, avatar_color)')
+    .eq('session_id', SESSION_ID)
+    .eq('question_index', questionIndex)
+    .order('points', { ascending: false });
+
+  if (!pins) return;
+
+  // Render side panel
+  $('results-list').innerHTML = pins.map((pin, i) => {
+    const p = pin.players;
+    const avatar = p.avatar_data_url
+      ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+      : `<span style="font-size:9px;font-weight:700;color:#fff;">${p.initials}</span>`;
+    const dist = pin.distance_km < 1
+      ? `${Math.round(pin.distance_km * 1000)} m`
+      : `${Math.round(pin.distance_km).toLocaleString('pl')} km`;
+    return `
+      <div class="result-row">
+        <div class="avatar-circle" style="width:24px;height:24px;background:${p.avatar_color};">${avatar}</div>
+        <div style="flex:1;">
+          <div>${p.name}</div>
+          <div style="color:var(--text-muted);font-size:9px;">${dist}</div>
+        </div>
+        <div class="pts">+${pin.points.toLocaleString('pl')}</div>
+      </div>`;
+  }).join('');
+
+  // Fit map to show all pins + true location
+  const allLatLngs = [[q.lat, q.lng], ...pins.map(p => [p.lat, p.lng])];
+  if (allLatLngs.length > 1) {
+    resultsMap.fitBounds(L.latLngBounds(allLatLngs), { padding: [40, 40] });
+  }
+
+  // Add player pins + polylines
+  pins.forEach(pin => {
+    addPlayerPin(resultsMap, pin.players, pin.lat, pin.lng, pin.distance_km);
+    drawPolyline(
+      resultsMap,
+      [pin.lat, pin.lng],
+      [q.lat, q.lng],
+      pin.players.avatar_color
+    );
+  });
+
+  // Next question button
+  $('btn-next-question').onclick = () => {
+    hide('screen-results');
+    if (isLast) {
+      showLeaderboard(true);
+    } else if (isLeaderboard) {
+      showLeaderboard(false);
+    } else {
+      show('screen-round');
+      startRound(questionIndex + 1);
+    }
+  };
+}
+
+function showLeaderboard(isFinal) { console.log('showLeaderboard stub', isFinal); }
