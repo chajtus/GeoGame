@@ -104,6 +104,14 @@
       border-bottom: 2px solid rgba(255,215,0,0.3);
       box-shadow: 0 3px 22px rgba(0,0,0,0.6), 0 1px 0 rgba(255,215,0,0.12);
       padding: 8px 22px;
+      position: relative; /* needed for absolute phase-label */
+    }
+    #phase-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
     }
     .top-bar-logo {
       display: flex; align-items: center; gap: 10px;
@@ -625,6 +633,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=15"></script>
+<script type="module" src="js/host.js?v=16"></script>
 </body>
 </html>
