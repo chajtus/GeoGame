@@ -138,11 +138,15 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* MAP */
-    #screen-map { flex: 1; display: flex; flex-direction: column; }
+    #screen-map {
+      flex: 1; display: flex; flex-direction: column;
+      min-height: 0; overflow: hidden; /* prevent map from expanding past viewport */
+    }
     #map-top-bar {
       background: #1a0030; padding: 10px 16px;
       display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
       border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 1001; /* stays visible when map zooms */
     }
     /* BOLDER: round label — bigger, stronger */
     #round-label { color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 14px rgba(233,30,140,0.7); }
@@ -155,7 +159,7 @@
     #player-timer.urgent { background: var(--red); animation: pulse 0.5s ease-in-out infinite alternate; box-shadow: 0 2px 12px rgba(244,67,54,0.7); }
     @keyframes pulse { to { opacity: 0.65; } }
     #leader-label { color: var(--text-muted); font-size: 11px; }
-    #map { flex: 1; }
+    #map { flex: 1; min-height: 0; overflow: hidden; }
     #map-hint {
       position: absolute; bottom: calc(80px + env(safe-area-inset-bottom, 16px)); left: 50%; transform: translateX(-50%);
       background: rgba(0,0,0,0.82); color: #ccc; padding: 8px 16px;
@@ -506,6 +510,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=8"></script>
+<script type="module" src="js/player.js?v=9"></script>
 </body>
 </html>

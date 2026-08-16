@@ -453,13 +453,13 @@ async function initSubmitMiniMap(distanceKm) {
     color: '#ff79c6', weight: 2, opacity: 0.8, dashArray: '6, 4',
   }).addTo(playerResultMap);
 
-  // Km label at midpoint — transform:translateX(-50%) centers it over the marker point
+  // Km label at midpoint — pill above the line, centered
   const distKm = distanceKm < 1
     ? `${Math.round(distanceKm * 1000)} m`
     : `${Math.round(distanceKm).toLocaleString('pl')} km`;
   L.marker([midLat, midLng], {
     icon: L.divIcon({
-      html: `<div style="transform:translateX(-50%);background:#fff;color:#111;border:1.5px solid #ddd;padding:5px 12px;border-radius:8px;font-size:13px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.25);">📍 ${distKm} w linii prostej</div>`,
+      html: `<div style="transform:translate(-50%,-120%);background:rgba(10,0,30,0.92);color:#ff79c6;border:2px solid rgba(255,121,198,0.5);padding:5px 14px;border-radius:20px;font-size:13px;font-weight:800;white-space:nowrap;box-shadow:0 3px 14px rgba(0,0,0,0.6);pointer-events:none;">📏 ${distKm}</div>`,
       className: '', iconSize: [0, 0], iconAnchor: [0, 0],
     }),
     interactive: false,
