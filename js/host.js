@@ -37,6 +37,7 @@ let prevRankings = [];
 let resultsMap = null;
 let heartbeatInterval = null;
 let lastCountdownSec = -1;
+let roundEnding = false;
 
 // ── Init ──────────────────────────────────────────────────────────────────
 await loadQuestions();
@@ -116,6 +117,7 @@ $('btn-start-test').addEventListener('click', startGame);
 
 // ── Round ─────────────────────────────────────────────────────────────────
 async function startRound(index) {
+  roundEnding = false;
   currentQuestionIndex = index;
   const q = questions[index];
   $('phase-label').textContent = `RUNDA ${index + 1} / ${questions.length}`;
@@ -271,6 +273,7 @@ function subscribeAnswerCount(questionIndex) {
         $('answered-names').textContent = answeredNames.join(' · ');
       }
       refreshTop5();
+      broadcast(gameChannel, 'player_answered', { answered: answerCount, total: players.length }).catch(() => null);
       // Auto-end round when everyone has answered
       if (players.length > 0 && answerCount >= players.length) {
         endRound();
@@ -303,6 +306,10 @@ async function refreshTop5() {
 
 // ── End round ─────────────────────────────────────────────────────────────
 async function endRound() {
+  if (roundEnding) return;
+  roundEnding = true;
+  clearInterval(timerInterval);
+  timerRunning = false;
   clearInterval(heartbeatInterval);
   hide('host-countdown-overlay');
   if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }

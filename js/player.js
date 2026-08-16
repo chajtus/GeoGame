@@ -27,20 +27,6 @@ let playerState = {
 };
 let cameraStream = null;
 
-// ── Session restore (rejoin after accidental refresh) ─────────────────────
-(function tryRestoreSession() {
-  const saved = sessionStorage.getItem('player');
-  if (!saved) return;
-  try {
-    const p = JSON.parse(saved);
-    if (!p.id || !p.name) return;
-    Object.assign(playerState, p);
-    showWaiting();
-    document.querySelector('#screen-waiting .waiting-sub').textContent = 'Łączenie ponownie...';
-    subscribeToGame();
-  } catch { /* ignore parse errors */ }
-})();
-
 // ── AGA FACT ──────────────────────────────────────────────────────────────
 $('fact-text').textContent = AGA_FACTS[Math.floor(Math.random() * AGA_FACTS.length)];
 
@@ -191,6 +177,11 @@ function subscribeToGame() {
         currentQuestion.started_at = payload.started_at;
         currentQuestion.duration_ms = payload.duration_ms;
         startPlayerTimer(payload.started_at, payload.duration_ms);
+      }
+    })
+    .on('broadcast', { event: 'player_answered' }, ({ payload }) => {
+      if (!$('map-submitted-overlay').classList.contains('hidden')) {
+        $('overlay-count').textContent = `${payload.answered} / ${payload.total} odpowiedziało`;
       }
     })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
@@ -467,6 +458,21 @@ function showPlayerResult() {
   show('screen-submitted');
   initSubmitMiniMap(lastDistanceKm);
 }
+
+// ── Session restore (rejoin after accidental refresh) ─────────────────────
+// Must run after all let declarations to avoid TDZ errors
+(function tryRestoreSession() {
+  const saved = sessionStorage.getItem('player');
+  if (!saved) return;
+  try {
+    const p = JSON.parse(saved);
+    if (!p.id || !p.name) return;
+    Object.assign(playerState, p);
+    showWaiting();
+    document.querySelector('#screen-waiting .waiting-sub').textContent = 'Łączenie ponownie...';
+    subscribeToGame();
+  } catch { /* ignore */ }
+})();
 
 // ── Round end from host ───────────────────────────────────────────────────
 function handleRoundEnd() {
