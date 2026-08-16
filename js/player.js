@@ -477,12 +477,15 @@ function showPlayerResult() {
   clearInterval(submittedCountdownInterval);
   hide('map-submitted-overlay');
 
-  const distLabel = lastDistanceKm < 1
-    ? `${Math.round(lastDistanceKm * 1000)} m od celu`
-    : `${Math.round(lastDistanceKm).toLocaleString('pl')} km od celu`;
+  const noPin = !playerPinLatLng && lastDistanceKm === 0 && lastPoints === 0;
+  const distLabel = noPin
+    ? '😅 Nie zaznaczyłeś miejsca'
+    : lastDistanceKm < 1
+      ? `${Math.round(lastDistanceKm * 1000)} m od celu`
+      : `${Math.round(lastDistanceKm).toLocaleString('pl')} km od celu`;
   $('submit-points').textContent = lastPoints > 0 ? `+${lastPoints.toLocaleString('pl')} pkt` : '0 pkt';
   $('submit-distance').textContent = distLabel;
-  $('submit-location').textContent = currentQuestion?.location_name || '';
+  $('submit-location').textContent = noPin ? '' : (currentQuestion?.location_name || '');
   $('submit-countdown-label').textContent = 'Poczekaj na leaderboard...';
   $('submit-countdown-secs').textContent = '';
 
@@ -521,8 +524,15 @@ function handleRoundEnd() {
   $('player-timer').classList.add('urgent');
 
   if (!submitted) {
-    if (!playerPinLatLng) playerPinLatLng = [0, 0];
-    submitAnswer().then(() => showPlayerResult());
+    if (!playerPinLatLng) {
+      // No pin placed — skip DB insert, show 0 points directly
+      submitted = true;
+      lastDistanceKm = 0;
+      lastPoints = 0;
+      showPlayerResult();
+    } else {
+      submitAnswer().then(() => showPlayerResult());
+    }
   } else {
     showPlayerResult();
   }

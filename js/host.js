@@ -129,7 +129,8 @@ async function startRound(index) {
   const durationMs = 30_000;
   const startedAt = Date.now();
 
-  const roundPayload = {
+  // Use let so we can update started_at/duration_ms on pause/extend — heartbeat broadcasts current state
+  let roundPayload = {
     question_index: index,
     lat: q.lat,
     lng: q.lng,
@@ -141,11 +142,17 @@ async function startRound(index) {
 
   await broadcast(gameChannel, 'round_start', roundPayload);
 
-  // Heartbeat every 5s — catches players who missed round_start (e.g. channel reconnect)
+  // Heartbeat every 2s — catches players who missed round_start (e.g. page refresh)
+  // Always reflects current started_at/duration_ms so timer syncs correctly
   clearInterval(heartbeatInterval);
   heartbeatInterval = setInterval(() => {
+    // Keep heartbeat payload in sync with current timer state (accounts for pauses/extensions)
+    const effectiveStartedAt = roundStartedAt - extraMs;
+    if (roundPayload.started_at !== effectiveStartedAt || roundPayload.duration_ms !== roundDurationMs) {
+      roundPayload = { ...roundPayload, started_at: effectiveStartedAt, duration_ms: roundDurationMs };
+    }
     broadcast(gameChannel, 'round_heartbeat', roundPayload).catch(() => null);
-  }, 5000);
+  }, 2000);
 
   $('answer-count-num').textContent = '0';
   $('top5-list').innerHTML = '<div style="color:var(--text-muted);font-size:11px;text-align:center;padding:8px 0;">Brak danych z poprzednich rund</div>';

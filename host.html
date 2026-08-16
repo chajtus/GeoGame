@@ -301,18 +301,18 @@
       background: linear-gradient(160deg, rgba(15,0,45,0.97), rgba(28,0,65,0.97));
       backdrop-filter: blur(12px);
       border: 2px solid rgba(255,215,0,0.4);
-      border-radius: 18px; padding: 14px 18px; min-width: 215px;
+      border-radius: 20px; padding: 18px 24px; min-width: 290px;
       box-shadow: 0 6px 32px rgba(0,0,0,0.8), 0 0 28px rgba(255,215,0,0.1);
     }
     #top5-panel h4 {
       font-family: 'Cinzel Decorative', serif;
-      font-size: 10px; letter-spacing: 2px; margin-bottom: 10px;
+      font-size: 13px; letter-spacing: 2px; margin-bottom: 14px;
       font-weight: 700; text-transform: uppercase;
       background: linear-gradient(90deg, #ffd700, #ff79c6);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .top5-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+    .top5-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; font-size: 17px; }
     .top5-row:last-child { margin-bottom: 0; }
 
     /* answer count */
@@ -320,11 +320,11 @@
       position: absolute; bottom: 12px; left: 12px;
       background: linear-gradient(160deg, rgba(8,0,30,0.96), rgba(18,0,50,0.96));
       border: 1px solid rgba(255,215,0,0.28);
-      border-radius: 14px; padding: 10px 16px; max-width: 300px;
+      border-radius: 16px; padding: 14px 20px; max-width: 420px;
       box-shadow: 0 4px 22px rgba(0,0,0,0.7), 0 0 14px rgba(255,215,0,0.07);
     }
-    #answer-count-line { font-size: 14px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
-    #answered-names { font-size: 10px; color: rgba(255,215,0,0.75); margin-top: 5px; line-height: 1.55; word-break: break-word; }
+    #answer-count-line { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+    #answered-names { font-size: 13px; color: rgba(255,215,0,0.75); margin-top: 6px; line-height: 1.6; word-break: break-word; }
 
     /* bottom bar */
     #round-bottom {
@@ -361,29 +361,29 @@
     #location-label .lbl-sub { color: rgba(255,215,0,0.75); font-size: 9px; letter-spacing: 2px; font-weight: 800; }
     #location-label .lbl-name { color: #fff; font-size: 16px; font-weight: 900; }
     #results-side {
-      width: 310px;
+      width: 400px;
       background: linear-gradient(160deg, #080020, #10003a);
       border-left: 2px solid rgba(255,215,0,0.18);
-      padding: 14px; display: flex; flex-direction: column; gap: 6px;
+      padding: 18px; display: flex; flex-direction: column; gap: 8px;
       overflow-y: auto; flex-shrink: 0;
       box-shadow: -4px 0 22px rgba(0,0,0,0.45);
     }
     #results-side h4 {
       font-family: 'Cinzel Decorative', serif;
-      font-size: 10px; letter-spacing: 2px; margin-bottom: 6px;
+      font-size: 13px; letter-spacing: 2px; margin-bottom: 8px;
       font-weight: 700; text-transform: uppercase;
       background: linear-gradient(90deg, #ffd700, #ff79c6);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .result-row {
-      display: flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; gap: 12px;
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(255,215,0,0.09);
-      padding: 8px 12px; border-radius: 10px; font-size: 11px;
+      padding: 10px 14px; border-radius: 12px; font-size: 14px;
     }
-    .result-row .pts { color: #ffd700; font-weight: 800; font-size: 13px; margin-left: auto; white-space: nowrap; }
-    .result-row .dist-label { color: var(--text-muted); font-size: 10px; margin-top: 1px; }
+    .result-row .pts { color: #ffd700; font-weight: 800; font-size: 17px; margin-left: auto; white-space: nowrap; }
+    .result-row .dist-label { color: var(--text-muted); font-size: 12px; margin-top: 1px; }
 
     /* ══ LEADERBOARD — royal court ════════════════════════════════════ */
     #screen-leaderboard { flex: 1; display: flex; flex-direction: column; }
@@ -610,6 +610,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=10"></script>
+<script type="module" src="js/host.js?v=11"></script>
 </body>
 </html>
