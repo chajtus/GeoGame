@@ -147,6 +147,32 @@
       border-radius: 8px; font-size: 13px; white-space: nowrap; pointer-events: none; z-index: 1000;
       border: 1px solid rgba(255,255,255,0.1);
     }
+    /* Submitted overlay — dims the map, keeps it visible underneath */
+    #map-submitted-overlay {
+      position: absolute; inset: 0; z-index: 400;
+      background: rgba(5,0,20,0.78); backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      padding-bottom: calc(64px + env(safe-area-inset-bottom, 16px));
+    }
+    #map-submitted-card {
+      background: rgba(13,10,30,0.95); border: 2px solid var(--primary);
+      border-radius: 22px; padding: 28px 26px;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      text-align: center; width: min(340px, 88vw);
+      box-shadow: 0 8px 40px rgba(233,30,140,0.3);
+    }
+    #overlay-check { color: var(--green); font-size: 13px; font-weight: 700; letter-spacing: 1px; }
+    #overlay-points {
+      font-size: 54px; font-weight: 900; line-height: 1;
+      background: linear-gradient(135deg, var(--primary-light), var(--gold));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    #overlay-distance { color: #bbb; font-size: 15px; }
+    #overlay-location { color: var(--primary-light); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+    #overlay-divider { width: 50px; height: 2px; background: var(--border); border-radius: 2px; }
+    #overlay-waiting { color: var(--text-muted); font-size: 13px; }
+    #overlay-countdown { color: var(--primary-light); font-size: 18px; font-weight: 800; min-height: 24px; }
+
     /* Fixed bottom bar — always above navigation bar */
     #map-submit-bar {
       position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
@@ -318,6 +344,19 @@
   </div>
   <div id="map"></div>
   <div id="map-hint">Dotknij mapę aby postawić pinezkę 📍</div>
+  <!-- Submitted overlay — appears over the dimmed map after answering -->
+  <div id="map-submitted-overlay" class="hidden">
+    <div id="map-submitted-card">
+      <div id="overlay-check">✓ ODPOWIEDŹ WYSŁANA</div>
+      <div id="overlay-points">—</div>
+      <div id="overlay-distance"></div>
+      <div id="overlay-location"></div>
+      <div id="overlay-divider"></div>
+      <div class="spinner"></div>
+      <div id="overlay-waiting">Czekam na innych graczy...</div>
+      <div id="overlay-countdown"></div>
+    </div>
+  </div>
   <div id="player-countdown-overlay" class="hidden">
     <div class="countdown-num" id="player-countdown-number"></div>
   </div>

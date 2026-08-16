@@ -206,6 +206,7 @@ async function handleRoundStart(payload, showFlash = false) {
     $('flash-photo').src = payload.photo_url;
     hide('screen-waiting');
     hide('screen-submitted');
+    hide('map-submitted-overlay');
     hide('screen-map');
     show('screen-round-flash');
     await new Promise(r => setTimeout(r, 2200));
@@ -213,6 +214,7 @@ async function handleRoundStart(payload, showFlash = false) {
   } else {
     hide('screen-waiting');
     hide('screen-submitted');
+    hide('map-submitted-overlay');
     hide('screen-round-flash');
   }
 
@@ -334,23 +336,21 @@ async function submitAnswer() {
   await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
     .catch(() => null);
 
-  // Show result summary
+  // Show overlay over the (now dimmed) map
   const distLabel = distanceKm < 1
     ? `${Math.round(distanceKm * 1000)} m od celu`
     : `${Math.round(distanceKm).toLocaleString('pl')} km od celu`;
 
-  $('submit-points').textContent = points > 0 ? `+${points.toLocaleString('pl')}` : '0';
-  $('submit-distance').textContent = distLabel;
-  $('submit-location').textContent = currentQuestion.location_name || '';
+  $('overlay-points').textContent = points > 0 ? `+${points.toLocaleString('pl')}` : '0 pkt';
+  $('overlay-distance').textContent = distLabel;
+  $('overlay-location').textContent = currentQuestion.location_name || '';
+  $('overlay-countdown').textContent = '';
 
-  hide('screen-map');
-  show('screen-submitted');
+  show('map-submitted-overlay');
+  $('btn-submit').textContent = '✓ Wysłano';
+  $('btn-submit').disabled = true;
 
-  // Countdown to round end
   startSubmittedCountdown();
-
-  // Mini map showing player pin vs correct location
-  initSubmitMiniMap(distanceKm).catch(() => null);
 }
 
 function startSubmittedCountdown() {
@@ -360,14 +360,14 @@ function startSubmittedCountdown() {
     const remaining = Math.max(0, q.duration_ms - (Date.now() - new Date(q.started_at).getTime()));
     const secs = Math.ceil(remaining / 1000);
     if (secs > 0) {
-      $('submit-countdown-secs').textContent = `${secs}s`;
-      $('submit-countdown-label').textContent = 'Czekam na innych graczy';
+      $('overlay-countdown').textContent = `${secs}s`;
+      $('overlay-waiting').textContent = 'Czekam na innych graczy...';
     } else {
-      $('submit-countdown-secs').textContent = '';
-      $('submit-countdown-label').textContent = 'Czekam na wyniki...';
+      $('overlay-countdown').textContent = '';
+      $('overlay-waiting').textContent = 'Czekam na wyniki...';
       clearInterval(submittedCountdownInterval);
     }
-  }, 250);
+  }, 100);
 }
 
 async function initSubmitMiniMap(distanceKm) {
