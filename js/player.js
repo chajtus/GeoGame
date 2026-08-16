@@ -32,7 +32,9 @@ $('fact-text').textContent = AGA_FACTS[Math.floor(Math.random() * AGA_FACTS.leng
 
 // ── Name input ────────────────────────────────────────────────────────────
 $('name-input').addEventListener('input', () => {
-  $('btn-join').disabled = $('name-input').value.trim().length < 2;
+  const name = $('name-input').value.trim();
+  $('btn-join').disabled = name.length < 2;
+  if (!playerState.avatarDataUrl) renderAvatarPreview();
 });
 
 // ── Selfie flow ───────────────────────────────────────────────────────────
@@ -77,13 +79,19 @@ $('btn-skip-avatar').addEventListener('click', () => {
 
 function renderAvatarPreview() {
   const el = $('avatar-preview');
+  const name = $('name-input').value.trim();
+  const initials = name ? getInitials(name) : '?';
+
   if (playerState.avatarDataUrl) {
     el.innerHTML = `<img src="${playerState.avatarDataUrl}" alt="selfie">`;
+    el.style.background = 'transparent';
     el.classList.add('has-photo');
     show('retake-hint');
     hide('btn-skip-avatar');
   } else {
-    el.innerHTML = `<span>📷</span><span style="font-size:8px;color:var(--text-muted)">avatar</span>`;
+    // Show initials circle — feels like a real avatar, not a broken state
+    el.style.background = playerState.avatarColor;
+    el.innerHTML = `<span style="font-size:28px;font-weight:800;color:#fff;line-height:1;">${initials}</span>`;
     el.classList.remove('has-photo');
     hide('retake-hint');
     show('btn-skip-avatar');

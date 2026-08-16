@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <title>AGA TIMES GEOGUESSER</title>
@@ -13,49 +13,81 @@
 
     /* LOGIN */
     #screen-login {
-      flex: 1; background: linear-gradient(180deg, #1a0030 0%, var(--bg) 100%);
-      display: flex; flex-direction: column; overflow: hidden;
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      background: linear-gradient(180deg, #1a0030 0%, #0d0d1a 100%);
     }
-    #login-scroll {
-      flex: 1; overflow-y: auto; display: flex; flex-direction: column;
-      align-items: center; padding: 20px 20px 12px; gap: 14px;
-    }
-    #login-footer {
-      padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
-      background: linear-gradient(0deg, #0d0d1a 70%, transparent);
+
+    /* Hero header — Aga photo + title */
+    #login-hero {
       flex-shrink: 0;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 24px 24px 16px;
+      background: linear-gradient(180deg, #2a0050 0%, #1a0030 100%);
+      gap: 10px;
     }
-    #screen-login .logo-text { font-size: 11px; text-align: center; }
-    #aga-avatar { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary-light); object-fit: cover; box-shadow: 0 0 24px rgba(233,30,140,0.5); }
-    .login-title { color: #fff; font-size: 15px; font-weight: 700; text-align: center; }
-    .login-sub { color: var(--text-muted); font-size: 11px; text-align: center; }
+    #screen-login .logo-text { font-size: 11px; letter-spacing: 2px; }
+    #aga-avatar {
+      width: 120px; height: 120px; border-radius: 50%;
+      border: 3px solid var(--primary-light); object-fit: cover;
+      box-shadow: 0 0 40px rgba(233,30,140,0.6), 0 0 80px rgba(156,39,176,0.3);
+    }
+    .login-title { color: #fff; font-size: 20px; font-weight: 700; text-align: center; }
+    .login-sub { color: var(--primary-light); font-size: 13px; text-align: center; }
+
+    /* Scrollable form */
+    #login-scroll {
+      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 20px 24px 8px; gap: 16px;
+    }
+
+    /* Avatar selfie */
     #avatar-preview {
-      width: 72px; height: 72px; border-radius: 50%;
+      width: 88px; height: 88px; border-radius: 50%;
       border: 2px dashed var(--border); background: var(--bg-mid);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      font-size: 22px; gap: 2px; overflow: hidden;
+      font-size: 28px; gap: 3px; overflow: hidden; flex-shrink: 0;
     }
     #avatar-preview.has-photo { border-style: solid; border-color: var(--primary); }
     #avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-    .avatar-actions { display: flex; gap: 8px; }
-    .field-label { color: var(--primary-light); font-size: 9px; letter-spacing: 1px; font-weight: 600; }
+    .avatar-actions { display: flex; gap: 10px; }
+    .avatar-actions .btn { font-size: 13px; padding: 10px 16px; }
+
+    /* Name field */
+    .field-label { color: var(--primary-light); font-size: 10px; letter-spacing: 1.5px; font-weight: 700; }
     #name-input {
-      width: 100%; background: var(--bg-mid); border: 1.5px solid var(--border);
-      border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 16px; outline: none;
+      width: 100%; background: var(--bg-mid); border: 2px solid var(--border);
+      border-radius: 12px; padding: 14px 18px; color: #fff;
+      font-size: 18px; outline: none; font-weight: 600;
     }
-    #name-input:focus { border-color: var(--primary); }
-    .fact-box { width: 100%; background: #1a0030; border: 1px solid rgba(233,30,140,0.3); border-radius: 10px; padding: 12px 14px; }
-    .fact-label { color: var(--primary-light); font-size: 9px; font-weight: 700; margin-bottom: 5px; letter-spacing: 1px; }
-    .fact-text { color: #ddd; font-size: 11px; line-height: 1.5; }
+    #name-input::placeholder { color: #555; font-weight: 400; }
+    #name-input:focus { border-color: var(--primary); background: #1a0a2a; }
+
+    /* AGA FACT */
+    .fact-box {
+      width: 100%; background: rgba(233,30,140,0.08);
+      border: 1px solid rgba(233,30,140,0.25); border-radius: 12px; padding: 14px 16px;
+    }
+    .fact-label { color: var(--primary-light); font-size: 10px; font-weight: 700; margin-bottom: 6px; letter-spacing: 1px; }
+    .fact-text { color: #ccc; font-size: 13px; line-height: 1.6; }
+
+    /* Sticky join button */
+    #login-footer {
+      flex-shrink: 0;
+      padding: 14px 24px calc(14px + env(safe-area-inset-bottom, 16px));
+      background: linear-gradient(0deg, #0d0d1a 60%, transparent);
+    }
     #btn-join {
-      width: 100%; font-size: 17px; padding: 16px 24px;
-      box-shadow: 0 6px 24px rgba(233,30,140,0.55);
+      width: 100%; font-size: 18px; font-weight: 800;
+      padding: 18px 24px; border-radius: 14px;
+      box-shadow: 0 8px 28px rgba(233,30,140,0.5);
       letter-spacing: 0.5px;
     }
     #btn-join:not(:disabled) { animation: glow-pulse 2s ease-in-out infinite; }
+    #btn-join:disabled { opacity: 0.35; }
     @keyframes glow-pulse {
-      0%, 100% { box-shadow: 0 6px 24px rgba(233,30,140,0.55); }
-      50% { box-shadow: 0 6px 36px rgba(233,30,140,0.85), 0 0 0 4px rgba(233,30,140,0.15); }
+      0%, 100% { box-shadow: 0 8px 28px rgba(233,30,140,0.5); }
+      50% { box-shadow: 0 8px 40px rgba(233,30,140,0.9), 0 0 0 5px rgba(233,30,140,0.12); }
     }
 
     /* CAMERA */
@@ -113,24 +145,24 @@
 
 <!-- LOGIN -->
 <div id="screen-login">
-  <div id="login-scroll">
+  <div id="login-hero">
     <div class="logo-text">🎂 AGA TIMES GEOGUESSER</div>
     <img id="aga-avatar" src="assets/aga-login.jpg" alt="Aga" onerror="this.style.display='none'">
-    <div>
-      <div class="login-title">Witaj w grze Agi!</div>
-      <div class="login-sub">Zgadnij gdzie była 📍</div>
-    </div>
+    <div class="login-title">Witaj w grze Agi!</div>
+    <div class="login-sub">Zgadnij gdzie była 📍</div>
+  </div>
+  <div id="login-scroll">
     <div id="avatar-preview">
       <span>📷</span>
-      <span style="font-size:8px;color:var(--text-muted)">avatar</span>
+      <span style="font-size:9px;color:var(--text-muted)">avatar</span>
     </div>
     <div class="avatar-actions">
-      <button class="btn btn--primary" id="btn-selfie" style="font-size:11px;padding:8px 14px;">📸 ZRÓB SELFIE</button>
-      <button class="btn btn--secondary" id="btn-skip-avatar" style="font-size:11px;padding:8px 14px;">pomiń →</button>
+      <button class="btn btn--primary" id="btn-selfie">📸 SELFIE</button>
+      <button class="btn btn--secondary" id="btn-skip-avatar">bez zdjęcia →</button>
     </div>
-    <small id="retake-hint" class="hidden" style="color:var(--primary-light);font-size:10px;cursor:pointer;text-decoration:underline;">📸 zrób ponownie</small>
+    <small id="retake-hint" class="hidden" style="color:var(--primary-light);font-size:11px;cursor:pointer;text-decoration:underline;">📸 zrób ponownie</small>
     <div style="width:100%">
-      <div class="field-label" style="margin-bottom:5px;">TWOJE IMIĘ</div>
+      <div class="field-label" style="margin-bottom:8px;">TWOJE IMIĘ</div>
       <input id="name-input" type="text" placeholder="Wpisz imię..." maxlength="20" autocomplete="off" inputmode="text">
     </div>
     <div class="fact-box">
