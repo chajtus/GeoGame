@@ -152,9 +152,15 @@ function subscribeToGame() {
   gameChannel = sb.channel(`game:${SESSION_ID}`, { config: { broadcast: { self: false } } });
   gameChannel
     .on('broadcast', { event: 'round_start' }, ({ payload }) => handleRoundStart(payload))
+    .on('broadcast', { event: 'round_heartbeat' }, ({ payload }) => {
+      // Fallback: arrived if player missed round_start (channel reconnect etc.)
+      if (!currentQuestion || currentQuestion.question_index !== payload.question_index) {
+        handleRoundStart(payload);
+      }
+    })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
-    .on('broadcast', { event: 'next_question' }, ({ payload }) => handleRoundStart(payload))
     .on('broadcast', { event: 'show_leaderboard' }, () => {
+      clearInterval(submittedCountdownInterval);
       hide('screen-submitted');
       hide('screen-map');
       show('screen-waiting');
@@ -170,9 +176,15 @@ let playerPinLatLng = null;
 let currentQuestion = null;
 let timerInterval = null;
 let submitted = false;
+let playerResultMap = null;
+let submittedCountdownInterval = null;
+let lastPlayerCountdownSec = -1;
 
 // ── Round start ───────────────────────────────────────────────────────────
 async function handleRoundStart(payload) {
+  clearInterval(submittedCountdownInterval);
+  if (playerResultMap) { playerResultMap.remove(); playerResultMap = null; }
+
   currentQuestion = payload;
   hide('screen-waiting');
   hide('screen-submitted');
@@ -183,6 +195,8 @@ async function handleRoundStart(payload) {
   $('btn-submit').textContent = '✅ ZATWIERDŹ ODPOWIEDŹ';
   playerPinLatLng = null;
   submitted = false;
+  hide('player-countdown-overlay');
+  lastPlayerCountdownSec = -1;
 
   // Init map on first round
   if (!leafletMap) {
@@ -191,6 +205,8 @@ async function handleRoundStart(payload) {
     // Remove previous pin
     if (playerPin) { leafletMap.removeLayer(playerPin); playerPin = null; }
     show('map-hint');
+    // Re-calculate size after screen becomes visible
+    setTimeout(() => leafletMap.invalidateSize(), 60);
   }
 
   startPlayerTimer(payload.started_at, payload.duration_ms);
@@ -229,10 +245,28 @@ function startPlayerTimer(startedAt, durationMs) {
     const s = secs % 60;
     $('player-timer').textContent = `${mins}:${String(s).padStart(2, '0')}`;
     $('player-timer').classList.toggle('urgent', secs <= 10);
+
+    // Countdown overlay 5-4-3-2-1
+    if (secs <= 5 && secs > 0 && remaining > 0) {
+      if (secs !== lastPlayerCountdownSec) {
+        lastPlayerCountdownSec = secs;
+        const el = $('player-countdown-number');
+        el.textContent = secs;
+        el.classList.remove('countdown-num');
+        void el.offsetWidth;
+        el.classList.add('countdown-num');
+      }
+      show('player-countdown-overlay');
+    } else {
+      hide('player-countdown-overlay');
+      if (remaining > 0) lastPlayerCountdownSec = -1;
+    }
+
     if (remaining <= 0) {
       clearInterval(timerInterval);
       $('player-timer').textContent = 'Czas!';
       $('player-timer').classList.add('urgent');
+      hide('player-countdown-overlay');
       // Do NOT auto-submit — wait for round_end from host
     }
   }, 250);
@@ -288,6 +322,75 @@ async function submitAnswer() {
 
   hide('screen-map');
   show('screen-submitted');
+
+  // Countdown to round end
+  startSubmittedCountdown();
+
+  // Mini map showing player pin vs correct location
+  initSubmitMiniMap(distanceKm).catch(() => null);
+}
+
+function startSubmittedCountdown() {
+  clearInterval(submittedCountdownInterval);
+  const q = currentQuestion;
+  submittedCountdownInterval = setInterval(() => {
+    const remaining = Math.max(0, q.duration_ms - (Date.now() - new Date(q.started_at).getTime()));
+    const secs = Math.ceil(remaining / 1000);
+    if (secs > 0) {
+      $('submit-countdown-secs').textContent = `${secs}s`;
+      $('submit-countdown-label').textContent = 'Czekam na innych graczy';
+    } else {
+      $('submit-countdown-secs').textContent = '';
+      $('submit-countdown-label').textContent = 'Czekam na wyniki...';
+      clearInterval(submittedCountdownInterval);
+    }
+  }, 250);
+}
+
+async function initSubmitMiniMap(distanceKm) {
+  if (playerResultMap) { playerResultMap.remove(); playerResultMap = null; }
+  const q = currentQuestion;
+  if (!playerPinLatLng || !q) return;
+
+  const { initMap, createTrueLocationMarker } = await import('./map-utils.js');
+  await new Promise(r => setTimeout(r, 80));
+
+  const midLat = (playerPinLatLng[0] + q.lat) / 2;
+  const midLng = (playerPinLatLng[1] + q.lng) / 2;
+
+  playerResultMap = initMap('submit-mini-map', { center: [midLat, midLng], zoom: 3 });
+  createTrueLocationMarker(playerResultMap, q.lat, q.lng);
+
+  // Player pin
+  L.marker(playerPinLatLng, {
+    icon: L.divIcon({
+      html: `<div style="width:14px;height:14px;background:#ff79c6;border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px rgba(255,121,198,0.9);"></div>`,
+      className: '', iconSize: [14, 14], iconAnchor: [7, 7],
+    }),
+  }).addTo(playerResultMap);
+
+  // Line between them
+  L.polyline([playerPinLatLng, [q.lat, q.lng]], {
+    color: '#ff79c6', weight: 2, opacity: 0.8, dashArray: '6, 4',
+  }).addTo(playerResultMap);
+
+  // Km label at midpoint
+  const distKm = distanceKm < 1
+    ? `${Math.round(distanceKm * 1000)} m`
+    : `${Math.round(distanceKm).toLocaleString('pl')} km`;
+  L.marker([midLat, midLng], {
+    icon: L.divIcon({
+      html: `<div style="background:rgba(0,0,0,0.82);color:#fff;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap;">${distKm} w linii prostej</div>`,
+      className: '', iconAnchor: [40, 10],
+    }),
+    interactive: false,
+  }).addTo(playerResultMap);
+
+  setTimeout(() => {
+    playerResultMap.invalidateSize();
+    const bounds = L.latLngBounds([playerPinLatLng, [q.lat, q.lng]]);
+    playerResultMap.fitBounds(bounds, { padding: [30, 30] });
+  }, 100);
 }
 
 // ── Round end from host ───────────────────────────────────────────────────

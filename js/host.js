@@ -35,6 +35,8 @@ let timerRemaining = 0;
 let timerRunning = false;
 let prevRankings = [];
 let resultsMap = null;
+let heartbeatInterval = null;
+let lastCountdownSec = -1;
 
 // ── Init ──────────────────────────────────────────────────────────────────
 await loadQuestions();
@@ -125,16 +127,26 @@ async function startRound(index) {
   const durationMs = 30_000;
   const startedAt = Date.now();
 
-  await broadcast(gameChannel, 'round_start', {
+  const roundPayload = {
     question_index: index,
     lat: q.lat,
     lng: q.lng,
     location_name: q.location_name,
     started_at: startedAt,
     duration_ms: durationMs,
-  });
+  };
+
+  await broadcast(gameChannel, 'round_start', roundPayload);
+
+  // Heartbeat every 5s — catches players who missed round_start (e.g. channel reconnect)
+  clearInterval(heartbeatInterval);
+  heartbeatInterval = setInterval(() => {
+    broadcast(gameChannel, 'round_heartbeat', roundPayload).catch(() => null);
+  }, 5000);
 
   $('answer-count-num').textContent = '0';
+  hide('host-countdown-overlay');
+  lastCountdownSec = -1;
   startHostTimer(startedAt, durationMs);
   subscribeAnswerCount(index);
   subscribeTop5();
@@ -171,6 +183,22 @@ function tickTimer() {
     ? 'linear-gradient(90deg,#f44336,#ff5722)'
     : 'linear-gradient(90deg,var(--primary),var(--primary-light))';
 
+  // Countdown overlay 5-4-3-2-1
+  if (secs <= 5 && secs > 0 && remaining > 0) {
+    if (secs !== lastCountdownSec) {
+      lastCountdownSec = secs;
+      const el = $('host-countdown-number');
+      el.textContent = secs;
+      el.classList.remove('countdown-num');
+      void el.offsetWidth; // reflow to restart animation
+      el.classList.add('countdown-num');
+    }
+    show('host-countdown-overlay');
+  } else {
+    hide('host-countdown-overlay');
+    if (remaining > 0) lastCountdownSec = -1;
+  }
+
   if (remaining <= 0) {
     clearInterval(timerInterval);
     timerRunning = false;
@@ -192,7 +220,7 @@ $('btn-pause').addEventListener('click', () => {
 });
 
 $('btn-add-time').addEventListener('click', () => {
-  roundDurationMs += 30_000;
+  roundDurationMs += 5_000;
 });
 
 $('btn-end-round').addEventListener('click', () => {
@@ -204,12 +232,15 @@ $('btn-end-round').addEventListener('click', () => {
 // ── Live answer count (Realtime) ──────────────────────────────────────────
 let answerChannel = null;
 let answerCount = 0;
+let answeredNames = [];
 
 function subscribeAnswerCount(questionIndex) {
   if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
   answerCount = 0;
+  answeredNames = [];
   $('answer-count-num').textContent = '0';
   $('global-stat').textContent = `0/${players.length} odpowiedziało`;
+  $('answered-names').textContent = '';
 
   answerChannel = sb.channel(`pins:${SESSION_ID}:${questionIndex}`)
     .on('postgres_changes', {
@@ -222,6 +253,11 @@ function subscribeAnswerCount(questionIndex) {
       answerCount++;
       $('answer-count-num').textContent = answerCount;
       $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
+      const player = players.find(p => p.id === pin.player_id);
+      if (player) {
+        answeredNames.push(player.name);
+        $('answered-names').textContent = answeredNames.join(' · ');
+      }
     })
     .subscribe();
 }
@@ -260,6 +296,8 @@ function subscribeTop5() {
 
 // ── End round ─────────────────────────────────────────────────────────────
 async function endRound() {
+  clearInterval(heartbeatInterval);
+  hide('host-countdown-overlay');
   if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
   if (top5Channel) { top5Channel.unsubscribe(); top5Channel = null; }
   await broadcast(gameChannel, 'round_end', {});
@@ -294,7 +332,20 @@ async function showResults(questionIndex) {
   if (resultsMap) { resultsMap.remove(); resultsMap = null; }
   // Wait for DOM to render the visible container
   await new Promise(r => setTimeout(r, 120));
-  resultsMap = initMap('results-map', { center: [q.lat, q.lng], zoom: 4 });
+  resultsMap = initMap('results-map', { center: [q.lat, q.lng], zoom: 4, skipTiles: true });
+
+  // Layer control with 3 base maps
+  const voyager = L.tileLayer(window.CONFIG.mapTileUrl, {
+    attribution: window.CONFIG.mapAttribution, subdomains: 'abcd', maxZoom: 19,
+  }).addTo(resultsMap);
+  const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19,
+  });
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 19,
+  });
+  L.control.layers({ 'Kolorowa': voyager, 'Ciemna': dark, 'OSM': osm }, {}, { position: 'topleft' }).addTo(resultsMap);
+
   setTimeout(() => resultsMap.invalidateSize(), 100);
 
   // True location marker
@@ -314,16 +365,16 @@ async function showResults(questionIndex) {
     const p = pin.players;
     const avatar = p.avatar_data_url
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
-      : `<span style="font-size:9px;font-weight:700;color:#fff;">${p.initials}</span>`;
+      : `<span style="font-size:11px;font-weight:700;color:#fff;">${p.initials}</span>`;
     const dist = pin.distance_km < 1
       ? `${Math.round(pin.distance_km * 1000)} m`
       : `${Math.round(pin.distance_km).toLocaleString('pl')} km`;
     return `
       <div class="result-row">
-        <div class="avatar-circle" style="width:24px;height:24px;background:${p.avatar_color};">${avatar}</div>
-        <div style="flex:1;">
-          <div>${p.name}</div>
-          <div style="color:var(--text-muted);font-size:9px;">${dist}</div>
+        <div class="avatar-circle" style="width:36px;height:36px;background:${p.avatar_color};flex-shrink:0;">${avatar}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
+          <div class="dist-label">${dist} w linii prostej</div>
         </div>
         <div class="pts">+${pin.points.toLocaleString('pl')}</div>
       </div>`;
@@ -335,15 +386,25 @@ async function showResults(questionIndex) {
     resultsMap.fitBounds(L.latLngBounds(allLatLngs), { padding: [40, 40] });
   }
 
-  // Add player pins + polylines
+  // Add player pins + polylines + km labels
   pins.forEach(pin => {
     addPlayerPin(resultsMap, pin.players, pin.lat, pin.lng, pin.distance_km);
-    drawPolyline(
-      resultsMap,
-      [pin.lat, pin.lng],
-      [q.lat, q.lng],
-      pin.players.avatar_color
-    );
+    drawPolyline(resultsMap, [pin.lat, pin.lng], [q.lat, q.lng], pin.players.avatar_color);
+
+    // Distance label at midpoint of line
+    const midLat = (pin.lat + q.lat) / 2;
+    const midLng = (pin.lng + q.lng) / 2;
+    const distKm = pin.distance_km < 1
+      ? `${Math.round(pin.distance_km * 1000)} m`
+      : `${Math.round(pin.distance_km)} km`;
+    L.marker([midLat, midLng], {
+      icon: L.divIcon({
+        html: `<div style="background:rgba(0,0,0,0.78);color:#fff;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;white-space:nowrap;border:1px solid rgba(255,255,255,0.15);">${distKm}</div>`,
+        className: '',
+        iconAnchor: [22, 10],
+      }),
+      interactive: false,
+    }).addTo(resultsMap);
   });
 
   // Next question button

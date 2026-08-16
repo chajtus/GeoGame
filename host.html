@@ -35,12 +35,30 @@
 
     /* ── ROUND ── */
     #screen-round {
-      flex: 1; display: flex; flex-direction: column;
+      flex: 1; display: flex; flex-direction: column; position: relative;
     }
     #round-photo-wrap {
       flex: 1; position: relative; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
       background: #000; max-height: calc(100vh - 160px);
+    }
+    /* Countdown overlay (5-4-3-2-1) */
+    #host-countdown-overlay {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      z-index: 9000; pointer-events: none;
+    }
+    .countdown-num {
+      font-weight: 900; line-height: 1; user-select: none;
+      font-size: min(55vw, 65vh);
+      color: rgba(255,255,255,0.10);
+      text-shadow: 0 0 60px rgba(233,30,140,0.25);
+      animation: cdown-pop 0.55s cubic-bezier(0.22,1,0.36,1);
+    }
+    @keyframes cdown-pop {
+      0%  { transform: scale(1.5); opacity: 0; }
+      40% { opacity: 1; }
+      100%{ transform: scale(1); }
     }
     #round-photo {
       max-width: 100%; max-height: 100%;
@@ -49,17 +67,23 @@
     /* TOP5 overlay */
     #top5-panel {
       position: absolute; top: 12px; right: 12px;
-      background: rgba(0,0,0,0.78); backdrop-filter: blur(4px);
-      border: 1px solid rgba(233,30,140,0.4); border-radius: 10px;
-      padding: 12px 16px; min-width: 160px;
+      background: rgba(0,0,0,0.88); backdrop-filter: blur(6px);
+      border: 1.5px solid rgba(233,30,140,0.55); border-radius: 12px;
+      padding: 14px 18px; min-width: 200px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
-    #top5-panel h4 { color: var(--primary-light); font-size: 10px; letter-spacing: 1px; margin-bottom: 8px; }
-    .top5-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 10px; }
-    /* Answer count overlay */
+    #top5-panel h4 { color: var(--primary-light); font-size: 11px; letter-spacing: 1.5px; margin-bottom: 10px; font-weight: 800; }
+    .top5-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 13px; }
+    /* Answer count overlay — bigger, with names */
     #answer-count-badge {
       position: absolute; bottom: 12px; left: 12px;
-      background: rgba(0,0,0,0.75); border-radius: 8px;
-      padding: 6px 12px; font-size: 11px; color: var(--text-muted);
+      background: rgba(0,0,0,0.88); border: 1px solid rgba(233,30,140,0.35);
+      border-radius: 12px; padding: 10px 14px; max-width: 300px;
+    }
+    #answer-count-line { font-size: 14px; font-weight: 700; color: #fff; }
+    #answered-names {
+      font-size: 10px; color: var(--primary-light); margin-top: 5px;
+      line-height: 1.5; word-break: break-word;
     }
     /* Bottom bar */
     #round-bottom {
@@ -87,12 +111,13 @@
     #location-label .lbl-sub { color: var(--primary-light); font-size: 9px; letter-spacing: 1px; font-weight: 700; }
     #location-label .lbl-name { color: #fff; font-size: 15px; font-weight: 700; }
     #results-side {
-      width: 220px; background: var(--bg-panel); border-left: 1px solid var(--border);
-      padding: 14px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto;
+      width: 300px; background: var(--bg-panel); border-left: 1px solid var(--border);
+      padding: 14px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex-shrink: 0;
     }
-    #results-side h4 { color: var(--primary-light); font-size: 10px; letter-spacing: 1px; margin-bottom: 4px; }
-    .result-row { display: flex; align-items: center; gap: 8px; background: var(--bg-mid); padding: 6px 10px; border-radius: 8px; font-size: 10px; }
-    .result-row .pts { color: var(--green); font-weight: 700; font-size: 11px; margin-left: auto; }
+    #results-side h4 { color: var(--primary-light); font-size: 11px; letter-spacing: 1px; margin-bottom: 6px; }
+    .result-row { display: flex; align-items: center; gap: 10px; background: var(--bg-mid); padding: 8px 12px; border-radius: 10px; font-size: 11px; }
+    .result-row .pts { color: var(--green); font-weight: 700; font-size: 13px; margin-left: auto; white-space: nowrap; }
+    .result-row .dist-label { color: var(--text-muted); font-size: 10px; margin-top: 1px; }
 
     /* ── LEADERBOARD ── */
     #screen-leaderboard { flex: 1; display: flex; flex-direction: column; }
@@ -159,14 +184,18 @@
       <div id="top5-list"></div>
     </div>
     <div id="answer-count-badge">
-      ✅ <span id="answer-count-num">0</span> / <span id="player-total">0</span> pinezek
+      <div id="answer-count-line">✅ <span id="answer-count-num">0</span> / <span id="player-total">0</span> odpowiedziało</div>
+      <div id="answered-names"></div>
+    </div>
+    <div id="host-countdown-overlay" class="hidden">
+      <div class="countdown-num" id="host-countdown-number"></div>
     </div>
   </div>
   <div id="round-bottom">
     <div id="host-timer-display">0:30</div>
     <div id="timer-bar-wrap"><div id="timer-bar" style="width:100%"></div></div>
     <button class="btn btn--secondary" id="btn-pause">⏸ PAUZA</button>
-    <button class="btn btn--success" id="btn-add-time">+30s</button>
+    <button class="btn btn--success" id="btn-add-time">+5s</button>
     <button class="btn btn--danger" id="btn-end-round">⏹ ZAKOŃCZ</button>
   </div>
 </div>

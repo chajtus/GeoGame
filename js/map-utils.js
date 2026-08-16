@@ -5,7 +5,7 @@
  * @param {{ center?: [number, number], zoom?: number }} options
  * @returns {L.Map}
  */
-export function initMap(elementId, { center = [20, 0], zoom = 2 } = {}) {
+export function initMap(elementId, { center = [20, 0], zoom = 2, skipTiles = false } = {}) {
   const map = L.map(elementId, {
     center,
     zoom,
@@ -13,11 +13,13 @@ export function initMap(elementId, { center = [20, 0], zoom = 2 } = {}) {
     attributionControl: true,
   });
 
-  L.tileLayer(window.CONFIG.mapTileUrl, {
-    attribution: window.CONFIG.mapAttribution,
-    subdomains: 'abcd',
-    maxZoom: 19,
-  }).addTo(map);
+  if (!skipTiles) {
+    L.tileLayer(window.CONFIG.mapTileUrl, {
+      attribution: window.CONFIG.mapAttribution,
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(map);
+  }
 
   return map;
 }

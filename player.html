@@ -126,38 +126,50 @@
     /* MAP */
     #screen-map { flex: 1; display: flex; flex-direction: column; }
     #map-top-bar {
-      background: #1a0030; padding: 8px 14px;
+      background: #1a0030; padding: 10px 16px;
       display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
     }
-    #round-label { color: var(--primary-light); font-size: 10px; font-weight: 700; }
+    #round-label { color: var(--primary-light); font-size: 14px; font-weight: 800; letter-spacing: 1px; }
     #player-timer {
-      background: var(--primary); color: #fff; padding: 4px 12px;
-      border-radius: 12px; font-size: 12px; font-weight: 700; min-width: 56px; text-align: center;
+      background: var(--primary); color: #fff;
+      padding: 8px 18px; border-radius: 14px;
+      font-size: 18px; font-weight: 800; min-width: 72px; text-align: center;
+      box-shadow: 0 2px 12px rgba(233,30,140,0.5);
     }
-    #player-timer.urgent { background: var(--red); animation: pulse 0.5s ease-in-out infinite alternate; }
-    @keyframes pulse { to { opacity: 0.7; } }
-    #leader-label { color: var(--text-muted); font-size: 10px; }
+    #player-timer.urgent { background: var(--red); animation: pulse 0.5s ease-in-out infinite alternate; box-shadow: 0 2px 12px rgba(244,67,54,0.7); }
+    @keyframes pulse { to { opacity: 0.65; } }
+    #leader-label { color: var(--text-muted); font-size: 11px; }
     #map { flex: 1; }
     #map-hint {
-      position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.75); color: var(--text-muted); padding: 5px 12px;
-      border-radius: 6px; font-size: 11px; white-space: nowrap; pointer-events: none; z-index: 1000;
+      position: absolute; bottom: calc(80px + env(safe-area-inset-bottom, 16px)); left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.82); color: #ccc; padding: 8px 16px;
+      border-radius: 8px; font-size: 13px; white-space: nowrap; pointer-events: none; z-index: 1000;
+      border: 1px solid rgba(255,255,255,0.1);
     }
-    #screen-map .bottom-bar {
-      background: var(--bg-panel); flex-shrink: 0; position: relative;
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 16px));
+    /* Fixed bottom bar — always above navigation bar */
+    #map-submit-bar {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+      background: var(--bg-panel); border-top: 2px solid var(--border);
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 16px));
     }
-    #btn-submit { width: 100%; font-size: 16px; padding: 16px; }
+    #btn-submit { width: 100%; font-size: 17px; font-weight: 800; padding: 16px; border-radius: 14px; }
+    /* Countdown overlay on map */
+    #player-countdown-overlay {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center;
+      z-index: 9000; pointer-events: none;
+    }
 
     /* SUBMITTED */
     #screen-submitted {
       flex: 1; display: flex; flex-direction: column;
       background: linear-gradient(180deg, #1a0030 0%, #0d0d1a 100%);
-      align-items: center; justify-content: center; gap: 0; padding: 0;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
     }
     #submit-result-card {
-      width: 100%; padding: 32px 24px; display: flex; flex-direction: column;
-      align-items: center; gap: 16px; text-align: center;
+      width: 100%; padding: 24px 20px; display: flex; flex-direction: column;
+      align-items: center; gap: 12px; text-align: center; flex-shrink: 0;
     }
     #submit-points {
       font-size: 56px; font-weight: 900; line-height: 1;
@@ -166,10 +178,17 @@
     }
     #submit-distance { color: #aaa; font-size: 16px; }
     #submit-location { color: var(--primary-light); font-size: 13px; font-weight: 700; letter-spacing: 1px; }
-    #submit-waiting { color: var(--text-muted); font-size: 12px; margin-top: 8px; }
+    #submit-countdown-bar {
+      width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    #submit-countdown-label { color: var(--text-muted); font-size: 11px; }
+    #submit-countdown-secs { color: var(--primary-light); font-size: 22px; font-weight: 800; }
+    #submit-mini-map {
+      width: calc(100% - 32px); height: 200px; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--border); flex-shrink: 0; margin: 0 16px;
+    }
     .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    #answer-count { color: var(--text-muted); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -246,8 +265,12 @@
     <div id="leader-label">🏆 —</div>
   </div>
   <div id="map"></div>
-  <div id="map-hint">Dotknij mapę aby postawić pinezkę</div>
-  <div class="bottom-bar">
+  <div id="map-hint">Dotknij mapę aby postawić pinezkę 📍</div>
+  <div id="player-countdown-overlay" class="hidden">
+    <div class="countdown-num" id="player-countdown-number"></div>
+  </div>
+  <!-- Fixed submit bar — always visible above nav bar -->
+  <div id="map-submit-bar">
     <button class="btn btn--primary" id="btn-submit" disabled>✅ ZATWIERDŹ ODPOWIEDŹ</button>
   </div>
 </div>
@@ -255,14 +278,19 @@
 <!-- SUBMITTED -->
 <div id="screen-submitted" class="hidden">
   <div id="submit-result-card">
-    <div style="color:var(--green);font-size:14px;font-weight:700;letter-spacing:1px;">✓ ODPOWIEDŹ WYSŁANA</div>
+    <div style="color:var(--green);font-size:13px;font-weight:700;letter-spacing:1px;">✓ ODPOWIEDŹ WYSŁANA</div>
     <div id="submit-points">—</div>
     <div id="submit-distance"></div>
     <div id="submit-location"></div>
-    <div style="width:60px;height:2px;background:var(--border);border-radius:2px;"></div>
+    <div id="submit-countdown-bar">
+      <div id="submit-countdown-label">Czekam na innych graczy</div>
+      <div id="submit-countdown-secs"></div>
+    </div>
     <div class="spinner"></div>
-    <div id="submit-waiting">Czekamy na pozostałych graczy...</div>
   </div>
+  <!-- Mini map showing player pin vs correct location -->
+  <div id="submit-mini-map"></div>
+  <div style="height:16px;flex-shrink:0;"></div>
 </div>
 
 <script src="js/config.js"></script>
