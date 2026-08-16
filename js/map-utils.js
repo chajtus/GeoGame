@@ -105,7 +105,7 @@ export function drawPolyline(map, fromLatLng, toLatLng, color = '#ffffff', dista
       : `${Math.round(distanceKm).toLocaleString('pl')} km`;
     L.marker([midLat, midLng], {
       icon: L.divIcon({
-        html: `<div style="transform:translate(-50%,-120%);background:rgba(8,0,24,0.92);color:#ff79c6;border:1.5px solid rgba(255,121,198,0.55);padding:3px 10px;border-radius:16px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.6);pointer-events:none;">📏 ${label}</div>`,
+        html: `<div style="transform:translate(-50%,-120%);background:rgba(8,0,24,0.92);color:#ff79c6;border:1.5px solid rgba(255,121,198,0.55);padding:3px 10px;border-radius:16px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 2px 10px rgba(0,0,0,0.6);pointer-events:none;">${label}</div>`,
         className: '', iconSize: [0, 0], iconAnchor: [0, 0],
       }),
       interactive: false,
