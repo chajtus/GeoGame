@@ -155,6 +155,117 @@ function subscribeToGame() {
     .subscribe();
 }
 
-// Stubs — implemented in Task 7
-function handleRoundStart(payload) { console.log('round_start stub', payload); }
-function handleRoundEnd() { console.log('round_end stub'); }
+// ── Map state ─────────────────────────────────────────────────────────────
+let leafletMap = null;
+let playerPin = null;
+let playerPinLatLng = null;
+let currentQuestion = null;
+let timerInterval = null;
+
+// ── Round start ───────────────────────────────────────────────────────────
+async function handleRoundStart(payload) {
+  currentQuestion = payload;
+  hide('screen-waiting');
+  hide('screen-submitted');
+  show('screen-map');
+
+  $('round-label').textContent = `RUNDA ${payload.question_index + 1}`;
+  $('btn-submit').disabled = true;
+  $('btn-submit').textContent = '✅ ZATWIERDŹ ODPOWIEDŹ';
+  playerPinLatLng = null;
+
+  // Init map on first round
+  if (!leafletMap) {
+    await initPlayerMap();
+  } else {
+    // Remove previous pin
+    if (playerPin) { leafletMap.removeLayer(playerPin); playerPin = null; }
+    show('map-hint');
+  }
+
+  startPlayerTimer(payload.started_at, payload.duration_ms);
+}
+
+async function initPlayerMap() {
+  const { initMap } = await import('./map-utils.js');
+  leafletMap = initMap('map', { center: [20, 0], zoom: 2 });
+  leafletMap.on('click', onMapClick);
+  show('map-hint');
+}
+
+function onMapClick(e) {
+  playerPinLatLng = [e.latlng.lat, e.latlng.lng];
+  if (playerPin) leafletMap.removeLayer(playerPin);
+
+  const icon = L.divIcon({
+    html: `<div style="width:18px;height:18px;background:var(--primary-light,#ff79c6);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid white;box-shadow:0 0 10px rgba(255,121,198,0.9);"></div>`,
+    className: '',
+    iconSize: [18, 18],
+    iconAnchor: [9, 18],
+  });
+  playerPin = L.marker(playerPinLatLng, { icon }).addTo(leafletMap);
+
+  hide('map-hint');
+  $('btn-submit').disabled = false;
+}
+
+// ── Timer ─────────────────────────────────────────────────────────────────
+function startPlayerTimer(startedAt, durationMs) {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const remaining = Math.max(0, durationMs - (Date.now() - startedAt));
+    const secs = Math.ceil(remaining / 1000);
+    const mins = Math.floor(secs / 60);
+    const s = secs % 60;
+    $('player-timer').textContent = `${mins}:${String(s).padStart(2, '0')}`;
+    $('player-timer').classList.toggle('urgent', secs <= 10);
+    if (remaining <= 0) { clearInterval(timerInterval); autoSubmit(); }
+  }, 250);
+}
+
+// ── Submit answer ─────────────────────────────────────────────────────────
+$('btn-submit').addEventListener('click', submitAnswer);
+
+async function autoSubmit() {
+  if (!playerPinLatLng) {
+    // No pin placed — submit [0,0] as fallback (0 points)
+    playerPinLatLng = [0, 0];
+  }
+  await submitAnswer();
+}
+
+async function submitAnswer() {
+  if (!playerPinLatLng || !currentQuestion) return;
+  $('btn-submit').disabled = true;
+  clearInterval(timerInterval);
+
+  const { haversineKm, calculatePoints } = await import('./scoring.js');
+  const distanceKm = haversineKm(
+    playerPinLatLng[0], playerPinLatLng[1],
+    currentQuestion.lat, currentQuestion.lng
+  );
+  const points = calculatePoints(distanceKm);
+
+  await sb.from('pins').insert({
+    session_id: SESSION_ID,
+    player_id: playerState.id,
+    question_index: currentQuestion.question_index,
+    lat: playerPinLatLng[0],
+    lng: playerPinLatLng[1],
+    distance_km: distanceKm,
+    points,
+  });
+
+  // Run SQL in Supabase: CREATE OR REPLACE FUNCTION increment_score(player_id UUID, amount INTEGER) RETURNS void LANGUAGE sql AS $$ UPDATE players SET total_score = total_score + amount WHERE id = player_id; $$;
+  await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
+    .catch(() => null);
+
+  hide('screen-map');
+  show('screen-submitted');
+}
+
+// ── Round end from host ───────────────────────────────────────────────────
+function handleRoundEnd() {
+  clearInterval(timerInterval);
+  // Host will broadcast next_question or show_leaderboard next
+}
