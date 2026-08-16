@@ -240,6 +240,7 @@ async function handleRoundStart(payload, showFlash = false) {
     hide('map-submitted-overlay');
     hide('screen-map');
     show('screen-round-flash');
+    triggerAnim('screen-round-flash', 'flash--in');
     await new Promise(r => setTimeout(r, 2200));
     hide('screen-round-flash');
   } else {
@@ -261,18 +262,34 @@ async function handleRoundStart(payload, showFlash = false) {
     // Remove previous pin, reset view to world
     if (playerPin) { leafletMap.removeLayer(playerPin); playerPin = null; }
     leafletMap.setView([20, 0], 2);
-    show('map-hint');
+    showHintAnimated();
     setTimeout(() => leafletMap.invalidateSize(), 60);
   }
 
   startPlayerTimer(payload.started_at, payload.duration_ms);
 }
 
+// ── Animation helper: remove class, force reflow, re-add (re-trigger) ────────
+function triggerAnim(el, cls) {
+  if (typeof el === 'string') el = $(el);
+  if (!el) return;
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+
 async function initPlayerMap() {
   const { initMap } = await import('./map-utils.js');
   leafletMap = initMap('map', { center: [20, 0], zoom: 2 });
   leafletMap.on('click', onMapClick);
+  showHintAnimated();
+}
+
+function showHintAnimated() {
+  const hint = $('map-hint');
+  if (!hint) return;
   show('map-hint');
+  triggerAnim(hint, 'hint--visible');
 }
 
 function onMapClick(e) {
@@ -380,6 +397,12 @@ async function submitAnswer() {
   $('overlay-countdown').textContent = '';
 
   show('map-submitted-overlay');
+  triggerAnim('map-submitted-overlay', 'overlay--in');
+  triggerAnim('map-submitted-card', 'card--in');
+  triggerAnim('overlay-points', 'points--in');
+
+  // btn-submit confirmation bounce
+  triggerAnim('btn-submit', 'btn--confirmed');
   $('btn-submit').textContent = '✓ Wysłano';
   $('btn-submit').disabled = true;
 
@@ -465,6 +488,12 @@ function showPlayerResult() {
 
   hide('screen-map');
   show('screen-submitted');
+
+  // Animate results fly-in with stagger
+  triggerAnim('submit-points', 'result--in');
+  triggerAnim('submit-distance', 'result--in');
+  triggerAnim('submit-mini-map', 'minimap--in');
+
   initSubmitMiniMap(lastDistanceKm);
 }
 

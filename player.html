@@ -118,8 +118,19 @@
       gap: 16px; padding: 24px;
     }
     #waiting-avatar { width: 72px; height: 72px; }
-    .waiting-name { font-size: 18px; font-weight: 700; }
+    /* BOLDER: waiting name — bigger, white */
+    .waiting-name { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 0.5px; }
     .waiting-sub { color: var(--text-muted); font-size: 12px; text-align: center; }
+    /* ANIMATE: waiting avatar pulse */
+    #waiting-avatar-display {
+      animation: avatar-pulse 2.5s cubic-bezier(0.16,1,0.3,1) infinite;
+      /* BOLDER: glow border */
+      box-shadow: 0 0 0 3px var(--primary), 0 0 20px rgba(233,30,140,0.55), 0 0 40px rgba(156,39,176,0.25);
+    }
+    @keyframes avatar-pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px var(--primary), 0 0 20px rgba(233,30,140,0.55), 0 0 40px rgba(156,39,176,0.25); }
+      50%       { transform: scale(1.04); box-shadow: 0 0 0 3px var(--primary), 0 0 30px rgba(233,30,140,0.8), 0 0 60px rgba(156,39,176,0.4); }
+    }
     .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -130,7 +141,8 @@
       display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
       border-bottom: 1px solid var(--border);
     }
-    #round-label { color: var(--primary-light); font-size: 14px; font-weight: 800; letter-spacing: 1px; }
+    /* BOLDER: round label — bigger, stronger */
+    #round-label { color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 14px rgba(233,30,140,0.7); }
     #player-timer {
       background: var(--primary); color: #fff;
       padding: 8px 18px; border-radius: 14px;
@@ -147,6 +159,14 @@
       border-radius: 8px; font-size: 13px; white-space: nowrap; pointer-events: none; z-index: 1000;
       border: 1px solid rgba(255,255,255,0.1);
     }
+    /* ANIMATE: map-hint slide-up from bottom */
+    #map-hint.hint--visible {
+      animation: hint-slide-up 0.4s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes hint-slide-up {
+      0%   { opacity: 0; transform: translateX(-50%) translateY(14px); }
+      100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
     /* Submitted overlay — dims the map, keeps it visible underneath */
     #map-submitted-overlay {
       position: absolute; inset: 0; z-index: 400;
@@ -154,6 +174,15 @@
       display: flex; align-items: center; justify-content: center;
       padding-bottom: calc(64px + env(safe-area-inset-bottom, 16px));
     }
+    /* ANIMATE: overlay fade-in */
+    #map-submitted-overlay.overlay--in {
+      animation: overlay-fade-in 0.35s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes overlay-fade-in {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    /* BOLDER + ANIMATE: card scale+fade */
     #map-submitted-card {
       background: rgba(13,10,30,0.95); border: 2px solid var(--primary);
       border-radius: 22px; padding: 28px 26px;
@@ -161,11 +190,28 @@
       text-align: center; width: min(340px, 88vw);
       box-shadow: 0 8px 40px rgba(233,30,140,0.3);
     }
+    #map-submitted-card.card--in {
+      animation: card-pop-in 0.35s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes card-pop-in {
+      0%   { opacity: 0; transform: scale(0.85); box-shadow: 0 4px 10px rgba(233,30,140,0.1); }
+      60%  { box-shadow: 0 12px 60px rgba(233,30,140,0.7), 0 0 0 4px rgba(233,30,140,0.2); }
+      100% { opacity: 1; transform: scale(1); box-shadow: 0 8px 40px rgba(233,30,140,0.5), 0 0 0 2px rgba(233,30,140,0.15); }
+    }
     #overlay-check { color: var(--green); font-size: 13px; font-weight: 700; letter-spacing: 1px; }
     #overlay-points {
       font-size: 54px; font-weight: 900; line-height: 1;
       background: linear-gradient(135deg, var(--primary-light), var(--gold));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    /* ANIMATE: overlay-points slide up */
+    #overlay-points.points--in {
+      animation: points-slide-up 0.38s cubic-bezier(0.16,1,0.3,1) both;
+      animation-delay: 80ms;
+    }
+    @keyframes points-slide-up {
+      0%   { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
     #overlay-distance { color: #bbb; font-size: 15px; }
     #overlay-location { color: var(--primary-light); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
@@ -193,7 +239,17 @@
       background: var(--bg-panel); border-top: 2px solid var(--border);
       padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 16px));
     }
-    #btn-submit { width: 100%; font-size: 17px; font-weight: 800; padding: 16px; border-radius: 14px; }
+    #btn-submit { width: 100%; font-size: 17px; font-weight: 800; padding: 16px; border-radius: 14px; transition: transform 0.15s ease, background 0.2s ease; }
+    /* ANIMATE: btn-submit confirmation bounce */
+    #btn-submit.btn--confirmed {
+      animation: btn-confirm 0.4s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes btn-confirm {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(0.93); }
+      70%  { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
     /* Countdown overlay on map */
     #player-countdown-overlay {
       position: absolute; inset: 0; display: flex;
@@ -222,10 +278,33 @@
       flex-shrink: 0; padding: 16px 20px 12px; display: flex; flex-direction: column;
       align-items: center; gap: 8px; text-align: center;
     }
+    /* BOLDER: submit-points more dramatic */
     #submit-points {
-      font-size: 52px; font-weight: 900; line-height: 1;
+      font-size: 68px; font-weight: 900; line-height: 1;
       background: linear-gradient(135deg, var(--primary-light), var(--gold));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 4px 18px rgba(233,30,140,0.45));
+    }
+    /* ANIMATE: results fly in from top */
+    #submit-points.result--in {
+      animation: result-drop-in 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    #submit-distance.result--in {
+      animation: result-drop-in 0.5s cubic-bezier(0.16,1,0.3,1) both;
+      animation-delay: 50ms;
+    }
+    @keyframes result-drop-in {
+      0%   { opacity: 0; transform: translateY(-28px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    /* ANIMATE: mini map fade in */
+    #submit-mini-map.minimap--in {
+      animation: minimap-fade 0.5s cubic-bezier(0.16,1,0.3,1) both;
+      animation-delay: 100ms;
+    }
+    @keyframes minimap-fade {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
     }
     #submit-distance { color: #aaa; font-size: 15px; }
     #submit-location { color: var(--primary-light); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
@@ -247,6 +326,14 @@
     #screen-round-flash {
       flex: 1; position: relative; background: #000;
       display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    /* ANIMATE: round flash screen entrance fade */
+    #screen-round-flash.flash--in {
+      animation: flash-screen-enter 0.35s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes flash-screen-enter {
+      0%   { opacity: 0; }
+      100% { opacity: 1; }
     }
     #flash-photo {
       position: absolute; inset: 0; width: 100%; height: 100%;
@@ -270,6 +357,20 @@
       0% { transform: scale(0.5); opacity: 0; }
       70% { transform: scale(1.05); }
       100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ═══ REDUCED MOTION ═══════════════════════════════════════════════════ */
+    @media (prefers-reduced-motion: reduce) {
+      #waiting-avatar-display { animation: none !important; }
+      #map-submitted-overlay.overlay--in { animation: none !important; }
+      #map-submitted-card.card--in { animation: none !important; box-shadow: 0 8px 40px rgba(233,30,140,0.5); }
+      #overlay-points.points--in { animation: none !important; }
+      #btn-submit.btn--confirmed { animation: none !important; }
+      #submit-points.result--in,
+      #submit-distance.result--in { animation: none !important; }
+      #submit-mini-map.minimap--in { animation: none !important; }
+      #map-hint.hint--visible { animation: none !important; }
+      #screen-round-flash.flash--in { animation: none !important; }
     }
   </style>
 </head>
@@ -402,6 +503,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=5"></script>
+<script type="module" src="js/player.js?v=8"></script>
 </body>
 </html>
