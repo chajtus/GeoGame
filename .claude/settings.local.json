@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash:*)",
+      "Bash(mkdir -p js css photos assets scripts .github/workflows)",
+      "Bash(touch photos/.gitkeep assets/.gitkeep)"
+    ]
+  }
+}

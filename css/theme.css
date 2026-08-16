@@ -1,0 +1,99 @@
+:root {
+  --bg: #0d0d1a;
+  --bg-mid: #1a1a2e;
+  --bg-panel: #0a0a1a;
+  --primary: #e91e8c;
+  --primary-light: #ff79c6;
+  --purple: #9c27b0;
+  --border: #2a2a4a;
+  --text: #ffffff;
+  --text-muted: #888;
+  --gold: #ffd700;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+  --green: #4caf50;
+  --orange: #ff9800;
+  --red: #f44336;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn--primary {
+  background: linear-gradient(90deg, var(--primary), var(--purple));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(233,30,140,0.4);
+}
+.btn--secondary {
+  background: var(--bg-mid);
+  color: var(--text-muted);
+  border: 1.5px solid var(--border);
+}
+.btn--danger {
+  background: #3a1010;
+  color: var(--red);
+  border: 1.5px solid #6a2020;
+}
+.btn--success {
+  background: #1a3a1a;
+  color: var(--green);
+  border: 1.5px solid #2a6a2a;
+}
+
+.hidden { display: none !important; }
+.logo-text {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--primary-light);
+}
+.top-bar {
+  background: linear-gradient(90deg, #1a0030, #3d0060);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+.avatar-circle {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid var(--primary);
+}
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
