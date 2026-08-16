@@ -148,6 +148,7 @@ async function startRound(index) {
   }, 5000);
 
   $('answer-count-num').textContent = '0';
+  $('top5-list').innerHTML = '<div style="color:var(--text-muted);font-size:11px;text-align:center;padding:8px 0;">Brak danych z poprzednich rund</div>';
   hide('host-countdown-overlay');
   lastCountdownSec = -1;
   startHostTimer(startedAt, durationMs);
@@ -345,10 +346,13 @@ async function showResults(questionIndex) {
   thumb.src = q.photo_url;
   thumb.style.display = 'block';
 
+  // Show loading state while fetching
+  $('results-list').innerHTML = `<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:16px;">Ładowanie wyników...</div>`;
+
   // Init / reset results map
   if (resultsMap) { resultsMap.remove(); resultsMap = null; }
-  // Wait for DOM to render the visible container
-  await new Promise(r => setTimeout(r, 120));
+  // Wait for DOM to render and paint the visible container before Leaflet reads dimensions
+  await new Promise(r => setTimeout(r, 200));
   resultsMap = initMap('results-map', { center: [q.lat, q.lng], zoom: 4, skipTiles: true });
 
   // Layer control with 3 base maps
@@ -363,7 +367,10 @@ async function showResults(questionIndex) {
   });
   L.control.layers({ 'Kolorowa': voyager, 'Ciemna': dark, 'OSM': osm }, {}, { position: 'topleft' }).addTo(resultsMap);
 
+  // Multiple invalidateSize calls — layout may not settle in a single tick
   setTimeout(() => resultsMap.invalidateSize(), 100);
+  setTimeout(() => resultsMap.invalidateSize(), 350);
+  setTimeout(() => resultsMap.invalidateSize(), 700);
 
   // True location marker
   createTrueLocationMarker(resultsMap, q.lat, q.lng);
@@ -402,32 +409,20 @@ async function showResults(questionIndex) {
     ? `<div style="text-align:center;color:var(--text-muted);font-size:11px;padding:8px 0;">+ ${rest} pozostałych</div>`
     : '');
 
-  // Fit map to show all pins + true location
-  const allLatLngs = [[q.lat, q.lng], ...pins.map(p => [p.lat, p.lng])];
-  if (allLatLngs.length > 1) {
-    resultsMap.fitBounds(L.latLngBounds(allLatLngs), { padding: [40, 40] });
-  }
-
-  // Add player pins + polylines + km labels
+  // Add player pins + polylines (km shown in tooltip on hover — labels cluttered with many players)
   pins.forEach(pin => {
     addPlayerPin(resultsMap, pin.players, pin.lat, pin.lng, pin.distance_km);
     drawPolyline(resultsMap, [pin.lat, pin.lng], [q.lat, q.lng], pin.players.avatar_color);
-
-    // Distance label at midpoint of line
-    const midLat = (pin.lat + q.lat) / 2;
-    const midLng = (pin.lng + q.lng) / 2;
-    const distKm = pin.distance_km < 1
-      ? `${Math.round(pin.distance_km * 1000)} m`
-      : `${Math.round(pin.distance_km)} km`;
-    L.marker([midLat, midLng], {
-      icon: L.divIcon({
-        html: `<div style="background:#fff;color:#111;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,0.35);border:1px solid rgba(0,0,0,0.12);">${distKm}</div>`,
-        className: '',
-        iconAnchor: [22, 10],
-      }),
-      interactive: false,
-    }).addTo(resultsMap);
   });
+
+  // Fit map after invalidateSize settles
+  const allLatLngs = [[q.lat, q.lng], ...pins.map(p => [p.lat, p.lng])];
+  setTimeout(() => {
+    resultsMap.invalidateSize();
+    if (allLatLngs.length > 1) {
+      resultsMap.fitBounds(L.latLngBounds(allLatLngs), { padding: [60, 60] });
+    }
+  }, 400);
 
   // Next question button
   $('btn-next-question').onclick = () => {
@@ -502,8 +497,12 @@ async function showLeaderboard(isFinal) {
       </div>`;
   }).join('');
 
-  // Rest of ranking
-  $('lb-rest').innerHTML = ranked.slice(3).map((p, i) => {
+  // Rest of ranking — cap at 20 rows (10 per column) to prevent overflow
+  const LB_MAX = 20;
+  const lbRest = ranked.slice(3);
+  const lbShown = lbRest.slice(0, LB_MAX);
+  const lbExtra = lbRest.length - lbShown.length;
+  $('lb-rest').innerHTML = lbShown.map((p, i) => {
     const rank = i + 4;
     const prev = posMap[p.id];
     const change = prev ? prev - rank : 0;
@@ -523,7 +522,9 @@ async function showLeaderboard(isFinal) {
         <span class="lb-pts">${p.total_score.toLocaleString('pl')}</span>
         ${changeHtml}
       </div>`;
-  }).join('');
+  }).join('') + (lbExtra > 0
+    ? `<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:11px;padding:6px 0;">+ ${lbExtra} pozostałych</div>`
+    : '');
 
   prevRankings = ranked;
 
