@@ -161,6 +161,7 @@ let playerPin = null;
 let playerPinLatLng = null;
 let currentQuestion = null;
 let timerInterval = null;
+let submitted = false;
 
 // ── Round start ───────────────────────────────────────────────────────────
 async function handleRoundStart(payload) {
@@ -173,6 +174,7 @@ async function handleRoundStart(payload) {
   $('btn-submit').disabled = true;
   $('btn-submit').textContent = '✅ ZATWIERDŹ ODPOWIEDŹ';
   playerPinLatLng = null;
+  submitted = false;
 
   // Init map on first round
   if (!leafletMap) {
@@ -213,7 +215,7 @@ function onMapClick(e) {
 function startPlayerTimer(startedAt, durationMs) {
   clearInterval(timerInterval);
   timerInterval = setInterval(() => {
-    const remaining = Math.max(0, durationMs - (Date.now() - startedAt));
+    const remaining = Math.max(0, durationMs - (Date.now() - new Date(startedAt).getTime()));
     const secs = Math.ceil(remaining / 1000);
     const mins = Math.floor(secs / 60);
     const s = secs % 60;
@@ -235,6 +237,8 @@ async function autoSubmit() {
 }
 
 async function submitAnswer() {
+  if (submitted) return;
+  submitted = true;
   if (!playerPinLatLng || !currentQuestion) return;
   $('btn-submit').disabled = true;
   clearInterval(timerInterval);
