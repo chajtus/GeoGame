@@ -11,27 +11,27 @@
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q02_a_21_01.jpg",
     "lat": 37.3221673,
     "lng": -113.0047934,
-    "location_name": "Park Narodowy Zion, Utah, USA"
+    "location_name": "Zion National Park, Utah, USA"
   },
   {
     "id": 3,
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q03_a_22_01.jpg",
     "lat": 49.232364099722226,
     "lng": 19.98174819972222,
-    "location_name": "Zakopane, Polska"
+    "location_name": "Zakopane, Poland"
   },
   {
     "id": 4,
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q04_a_22_12.jpg",
     "lat": 37.6540393,
     "lng": 20.8513759,
-    "location_name": "Δημοτική Ενότητα Λαγανά, Grecja"
+    "location_name": "Laganas, Zakynthos, Greece"
   },
   {
     "id": 5,
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q05_a_24_05.jpg",
     "lat": 38.264546099722224,
     "lng": -0.6913329,
-    "location_name": "Elx / Elche, Hiszpania"
+    "location_name": "Elche, Spain"
   }
 ]

@@ -6,6 +6,18 @@
 
   "a_21_01.jpg": {
     "address": "Zion National Park, Utah, USA",
-    "name": "Park Narodowy Zion, Utah, USA"
+    "name": "Zion National Park, Utah, USA"
+  },
+
+  "a_22_01.jpg": {
+    "name": "Zakopane, Poland"
+  },
+
+  "a_22_12.jpg": {
+    "name": "Laganas, Zakynthos, Greece"
+  },
+
+  "a_24_05.jpg": {
+    "name": "Elche, Spain"
   }
 }
