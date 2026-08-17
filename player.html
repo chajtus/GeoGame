@@ -197,24 +197,30 @@
       0%   { opacity: 0; transform: translateX(-50%) translateY(14px); }
       100% { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
-    /* Waiting overlay — grays out map, centered label */
+    /* Waiting overlay — semi-transparent over map */
     #map-waiting-overlay {
       position: absolute; inset: 0;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 12px;
+      align-items: center; justify-content: center; gap: 24px;
       z-index: 450; pointer-events: none;
-      background: rgba(5,0,20,0.7);
-      backdrop-filter: blur(2px) grayscale(0.6);
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(1px);
+    }
+    #waiting-sent {
+      font-size: 28px; font-weight: 900;
+      color: rgba(0,0,0,0.85);
+      text-shadow: 0 1px 4px rgba(255,255,255,0.6);
     }
     #waiting-label {
-      font-size: 18px; font-weight: 800; letter-spacing: 1.5px;
-      color: rgba(255,255,255,0.85);
+      font-size: 24px; font-weight: 900;
+      color: rgba(0,0,0,0.85);
+      text-shadow: 0 1px 4px rgba(255,255,255,0.6);
+      text-align: center;
     }
-    #waiting-count {
-      font-size: 64px; font-weight: 900; line-height: 1;
-      color: var(--primary-light);
-      text-shadow: 0 0 30px rgba(233,30,140,0.6);
-      user-select: none;
+    #waiting-dots {
+      font-size: 22px; font-weight: 800;
+      color: rgba(0,0,0,0.7);
+      text-shadow: 0 1px 4px rgba(255,255,255,0.6);
     }
     #map-waiting-overlay.waiting--in {
       animation: overlay-fade-in 0.35s cubic-bezier(0.16,1,0.3,1) both;
@@ -542,8 +548,9 @@
   <div id="map-hint">Dotknij mapę aby postawić pinezkę 📍</div>
   <!-- Waiting overlay — big centered text like countdown digits -->
   <div id="map-waiting-overlay" class="hidden">
-    <div id="waiting-label">Oczekiwanie na innych graczy</div>
-    <div id="waiting-count"></div>
+    <div id="waiting-sent">Odpowiedź wysłana.</div>
+    <div id="waiting-label">Oczekiwanie na innych graczy: <span id="waiting-count"></span></div>
+    <div id="waiting-dots">Czekamy...</div>
   </div>
   <div id="player-countdown-overlay" class="hidden">
     <div class="countdown-num" id="player-countdown-number"></div>
@@ -595,6 +602,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=37"></script>
+<script type="module" src="js/player.js?v=38"></script>
 </body>
 </html>

@@ -461,8 +461,9 @@ async function submitAnswer() {
   await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
     .catch(() => null);
 
-  // Hide submit bar and block map interaction
+  // Hide submit bar, hint, and block map interaction
   hide('map-submit-bar');
+  hide('map-hint');
   if (leafletMap) leafletMap.dragging.disable();
   if (leafletMap) leafletMap.touchZoom.disable();
 
