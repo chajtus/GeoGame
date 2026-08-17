@@ -45,6 +45,7 @@ $('name-input').addEventListener('input', () => {
 });
 
 // ── Selfie flow ───────────────────────────────────────────────────────────
+$('avatar-preview').addEventListener('click', () => $('btn-selfie').click());
 $('btn-selfie').addEventListener('click', async () => {
   try {
     cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
