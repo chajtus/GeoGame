@@ -166,8 +166,22 @@ function renderPlayerList() {
       <div class="player-chip" style="animation-delay:${i * 0.055}s;">
         <div class="avatar-circle" style="background:${p.avatar_color};width:28px;height:28px;font-size:10px;">${avatar}</div>
         <span>${p.name}</span>
+        <button class="btn-kick" data-id="${p.id}" title="Usuń gracza">✕</button>
       </div>`;
   }).join('');
+
+  // Kick buttons
+  document.querySelectorAll('.btn-kick').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const player = players.find(p => p.id === id);
+      if (!player || !confirm(`Usunąć ${player.name} z gry?`)) return;
+      await sb.from('players').delete().eq('id', id).catch(() => null);
+      players = players.filter(p => p.id !== id);
+      renderPlayerList();
+    });
+  });
 }
 
 // ── Session restore ───────────────────────────────────────────────────────
