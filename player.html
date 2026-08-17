@@ -197,63 +197,30 @@
       0%   { opacity: 0; transform: translateX(-50%) translateY(14px); }
       100% { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
-    /* Submitted overlay — dims the map, keeps it visible underneath */
-    #map-submitted-overlay {
-      position: absolute; inset: 0; z-index: 400;
-      background: rgba(5,0,20,0.78); backdrop-filter: blur(3px);
-      display: flex; align-items: center; justify-content: center;
-      padding-bottom: calc(64px + env(safe-area-inset-bottom, 16px));
+    /* Waiting overlay — like countdown, big centered text on the map */
+    #map-waiting-overlay {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 450; pointer-events: none;
     }
-    /* ANIMATE: overlay fade-in */
-    #map-submitted-overlay.overlay--in {
-      animation: overlay-fade-in 0.35s cubic-bezier(0.16,1,0.3,1) both;
+    #waiting-label {
+      font-size: 16px; font-weight: 700; letter-spacing: 2px;
+      color: rgba(255,255,255,0.5);
+      text-shadow: 0 0 20px rgba(233,30,140,0.4);
+    }
+    #waiting-count {
+      font-size: min(30vw, 35vh); font-weight: 900; line-height: 1;
+      color: rgba(255,255,255,0.12);
+      text-shadow: 0 0 50px rgba(233,30,140,0.3);
+      user-select: none;
+    }
+    #map-waiting-overlay.waiting--in {
+      animation: overlay-fade-in 0.4s cubic-bezier(0.16,1,0.3,1) both;
     }
     @keyframes overlay-fade-in {
       0%   { opacity: 0; }
       100% { opacity: 1; }
-    }
-    /* BOLDER + ANIMATE: card scale+fade */
-    #map-submitted-card {
-      background: rgba(13,10,30,0.95); border: 2px solid var(--primary);
-      border-radius: 22px; padding: 28px 26px;
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
-      text-align: center; width: min(340px, 88vw);
-      box-shadow: 0 8px 40px rgba(233,30,140,0.3);
-    }
-    #map-submitted-card.card--in {
-      animation: card-pop-in 0.35s cubic-bezier(0.16,1,0.3,1) both;
-    }
-    @keyframes card-pop-in {
-      0%   { opacity: 0; transform: scale(0.85); box-shadow: 0 4px 10px rgba(233,30,140,0.1); }
-      60%  { box-shadow: 0 12px 60px rgba(233,30,140,0.7), 0 0 0 4px rgba(233,30,140,0.2); }
-      100% { opacity: 1; transform: scale(1); box-shadow: 0 8px 40px rgba(233,30,140,0.5), 0 0 0 2px rgba(233,30,140,0.15); }
-    }
-    #overlay-check { color: var(--green); font-size: 18px; font-weight: 800; letter-spacing: 1.5px; }
-    #overlay-waiting-phase { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    #overlay-waiting { color: var(--text-muted); font-size: 14px; }
-    /* Results revealed after all players answered */
-    #overlay-results { display: none; flex-direction: column; align-items: center; gap: 10px; }
-    #overlay-results.visible { display: flex; }
-    #overlay-points {
-      font-size: 54px; font-weight: 900; line-height: 1;
-      background: linear-gradient(135deg, var(--primary-light), var(--gold));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    #overlay-distance { color: #bbb; font-size: 15px; }
-    #overlay-location { color: var(--primary-light); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
-
-    /* Floating vote icons in submitted overlay background */
-    #overlay-vote-bg {
-      position: absolute; inset: 0; pointer-events: none; overflow: hidden;
-    }
-    .vote-float {
-      position: absolute; font-size: 28px; opacity: 0;
-      animation: float-up 2.2s ease-out forwards;
-    }
-    @keyframes float-up {
-      0%   { opacity: 0.9; transform: translateY(0) scale(1.1); }
-      60%  { opacity: 0.5; }
-      100% { opacity: 0; transform: translateY(-130px) scale(0.6); }
     }
 
     /* Fixed bottom bar — always above navigation bar */
@@ -572,25 +539,10 @@
   </div>
   <div id="map"></div>
   <div id="map-hint">Dotknij mapę aby postawić pinezkę 📍</div>
-  <!-- Submitted overlay — appears over the dimmed map after answering -->
-  <div id="map-submitted-overlay" class="hidden">
-    <div id="overlay-vote-bg"></div>
-    <div id="map-submitted-card">
-      <div id="overlay-check">✓ ODPOWIEDŹ ZATWIERDZONA</div>
-      <!-- Waiting phase -->
-      <div id="overlay-waiting-phase">
-        <div class="spinner"></div>
-        <div id="overlay-waiting">Czekam na pozostałych graczy...</div>
-        <div id="overlay-count" style="color:var(--primary-light);font-size:16px;font-weight:800;"></div>
-        <div id="overlay-countdown" style="color:var(--text-muted);font-size:13px;"></div>
-      </div>
-      <!-- Results phase — shown when all answered -->
-      <div id="overlay-results">
-        <div id="overlay-points">—</div>
-        <div id="overlay-distance"></div>
-        <div id="overlay-location"></div>
-      </div>
-    </div>
+  <!-- Waiting overlay — big centered text like countdown digits -->
+  <div id="map-waiting-overlay" class="hidden">
+    <div id="waiting-label">Inni odpowiadają</div>
+    <div id="waiting-count"></div>
   </div>
   <div id="player-countdown-overlay" class="hidden">
     <div class="countdown-num" id="player-countdown-number"></div>
@@ -642,6 +594,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=31"></script>
+<script type="module" src="js/player.js?v=32"></script>
 </body>
 </html>

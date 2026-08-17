@@ -187,23 +187,8 @@ function subscribeToGame() {
       }
     })
     .on('broadcast', { event: 'player_answered' }, ({ payload }) => {
-      if (!$('map-submitted-overlay').classList.contains('hidden')) {
-        $('overlay-count').textContent = `${payload.answered} / ${payload.total} odpowiedziało`;
-        // All players answered — show results
-        if (payload.answered >= payload.total) {
-          $('overlay-waiting-phase').style.display = 'none';
-          $('overlay-results').classList.add('visible');
-          $('overlay-check').textContent = '✓ ODPOWIEDŹ WYSŁANA';
-        }
-        // Floating ✅ animation for each new answer
-        const icons = ['✅','🎯','✔️','💚'];
-        const el = document.createElement('div');
-        el.className = 'vote-float';
-        el.textContent = icons[Math.floor(Math.random() * icons.length)];
-        el.style.left = (10 + Math.random() * 80) + '%';
-        el.style.bottom = (5 + Math.random() * 40) + '%';
-        $('overlay-vote-bg').appendChild(el);
-        el.addEventListener('animationend', () => el.remove(), { once: true });
+      if (!$('map-waiting-overlay').classList.contains('hidden')) {
+        $('waiting-count').textContent = `${payload.answered}/${payload.total}`;
       }
     })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
@@ -213,7 +198,7 @@ function subscribeToGame() {
     })
     .on('broadcast', { event: 'show_leaderboard' }, ({ payload }) => {
       leaderboardShown = true;
-      clearInterval(submittedCountdownInterval);
+    
       hide('screen-submitted');
       hideMap();
       hide('screen-round-flash');
@@ -242,7 +227,7 @@ let timerInterval = null;
 let submitted = false;
 let manuallySubmitted = false; // true only when player clicked Zatwierdź
 let playerResultMap = null;
-let submittedCountdownInterval = null;
+
 let lastPlayerCountdownSec = -1;
 let lastDistanceKm = 0;
 let lastPoints = 0;
@@ -265,7 +250,7 @@ async function fetchPlayerRank() {
 
 // ── Round start ───────────────────────────────────────────────────────────
 async function handleRoundStart(payload, showFlash = false) {
-  clearInterval(submittedCountdownInterval);
+
   if (playerResultMap) { playerResultMap.remove(); playerResultMap = null; }
 
   // Guard: round already ended (late delivery of round_start after round_end)
@@ -301,7 +286,7 @@ async function handleRoundStart(payload, showFlash = false) {
     $('flash-photo').src = payload.photo_url;
     hide('screen-waiting');
     hide('screen-submitted');
-    hide('map-submitted-overlay');
+    hide('map-waiting-overlay');
     hideMap();
     show('screen-round-flash');
     triggerAnim('screen-round-flash', 'flash--in');
@@ -311,7 +296,7 @@ async function handleRoundStart(payload, showFlash = false) {
   } else {
     hide('screen-waiting');
     hide('screen-submitted');
-    hide('map-submitted-overlay');
+    hide('map-waiting-overlay');
     hide('screen-round-flash');
   }
 
@@ -401,8 +386,8 @@ function startPlayerTimer(startedAt, durationMs) {
       $('map-submit-bar').classList.remove('submit-urgent');
     }
 
-    // Countdown: flash "10" once (orange), then 5-4-3-2-1 (red)
-    const showCountdown = (secs === 10 || secs <= 5) && secs > 0 && remaining > 0;
+    // Countdown: flash "10" once (orange), then 5-4-3-2-1 (red) — only before submitting
+    const showCountdown = !submitted && (secs === 10 || secs <= 5) && secs > 0 && remaining > 0;
     if (showCountdown) {
       if (secs !== lastPlayerCountdownSec) {
         lastPlayerCountdownSec = secs;
@@ -449,7 +434,6 @@ async function submitAnswer() {
   if (!playerPinLatLng || !currentQuestion) return;
   $('btn-submit').disabled = true;
   $('map-submit-bar').classList.remove('submit-urgent');
-  clearInterval(timerInterval);
 
   const { haversineKm, calculatePoints } = await import('./scoring.js');
   const distanceKm = haversineKm(
@@ -474,48 +458,17 @@ async function submitAnswer() {
   await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
     .catch(() => null);
 
-  // Prepare result data (shown later when all players answer)
-  const distLabel = distanceKm < 1
-    ? `${Math.round(distanceKm * 1000)} m od celu`
-    : `${Math.round(distanceKm).toLocaleString('pl')} km od celu`;
-  $('overlay-points').textContent = points > 0 ? `+${points.toLocaleString('pl')}` : '0 pkt';
-  $('overlay-distance').textContent = distLabel;
-  $('overlay-location').textContent = currentQuestion.location_name || '';
-
-  // Show waiting phase first, hide results
-  $('overlay-waiting-phase').style.display = 'flex';
-  $('overlay-results').classList.remove('visible');
-  $('overlay-count').textContent = '';
-  $('overlay-countdown').textContent = '';
-
   // Hide submit bar and block map interaction
   hide('map-submit-bar');
   if (leafletMap) leafletMap.dragging.disable();
   if (leafletMap) leafletMap.touchZoom.disable();
 
-  show('map-submitted-overlay');
-  triggerAnim('map-submitted-overlay', 'overlay--in');
-  triggerAnim('map-submitted-card', 'card--in');
-
-  startSubmittedCountdown();
+  // Show waiting overlay with big count on the map
+  $('waiting-count').textContent = '';
+  show('map-waiting-overlay');
+  triggerAnim('map-waiting-overlay', 'waiting--in');
 }
 
-function startSubmittedCountdown() {
-  clearInterval(submittedCountdownInterval);
-  const q = currentQuestion;
-  submittedCountdownInterval = setInterval(() => {
-    const remaining = Math.max(0, q.duration_ms - (Date.now() - new Date(q.started_at).getTime()));
-    const secs = Math.ceil(remaining / 1000);
-    if (secs > 0) {
-      $('overlay-countdown').textContent = `${secs}s`;
-      $('overlay-waiting').textContent = 'Czekam na innych graczy...';
-    } else {
-      $('overlay-countdown').textContent = '';
-      $('overlay-waiting').textContent = 'Czekam na wyniki...';
-      clearInterval(submittedCountdownInterval);
-    }
-  }, 100);
-}
 
 async function initSubmitMiniMap(distanceKm) {
   if (playerResultMap) { playerResultMap.remove(); playerResultMap = null; }
@@ -563,8 +516,8 @@ async function initSubmitMiniMap(distanceKm) {
 
 // ── Show player result map after round ends ───────────────────────────────
 function showPlayerResult() {
-  clearInterval(submittedCountdownInterval);
-  hide('map-submitted-overlay');
+
+  hide('map-waiting-overlay');
 
   const notSubmitted = !manuallySubmitted;
   const noPin = notSubmitted && !playerPinLatLng;
@@ -627,7 +580,7 @@ function showPlayerResult() {
 function handleRoundEnd() {
   if (currentQuestion) lastEndedQuestionIndex = currentQuestion.question_index;
   clearInterval(timerInterval);
-  clearInterval(submittedCountdownInterval);
+
   hide('player-countdown-overlay');
   $('player-timer').textContent = 'Czas!';
   $('player-timer').classList.add('urgent');
