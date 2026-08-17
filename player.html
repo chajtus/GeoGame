@@ -153,8 +153,10 @@
       display: none;
       flex-shrink: 0;
       height: 56px;
-      position: relative;   /* establishes stacking context … */
-      z-index: 1;           /* … above everything inside screen-map          */
+      position: relative;
+      z-index: 1;
+      transform: translateZ(0);     /* own GPU compositing layer          */
+      backface-visibility: hidden;  /* keeps layer alive during zoom anim */
       background: #1a0030;
       padding: 0 16px;
       align-items: center;
@@ -300,9 +302,9 @@
     }
     .countdown-num {
       font-weight: 900; line-height: 1; user-select: none;
-      font-size: min(55vw, 65vh);
-      color: rgba(255,255,255,0.13);
-      text-shadow: 0 0 60px rgba(233,30,140,0.3);
+      font-size: min(50vw, 55vh);
+      color: rgba(255,152,0,0.7);
+      text-shadow: 0 0 12px rgba(255,152,0,0.5);
       animation: cdown-pop 0.55s cubic-bezier(0.22,1,0.36,1);
     }
     @keyframes cdown-pop {

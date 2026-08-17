@@ -347,6 +347,15 @@ async function initPlayerMap() {
   showHintAnimated();
   // Resize when browser chrome hides/shows (e.g. Android address bar)
   window.addEventListener('resize', () => { if (leafletMap) leafletMap.invalidateSize(); });
+  // Safety net: force bar visible after any zoom/move — Android Chrome
+  // GPU compositing can hide the bar during zoom animations
+  leafletMap.on('zoomend moveend', () => {
+    const bar = $('map-top-bar');
+    if (bar && !$('screen-map').classList.contains('hidden')) {
+      bar.classList.add('map-bar--visible');
+      bar.style.display = 'flex';
+    }
+  });
 }
 
 function showHintAnimated() {
@@ -390,8 +399,8 @@ function startPlayerTimer(startedAt, durationMs) {
       $('map-submit-bar').classList.remove('submit-urgent');
     }
 
-    // Countdown overlay 5-4-3-2-1
-    if (secs <= 5 && secs > 0 && remaining > 0) {
+    // Countdown overlay 10-9-8-...-1
+    if (secs <= 10 && secs > 0 && remaining > 0) {
       if (secs !== lastPlayerCountdownSec) {
         lastPlayerCountdownSec = secs;
         const el = $('player-countdown-number');
