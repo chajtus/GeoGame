@@ -129,10 +129,18 @@ function openKickModal() {
       if (!player) return;
       btn.textContent = '...';
       btn.disabled = true;
-      await sb.from('players').delete().eq('id', id);
+      // Check if kicked player already answered this round
+      const hadAnswered = answeredNames.includes(player.name);
+      await sb.from('players').delete().eq('id', id).catch(() => null);
       await sb.from('pins').delete().eq('player_id', id).catch(() => null);
       players = players.filter(p => p.id !== id);
+      if (hadAnswered) {
+        answerCount = Math.max(0, answerCount - 1);
+        answeredNames = answeredNames.filter(n => n !== player.name);
+      }
       $('player-total').textContent = players.length;
+      $('answer-count-num').textContent = answerCount;
+      $('answered-names').textContent = answeredNames.join(' · ');
       btn.closest('div[style]').remove();
       // Update stats and auto-end round if all remaining players answered
       $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
@@ -249,7 +257,7 @@ function renderPlayerList() {
       const id = btn.dataset.id;
       const player = players.find(p => p.id === id);
       if (!player || !confirm(`Usunąć ${player.name} z gry?`)) return;
-      await sb.from('players').delete().eq('id', id);
+      await sb.from('players').delete().eq('id', id).catch(() => null);
       players = players.filter(p => p.id !== id);
       renderPlayerList();
     });
