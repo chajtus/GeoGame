@@ -547,13 +547,21 @@ function showPlayerResult() {
   clearInterval(submittedCountdownInterval);
   hide('map-submitted-overlay');
 
-  const noPin = !playerPinLatLng && lastDistanceKm === 0 && lastPoints === 0;
   const notSubmitted = !manuallySubmitted;
+  const noPin = notSubmitted && !playerPinLatLng;
   const distLabel = notSubmitted
     ? (playerPinLatLng ? '📍 Pinezka niezatwierdzona' : '😅 Nie zaznaczyłeś miejsca')
     : lastDistanceKm < 1
       ? `${Math.round(lastDistanceKm * 1000)} m od celu`
       : `${Math.round(lastDistanceKm).toLocaleString('pl')} km od celu`;
+  const statusEl = $('submit-status-label');
+  if (notSubmitted) {
+    statusEl.textContent = '⚠ ODPOWIEDŹ NIEZATWIERDZONA';
+    statusEl.style.color = 'var(--red)';
+  } else {
+    statusEl.textContent = '✓ ODPOWIEDŹ WYSŁANA';
+    statusEl.style.color = 'var(--green)';
+  }
   $('submit-points').textContent = lastPoints > 0 ? `+${lastPoints.toLocaleString('pl')} pkt` : '0 pkt';
   $('submit-distance').textContent = distLabel;
   $('submit-location').textContent = noPin ? '' : (currentQuestion?.location_name || '');
