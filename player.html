@@ -269,6 +269,16 @@
       padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 16px));
     }
     #btn-submit { width: 100%; font-size: 17px; font-weight: 800; padding: 16px; border-radius: 14px; transition: transform 0.15s ease, background 0.2s ease; }
+    /* Urgent pulse — last 5 seconds, only when button is enabled */
+    #map-submit-bar.submit-urgent #btn-submit:not(:disabled) {
+      background: var(--red) !important;
+      animation: submit-urgent-pulse 0.4s ease-in-out infinite alternate !important;
+      box-shadow: 0 0 0 0 rgba(244,67,54,0.7);
+    }
+    @keyframes submit-urgent-pulse {
+      from { transform: scale(1);    box-shadow: 0 4px 20px rgba(244,67,54,0.6); }
+      to   { transform: scale(1.04); box-shadow: 0 4px 40px rgba(244,67,54,1), 0 0 0 6px rgba(244,67,54,0.25); }
+    }
     /* ANIMATE: btn-submit confirmation bounce */
     #btn-submit.btn--confirmed {
       animation: btn-confirm 0.4s cubic-bezier(0.16,1,0.3,1) both;

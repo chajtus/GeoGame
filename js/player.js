@@ -232,6 +232,7 @@ let playerPinLatLng = null;
 let currentQuestion = null;
 let timerInterval = null;
 let submitted = false;
+let manuallySubmitted = false; // true only when player clicked Zatwierdź
 let playerResultMap = null;
 let submittedCountdownInterval = null;
 let lastPlayerCountdownSec = -1;
@@ -279,6 +280,7 @@ async function handleRoundStart(payload, showFlash = false) {
   currentQuestion = payload;
   playerPinLatLng = null;
   submitted = false;
+  manuallySubmitted = false;
   leaderboardShown = false;
   lastDistanceKm = 0;
   lastPoints = 0;
@@ -379,6 +381,13 @@ function startPlayerTimer(startedAt, durationMs) {
     $('player-timer').textContent = `${mins}:${String(s).padStart(2, '0')}`;
     $('player-timer').classList.toggle('urgent', secs <= 10);
 
+    // Submit bar urgent pulse — last 5 seconds
+    if (secs <= 5 && remaining > 0 && !submitted) {
+      $('map-submit-bar').classList.add('submit-urgent');
+    } else {
+      $('map-submit-bar').classList.remove('submit-urgent');
+    }
+
     // Countdown overlay 5-4-3-2-1
     if (secs <= 5 && secs > 0 && remaining > 0) {
       if (secs !== lastPlayerCountdownSec) {
@@ -420,8 +429,10 @@ async function autoSubmit() {
 async function submitAnswer() {
   if (submitted) return;
   submitted = true;
+  manuallySubmitted = true;
   if (!playerPinLatLng || !currentQuestion) return;
   $('btn-submit').disabled = true;
+  $('map-submit-bar').classList.remove('submit-urgent');
   clearInterval(timerInterval);
 
   const { haversineKm, calculatePoints } = await import('./scoring.js');
@@ -537,8 +548,9 @@ function showPlayerResult() {
   hide('map-submitted-overlay');
 
   const noPin = !playerPinLatLng && lastDistanceKm === 0 && lastPoints === 0;
-  const distLabel = noPin
-    ? '😅 Nie zaznaczyłeś miejsca'
+  const notSubmitted = !manuallySubmitted;
+  const distLabel = notSubmitted
+    ? (playerPinLatLng ? '📍 Pinezka niezatwierdzona' : '😅 Nie zaznaczyłeś miejsca')
     : lastDistanceKm < 1
       ? `${Math.round(lastDistanceKm * 1000)} m od celu`
       : `${Math.round(lastDistanceKm).toLocaleString('pl')} km od celu`;
@@ -560,7 +572,7 @@ function showPlayerResult() {
   triggerAnim('submit-points', 'result--in');
   triggerAnim('submit-distance', 'result--in');
 
-  if (noPin) {
+  if (noPin || notSubmitted) {
     hide('submit-mini-map');
   } else {
     show('submit-mini-map');
@@ -598,34 +610,10 @@ function handleRoundEnd() {
 
   if (!submitted) {
     submitted = true;
-    if (!playerPinLatLng) {
-      // No pin placed — 0 points, skip DB
-      lastDistanceKm = 0;
-      lastPoints = 0;
-      showPlayerResult();
-    } else {
-      // Pin placed — calculate instantly, show result now, write DB in background
-      import('./scoring.js').then(({ haversineKm, calculatePoints }) => {
-        lastDistanceKm = haversineKm(
-          playerPinLatLng[0], playerPinLatLng[1],
-          currentQuestion.lat, currentQuestion.lng
-        );
-        lastPoints = calculatePoints(lastDistanceKm);
-
-        // fire-and-forget DB writes
-        sb.from('pins').insert({
-          session_id: SESSION_ID,
-          player_id: playerState.id,
-          question_index: currentQuestion.question_index,
-          lat: playerPinLatLng[0], lng: playerPinLatLng[1],
-          distance_km: lastDistanceKm, points: lastPoints,
-        }).catch(() => null);
-        sb.rpc('increment_score', { player_id: playerState.id, amount: lastPoints }).catch(() => null);
-
-        // Guard: show_leaderboard may have arrived while import() was pending
-        if (!leaderboardShown) showPlayerResult();
-      });
-    }
+    // Player didn't click Zatwierdź — always 0 pts, no DB write
+    lastDistanceKm = 0;
+    lastPoints = 0;
+    showPlayerResult();
   } else {
     showPlayerResult();
   }
