@@ -578,7 +578,7 @@ function showPlayerResult() {
 })();
 
 // ── Round end from host ───────────────────────────────────────────────────
-function handleRoundEnd() {
+async function handleRoundEnd() {
   if (currentQuestion) lastEndedQuestionIndex = currentQuestion.question_index;
   clearInterval(timerInterval);
 
@@ -587,10 +587,15 @@ function handleRoundEnd() {
   $('player-timer').classList.add('urgent');
 
   if (!submitted) {
-    submitted = true;
-    // Player didn't click Zatwierdź — always 0 pts, no DB write
-    lastDistanceKm = 0;
-    lastPoints = 0;
+    if (playerPinLatLng) {
+      // Pin placed but not confirmed — auto-submit as valid answer
+      await autoSubmit();
+    } else {
+      // No pin at all — 0 pts, no DB write
+      submitted = true;
+      lastDistanceKm = 0;
+      lastPoints = 0;
+    }
     showPlayerResult();
   } else {
     showPlayerResult();
