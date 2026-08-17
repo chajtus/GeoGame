@@ -238,21 +238,23 @@ function subscribeToPlayers() {
     .subscribe();
 }
 
+let ljfSide = 0; // alternates, but first pick is random
 function showJoinFlash(player) {
   // Remove previous flash if still visible
-  const prev = document.getElementById('lobby-join-flash');
-  if (prev) prev.remove();
+  document.querySelectorAll('.lobby-join-flash').forEach(el => el.remove());
+  const side = ljfSide++ % 2 === (Math.random() > 0.5 ? 0 : 1) ? 'ljf-left' : 'ljf-right';
   const avatarInner = player.avatar_data_url
     ? `<img src="${player.avatar_data_url}">`
     : `<span>${player.initials}</span>`;
   const div = document.createElement('div');
-  div.id = 'lobby-join-flash';
+  div.className = `lobby-join-flash ${side}`;
   div.innerHTML = `
     <div class="ljf-avatar" style="background:${player.avatar_data_url ? 'transparent' : player.avatar_color}">${avatarInner}</div>
     <div class="ljf-name">${player.name}</div>
+    <div class="ljf-label">dołącza do gry</div>
   `;
   document.body.appendChild(div);
-  setTimeout(() => div.remove(), 2000);
+  setTimeout(() => div.remove(), 2200);
 }
 
 function renderPlayerList() {

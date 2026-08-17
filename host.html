@@ -580,38 +580,49 @@
     #restore-toast.hidden { display: none; }
 
     /* lobby join flash */
-    #lobby-join-flash {
-      position: fixed; inset: 0; z-index: 9999;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    .lobby-join-flash {
+      position: fixed; top: 50%; z-index: 9999;
+      transform: translateY(-50%);
+      display: flex; flex-direction: column; align-items: center;
       pointer-events: none;
-      animation: lobby-flash-in 0.5s cubic-bezier(0.16,1,0.3,1) both,
-                 lobby-flash-out 0.4s ease 1.4s both;
+      animation: ljf-slide-in 0.5s cubic-bezier(0.16,1,0.3,1) both,
+                 ljf-slide-out 0.45s ease 1.6s both;
     }
-    #lobby-join-flash .ljf-avatar {
-      width: 120px; height: 120px; border-radius: 50%;
+    .lobby-join-flash.ljf-left { left: 60px; }
+    .lobby-join-flash.ljf-right { right: 60px; }
+    .lobby-join-flash .ljf-avatar {
+      width: 140px; height: 140px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 44px; font-weight: 800; color: #fff;
-      border: 4px solid rgba(255,215,0,0.6);
-      box-shadow: 0 0 60px rgba(233,30,140,0.5), 0 0 120px rgba(255,215,0,0.2);
+      font-size: 52px; font-weight: 800; color: #fff;
+      border: 4px solid rgba(255,215,0,0.5);
+      box-shadow: 0 0 50px rgba(233,30,140,0.45), 0 0 100px rgba(255,215,0,0.15),
+                  inset 0 0 30px rgba(255,255,255,0.05);
       overflow: hidden;
       animation: ljf-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
     }
-    #lobby-join-flash .ljf-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    #lobby-join-flash .ljf-name {
-      margin-top: 14px; font-size: 28px; font-weight: 900;
-      color: #fff; text-shadow: 0 0 30px rgba(233,30,140,0.6);
-      animation: ljf-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.15s both;
+    .lobby-join-flash .ljf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .lobby-join-flash .ljf-name {
+      margin-top: 12px; font-size: 24px; font-weight: 900;
+      color: #fff; letter-spacing: 0.5px;
+      text-shadow: 0 2px 20px rgba(233,30,140,0.5), 0 0 40px rgba(0,0,0,0.8);
+      animation: ljf-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.12s both;
+    }
+    .lobby-join-flash .ljf-label {
+      margin-top: 4px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 2px;
+      color: rgba(255,215,0,0.6);
+      animation: ljf-pop 0.35s cubic-bezier(0.34,1.56,0.64,1) 0.22s both;
     }
     @keyframes ljf-pop {
       from { opacity: 0; transform: scale(0.3); }
       to { opacity: 1; transform: scale(1); }
     }
-    @keyframes lobby-flash-in {
-      from { background: rgba(0,0,0,0); }
-      to { background: rgba(0,0,0,0.6); }
+    @keyframes ljf-slide-in {
+      from { opacity: 0; transform: translateY(-50%) scale(0.7); }
+      to { opacity: 1; transform: translateY(-50%) scale(1); }
     }
-    @keyframes lobby-flash-out {
-      to { opacity: 0; }
+    @keyframes ljf-slide-out {
+      to { opacity: 0; transform: translateY(-50%) scale(0.8); }
     }
 
     /* ══ SHARED ════════════════════════════════════════════════════════ */
@@ -642,7 +653,7 @@
   </div>
   <div id="phase-label" style="color:rgba(255,215,0,0.8);font-size:13px;font-weight:800;letter-spacing:2px;font-family:'Cinzel Decorative',serif;"></div>
   <div id="global-stat" style="color:var(--text-muted);font-size:12px;"></div>
-  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v57 · 17.08.26</div>
+  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v58 · 17.08.26</div>
 </div>
 
 <!-- KICK PLAYER MODAL -->
@@ -807,6 +818,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=57"></script>
+<script type="module" src="js/host.js?v=58"></script>
 </body>
 </html>
