@@ -551,7 +551,16 @@
   </div>
   <div id="phase-label" style="color:rgba(255,215,0,0.8);font-size:13px;font-weight:800;letter-spacing:2px;font-family:'Cinzel Decorative',serif;"></div>
   <div id="global-stat" style="color:var(--text-muted);font-size:12px;"></div>
-  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v41 · 18.08.26</div>
+  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v42 · 18.08.26</div>
+</div>
+
+<!-- KICK PLAYER MODAL -->
+<div id="kick-modal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(160deg,#1a0030,#0d0010);border:2px solid rgba(255,152,0,0.6);border-radius:20px;padding:28px 24px;max-width:400px;width:90%;text-align:center;box-shadow:0 8px 48px rgba(255,152,0,0.3);">
+    <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:16px;">Usuń gracza z gry</div>
+    <div id="kick-player-list" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;margin-bottom:16px;"></div>
+    <button id="btn-kick-close" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-size:14px;font-weight:700;padding:10px 24px;cursor:pointer;">Zamknij</button>
+  </div>
 </div>
 
 <!-- KILL SESSION MODAL -->
@@ -639,6 +648,7 @@
     <button class="btn btn--secondary" id="btn-pause">⏸ PAUZA</button>
     <button class="btn btn--success" id="btn-add-time">+5s</button>
     <button class="btn btn--danger" id="btn-end-round">⏹ ZAKOŃCZ</button>
+    <button class="btn btn--secondary" id="btn-kick-round" style="font-size:11px;padding:6px 12px;min-width:auto;">👤✕</button>
   </div>
 </div>
 
@@ -660,6 +670,7 @@
   </div>
   <div class="bottom-bar">
     <div class="bottom-bar-hint" id="results-file-label">—</div>
+    <button class="btn btn--secondary btn-kick-ingame" style="font-size:11px;padding:6px 12px;min-width:auto;">👤✕ Usuń gracza</button>
     <button class="btn btn--primary" id="btn-next-question">▶ NASTĘPNE PYTANIE</button>
   </div>
 </div>
@@ -679,6 +690,7 @@
   <div id="lb-rest"></div>
   <div class="bottom-bar">
     <div class="bottom-bar-hint">▲▼ zmiana pozycji względem poprzedniego rankingu</div>
+    <button class="btn btn--secondary btn-kick-ingame" style="font-size:11px;padding:6px 12px;min-width:auto;">👤✕ Usuń gracza</button>
     <button class="btn btn--primary" id="btn-after-lb">▶ PYTANIE</button>
   </div>
 </div>
@@ -699,6 +711,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=41"></script>
+<script type="module" src="js/host.js?v=42"></script>
 </body>
 </html>

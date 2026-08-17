@@ -108,6 +108,50 @@ $('btn-copy-link').addEventListener('click', async () => {
   }
 });
 
+// ── Kick player (in-game) ─────────────────────────────────────────────────
+function openKickModal() {
+  const list = $('kick-player-list');
+  list.innerHTML = players.map(p => {
+    const avatar = p.avatar_data_url
+      ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+      : `<span style="font-size:12px;font-weight:700;color:#fff;">${p.initials}</span>`;
+    return `<div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 12px;">
+      <div class="avatar-circle" style="background:${p.avatar_color};width:32px;height:32px;font-size:12px;">${avatar}</div>
+      <span style="flex:1;text-align:left;font-weight:700;">${p.name}</span>
+      <button class="btn btn--danger kick-player-btn" data-id="${p.id}" style="font-size:11px;padding:6px 14px;min-width:auto;">Usuń</button>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.kick-player-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const player = players.find(p => p.id === id);
+      if (!player) return;
+      btn.textContent = '...';
+      btn.disabled = true;
+      await sb.from('players').delete().eq('id', id).catch(() => null);
+      await sb.from('pins').delete().eq('player_id', id).catch(() => null);
+      players = players.filter(p => p.id !== id);
+      $('player-total').textContent = players.length;
+      btn.closest('div[style]').remove();
+      // If during round, update answer count
+      if (answerCount >= players.length && players.length > 0) {
+        $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
+      }
+    });
+  });
+
+  $('kick-modal').style.display = 'flex';
+}
+
+$('btn-kick-close').addEventListener('click', () => {
+  $('kick-modal').style.display = 'none';
+});
+$('btn-kick-round').addEventListener('click', openKickModal);
+document.querySelectorAll('.btn-kick-ingame').forEach(btn => {
+  btn.addEventListener('click', openKickModal);
+});
+
 // ── Kill-session button ───────────────────────────────────────────────────
 $('btn-kill-session').addEventListener('click', () => {
   $('kill-modal').style.display = 'flex';
