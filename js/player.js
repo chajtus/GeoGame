@@ -327,6 +327,28 @@ async function handleRoundStart(payload, showFlash = false) {
   $('leader-label').textContent = playerRank ? `🏆 #${playerRank}` : '🏆 —';
 
   startPlayerTimer(payload.started_at, payload.duration_ms);
+
+  // Check if player already submitted answer for this round (e.g. after page refresh)
+  try {
+    const { data: existingPin } = await sb.from('pins')
+      .select('distance_km, points')
+      .eq('session_id', SESSION_ID)
+      .eq('player_id', playerState.id)
+      .eq('question_index', payload.question_index)
+      .maybeSingle();
+    if (existingPin) {
+      submitted = true;
+      manuallySubmitted = true;
+      lastDistanceKm = existingPin.distance_km;
+      lastPoints = existingPin.points;
+      hide('map-submit-bar');
+      hide('map-hint');
+      if (leafletMap) { leafletMap.dragging.disable(); leafletMap.touchZoom.disable(); }
+      $('waiting-count').textContent = '';
+      show('map-waiting-overlay');
+      triggerAnim('map-waiting-overlay', 'waiting--in');
+    }
+  } catch (_) {}
 }
 
 // ── Animation helper: remove class, force reflow, re-add (re-trigger) ────────
