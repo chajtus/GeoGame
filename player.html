@@ -12,17 +12,18 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    html, body { height: 100%; overflow: hidden; }
-    body { height: 100dvh; display: flex; flex-direction: column; }
+    html { height: 100%; }
+    body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
     .leaflet-container { background: #a8c8e8 !important; } /* ocean color instead of grey */
 
     /* ═══ LOGIN ═══════════════════════════════════════════════════════════ */
     #screen-login {
-      flex: 1; display: flex; flex-direction: column;
+      flex: 1; min-height: 0; display: flex; flex-direction: column;
       background: #0d0d1a;
       /* reserve space for fixed button at bottom */
-      padding-bottom: calc(82px + env(safe-area-inset-bottom, 20px));
+      padding-bottom: calc(100px + env(safe-area-inset-bottom, 20px));
       overflow-y: auto; -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     /* HERO — full-width banner with Aga photo */
