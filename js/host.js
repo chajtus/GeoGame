@@ -130,17 +130,21 @@ function openKickModal() {
       btn.textContent = '...';
       btn.disabled = true;
       // Check if kicked player already answered this round
-      const hadAnswered = answeredNames.includes(player.name);
+      const hadAnswered = answeredIds.has(id);
       await sb.from('players').delete().eq('id', id).catch(() => null);
       await sb.from('pins').delete().eq('player_id', id).catch(() => null);
       players = players.filter(p => p.id !== id);
       if (hadAnswered) {
         answerCount = Math.max(0, answerCount - 1);
+        answeredIds.delete(id);
         answeredNames = answeredNames.filter(n => n !== player.name);
       }
+      // Remove from waiting list too
+      const wpEl = document.querySelector(`.waiting-player[data-id="${id}"]`);
+      if (wpEl) wpEl.remove();
+      if (!$('waiting-for-list').children.length) $('waiting-for-panel').classList.add('hidden');
       $('player-total').textContent = players.length;
       $('answer-count-num').textContent = answerCount;
-      $('answered-names').textContent = answeredNames.join(' · ');
       btn.closest('div[style]').remove();
       // Update stats and auto-end round if all remaining players answered
       $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
@@ -522,13 +526,35 @@ let answerChannel = null;
 let answerCount = 0;
 let answeredNames = [];
 
+function renderWaitingList() {
+  const list = $('waiting-for-list');
+  const waiting = players.filter(p => !answeredIds.has(p.id));
+  if (waiting.length === 0) {
+    $('waiting-for-panel').classList.add('hidden');
+    return;
+  }
+  $('waiting-for-panel').classList.remove('hidden');
+  list.innerHTML = waiting.map(p => {
+    const avatarInner = p.avatar_data_url
+      ? `<img src="${p.avatar_data_url}">`
+      : `<span>${p.initials}</span>`;
+    return `<div class="waiting-player" data-id="${p.id}">
+      <div class="wp-avatar" style="background:${p.avatar_data_url ? 'transparent' : p.avatar_color}">${avatarInner}</div>
+      <span class="wp-name">${p.name}</span>
+    </div>`;
+  }).join('');
+}
+
+let answeredIds = new Set();
+
 function subscribeAnswerCount(questionIndex) {
   if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
   answerCount = 0;
   answeredNames = [];
+  answeredIds = new Set();
   $('answer-count-num').textContent = '0';
   $('global-stat').textContent = `0/${players.length} odpowiedziało`;
-  $('answered-names').textContent = '';
+  renderWaitingList();
 
   answerChannel = sb.channel(`pins:${SESSION_ID}:${questionIndex}`)
     .on('postgres_changes', {
@@ -539,6 +565,7 @@ function subscribeAnswerCount(questionIndex) {
     }, ({ new: pin }) => {
       if (pin.question_index !== questionIndex) return;
       answerCount++;
+      answeredIds.add(pin.player_id);
       const numEl = $('answer-count-num');
       numEl.textContent = answerCount;
       numEl.classList.remove('count-pop-anim');
@@ -548,7 +575,12 @@ function subscribeAnswerCount(questionIndex) {
       const player = players.find(p => p.id === pin.player_id);
       if (player) {
         answeredNames.push(player.name);
-        $('answered-names').textContent = answeredNames.join(' · ');
+      }
+      // Animate out the answered player from waiting list
+      const wpEl = document.querySelector(`.waiting-player[data-id="${pin.player_id}"]`);
+      if (wpEl) {
+        wpEl.classList.add('answered');
+        setTimeout(() => { wpEl.remove(); if (!$('waiting-for-list').children.length) $('waiting-for-panel').classList.add('hidden'); }, 400);
       }
       broadcast(gameChannel, 'player_answered', { answered: answerCount, total: players.length }).catch(() => null);
       // Auto-end round when everyone has answered
@@ -589,6 +621,7 @@ async function endRound() {
   timerRunning = false;
   clearInterval(heartbeatInterval);
   hide('host-countdown-overlay');
+  $('waiting-for-panel').classList.add('hidden');
   if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
   // Broadcast with 2s timeout — showResults must always run even on network hiccup
   await Promise.race([

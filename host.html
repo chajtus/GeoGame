@@ -348,7 +348,47 @@
       box-shadow: 0 4px 22px rgba(0,0,0,0.7), 0 0 14px rgba(255,215,0,0.07);
     }
     #answer-count-line { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
-    #answered-names { font-size: 13px; color: rgba(255,215,0,0.75); margin-top: 6px; line-height: 1.6; word-break: break-word; }
+
+    /* waiting-for panel */
+    #waiting-for-panel {
+      position: absolute; top: 12px; left: 12px; z-index: 200;
+      background: linear-gradient(160deg, rgba(15,0,45,0.95), rgba(28,0,65,0.95));
+      backdrop-filter: blur(12px);
+      border: 2px solid rgba(233,30,140,0.35);
+      border-radius: 18px; padding: 14px 18px; min-width: 200px; max-width: 320px;
+      max-height: calc(100vh - 220px); overflow-y: auto;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.85), 0 0 20px rgba(233,30,140,0.1);
+    }
+    #waiting-for-panel h4 {
+      font-size: 12px; letter-spacing: 2px; margin-bottom: 10px;
+      font-weight: 700; text-transform: uppercase;
+      color: rgba(233,30,140,0.8);
+    }
+    .waiting-player {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+      animation: wait-player-in 0.3s ease both;
+    }
+    .waiting-player .wp-avatar {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #fff;
+      border: 1.5px solid rgba(255,255,255,0.3); overflow: hidden;
+    }
+    .waiting-player .wp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .waiting-player .wp-name {
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .waiting-player.answered {
+      animation: wait-player-out 0.4s ease both;
+    }
+    @keyframes wait-player-in {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes wait-player-out {
+      to { opacity: 0; transform: translateX(10px) scale(0.9); height: 0; margin: 0; overflow: hidden; }
+    }
 
     /* bottom bar */
     #round-bottom {
@@ -551,7 +591,7 @@
   </div>
   <div id="phase-label" style="color:rgba(255,215,0,0.8);font-size:13px;font-weight:800;letter-spacing:2px;font-family:'Cinzel Decorative',serif;"></div>
   <div id="global-stat" style="color:var(--text-muted);font-size:12px;"></div>
-  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v55 · 17.08.26</div>
+  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v56 · 17.08.26</div>
 </div>
 
 <!-- KICK PLAYER MODAL -->
@@ -634,9 +674,12 @@
       <h4>🏆 TOP 5</h4>
       <div id="top5-list"></div>
     </div>
+    <div id="waiting-for-panel" class="hidden">
+      <h4>⏳ Czekamy na:</h4>
+      <div id="waiting-for-list"></div>
+    </div>
     <div id="answer-count-badge">
       <div id="answer-count-line">✅ <span id="answer-count-num">0</span> / <span id="player-total">0</span> odpowiedziało</div>
-      <div id="answered-names"></div>
     </div>
     <div id="host-countdown-overlay" class="hidden">
       <div class="countdown-num" id="host-countdown-number"></div>
@@ -711,6 +754,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=55"></script>
+<script type="module" src="js/host.js?v=56"></script>
 </body>
 </html>
