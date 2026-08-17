@@ -131,7 +131,7 @@ function openKickModal() {
       btn.disabled = true;
       await sb.from('players').delete().eq('id', id).catch(() => null);
       await sb.from('pins').delete().eq('player_id', id).catch(() => null);
-
+      broadcast(gameChannel, 'player_kicked', { player_id: id, player_name: player.name }).catch(() => null);
       players = players.filter(p => p.id !== id);
       $('player-total').textContent = players.length;
       btn.closest('div[style]').remove();
@@ -190,6 +190,10 @@ if (!_isRestoring) {
 
 // Always subscribe to player join events (new joins even during restored session)
 subscribeToPlayers();
+
+// Create game channel early so kick broadcasts work from lobby
+gameChannel = createChannel(sb, SESSION_ID);
+gameChannel.subscribe();
 
 if (_isRestoring) {
   // Re-fetch existing players then jump to the saved screen
@@ -257,11 +261,7 @@ async function restoreHostSession(state) {
     return;
   }
 
-  // Need game channel for all non-lobby phases
-  gameChannel = createChannel(sb, SESSION_ID);
-  await new Promise(resolve => gameChannel.subscribe(status => {
-    if (status === 'SUBSCRIBED') resolve();
-  }));
+  // gameChannel already created and subscribed at startup
 
   currentQuestionIndex = state.questionIndex ?? 0;
   $('player-total').textContent = players.length;
@@ -356,11 +356,6 @@ async function startGame() {
   $('btn-start-test').disabled = true;
   const { data } = await sb.from('players').select('*').eq('session_id', SESSION_ID);
   players = data || players;
-
-  gameChannel = createChannel(sb, SESSION_ID);
-  await new Promise(resolve => gameChannel.subscribe(status => {
-    if (status === 'SUBSCRIBED') resolve();
-  }));
 
   hide('screen-lobby');
   show('screen-round');

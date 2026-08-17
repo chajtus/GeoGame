@@ -194,6 +194,17 @@ function subscribeToGame() {
       }
     })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
+    .on('broadcast', { event: 'player_kicked' }, ({ payload }) => {
+      if (payload.player_id === playerState.id) {
+        clearInterval(timerInterval);
+        sessionStorage.removeItem('geo_player');
+        document.body.innerHTML = `<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;">
+          <div style="font-size:48px;">🚫</div>
+          <div style="font-size:22px;font-weight:900;color:#ff5252;">Zostałeś wyrzucony z gry</div>
+          <div style="font-size:14px;color:#aaa;">Host usunął Cię z sesji.<br>Może następnym razem pójdzie lepiej!</div>
+        </div>`;
+      }
+    })
     .on('broadcast', { event: 'session_killed' }, () => {
       // Host killed the session — show a clear message
       document.body.innerHTML = '<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;"><div style="font-size:48px;">🎮</div><div style="font-size:22px;font-weight:900;">Sesja zakończona</div><div style="font-size:14px;color:#aaa;">Host zakończył grę.<br>Dziękujemy za udział!</div></div>';
