@@ -406,8 +406,8 @@ function startPlayerTimer(startedAt, durationMs) {
         lastPlayerCountdownSec = secs;
         const el = $('player-countdown-number');
         el.textContent = secs;
-        el.style.color = secs > 5 ? 'rgba(255,152,0,0.7)' : 'rgba(244,67,54,0.8)';
-        el.style.textShadow = secs > 5 ? '0 0 12px rgba(255,152,0,0.5)' : '0 0 12px rgba(244,67,54,0.5)';
+        el.style.color = secs > 5 ? 'rgba(255,152,0,0.7)' : 'rgba(255,255,255,0.13)';
+        el.style.textShadow = secs > 5 ? '0 0 12px rgba(255,152,0,0.5)' : '0 0 60px rgba(244,67,54,0.5)';
         el.classList.remove('countdown-num');
         void el.offsetWidth;
         el.classList.add('countdown-num');

@@ -144,19 +144,14 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* MAP */
-    /* Bar is a plain flex child of body — no position tricks.
-       position:relative + z-index:1 creates a stacking context so that
-       Leaflet's GPU-composited zoom layers (which can break out of
-       overflow:hidden on Android Chrome) can never paint above it.
-       isolation:isolate on screen-map keeps its stacking context self-contained. */
+    /* Top bar mirrors the bottom bar: position:fixed inside #screen-map.
+       The bottom bar (position:fixed;bottom:0;z-index:500) survives zoom
+       on every device — this uses the exact same technique at the top. */
     #map-top-bar {
       display: none;
-      flex-shrink: 0;
+      position: fixed; top: 0; left: 0; right: 0;
       height: 56px;
-      position: relative;
-      z-index: 1;
-      transform: translateZ(0);     /* own GPU compositing layer          */
-      backface-visibility: hidden;  /* keeps layer alive during zoom anim */
+      z-index: 500;
       background: #1a0030;
       padding: 0 16px;
       align-items: center;
@@ -168,7 +163,6 @@
     #screen-map:not(.hidden) {
       flex: 1;
       position: relative;
-      isolation: isolate;   /* contains Leaflet's stacking contexts */
       overflow: hidden;
     }
     /* BOLDER: round label — bigger, stronger */
@@ -184,7 +178,7 @@
     #leader-label { color: var(--text-muted); font-size: 11px; }
     #map {
       position: absolute;
-      inset: 0;
+      top: 56px; bottom: 0; left: 0; right: 0;
       overflow: hidden;
     }
     #map-hint {
@@ -573,14 +567,14 @@
 </div>
 
 <!-- MAP TOP BAR — position:fixed, outside Leaflet DOM entirely, zoom can never touch it -->
-<div id="map-top-bar">
-  <div id="round-label">RUNDA 1</div>
-  <div id="player-timer">0:30</div>
-  <div id="leader-label">🏆 —</div>
-</div>
-
 <!-- MAP -->
 <div id="screen-map" class="hidden">
+  <!-- Top bar: position:fixed inside screen-map, same as bottom bar -->
+  <div id="map-top-bar">
+    <div id="round-label">RUNDA 1</div>
+    <div id="player-timer">0:30</div>
+    <div id="leader-label">🏆 —</div>
+  </div>
   <div id="map"></div>
   <div id="map-hint">Dotknij mapę aby postawić pinezkę 📍</div>
   <!-- Submitted overlay — appears over the dimmed map after answering -->
@@ -648,6 +642,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=24"></script>
+<script type="module" src="js/player.js?v=25"></script>
 </body>
 </html>
