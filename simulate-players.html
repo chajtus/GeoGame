@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>GeoGame — Symulacja 40 graczy</title>
+<style>
+  * { margin:0; box-sizing:border-box; }
+  body { background:#0d0d1a; color:#fff; font-family:system-ui; padding:20px; }
+  h1 { font-size:20px; margin-bottom:12px; }
+  .controls { display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  input { background:#1a1a2e; color:#fff; border:1px solid #444; padding:8px 12px; border-radius:8px; font-size:14px; width:300px; }
+  button { background:linear-gradient(135deg,#e91e8c,#ab47bc); color:#fff; border:none; padding:10px 20px; border-radius:10px; font-weight:700; cursor:pointer; font-size:14px; }
+  button:disabled { opacity:0.4; cursor:not-allowed; }
+  button.danger { background:linear-gradient(135deg,#f44336,#e91e63); }
+  #log { background:#111; border:1px solid #333; border-radius:10px; padding:12px; max-height:500px; overflow-y:auto; font-size:12px; font-family:monospace; line-height:1.6; }
+  .ok { color:#4caf50; } .warn { color:#ff9800; } .err { color:#f44336; } .info { color:#64b5f6; }
+  #stats { margin:12px 0; font-size:14px; color:#aaa; }
+</style>
+</head>
+<body>
+
+<h1>🎮 GeoGame — Symulacja graczy</h1>
+
+<div class="controls">
+  <input id="session-id" placeholder="Session ID (z URL hosta)">
+  <input id="player-count" type="number" value="40" min="1" max="100" style="width:80px;" placeholder="Ile">
+  <button id="btn-join" onclick="joinAll()">Dołącz graczy</button>
+  <button id="btn-answer" onclick="answerAll()" disabled>Odpowiedz (wszyscy)</button>
+  <button id="btn-cleanup" class="danger" onclick="cleanupAll()">Usuń wszystkich</button>
+</div>
+
+<div id="stats"></div>
+<div id="log"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = 'https://mbhdynfnjfldssrmiqku.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1iaGR5bmZuamZsZHNzcm1pcWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4NjAzMTksImV4cCI6MjEwMjQzNjMxOX0.r2s7qMUvO4RNkJ2Ju272PfDwxUQu7Pfb1YyUo2oFetM';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let players = [];
+let gameChannel = null;
+let currentRound = null;
+
+const NAMES = [
+  'Kuba','Ania','Tomek','Ola','Bartek','Maja','Piotr','Zuzia','Kamil','Lena',
+  'Dawid','Hania','Michał','Wika','Jakub','Nadia','Szymon','Iga','Adam','Zosia',
+  'Filip','Alicja','Mateusz','Julia','Marcin','Kasia','Łukasz','Natalia','Paweł','Sara',
+  'Wojtek','Magda','Krzyś','Ewa','Olek','Daria','Rafał','Monika','Hubert','Weronika',
+  'Konrad','Patrycja','Emil','Klara','Igor','Roksana','Tymek','Nikola','Franek','Milena',
+];
+
+const COLORS = ['#e91e63','#9c27b0','#673ab7','#3f51b5','#2196f3','#009688','#4caf50','#ff9800','#f44336','#795548'];
+
+function log(msg, cls = 'info') {
+  const el = document.getElementById('log');
+  const t = new Date().toLocaleTimeString();
+  el.innerHTML = `<div class="${cls}">[${t}] ${msg}</div>` + el.innerHTML;
+}
+
+function updateStats() {
+  document.getElementById('stats').textContent =
+    `Graczy w pamięci: ${players.length} | Runda: ${currentRound !== null ? currentRound.question_index + 1 : '—'}`;
+}
+
+function getInitials(name) {
+  return name.split(/\s+/).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+async function joinAll() {
+  const sessionId = document.getElementById('session-id').value.trim();
+  if (!sessionId) { alert('Podaj Session ID!'); return; }
+  const count = parseInt(document.getElementById('player-count').value) || 40;
+
+  document.getElementById('btn-join').disabled = true;
+  log(`Dołączam ${count} graczy do sesji ${sessionId}...`);
+
+  // Subscribe to game channel to listen for rounds
+  if (gameChannel) gameChannel.unsubscribe();
+  gameChannel = sb.channel(`game:${sessionId}`, { config: { broadcast: { self: false } } });
+  gameChannel
+    .on('broadcast', { event: 'round_start' }, ({ payload }) => {
+      currentRound = payload;
+      log(`🎯 Runda ${payload.question_index + 1} rozpoczęta! (lat:${payload.lat}, lng:${payload.lng})`, 'warn');
+      document.getElementById('btn-answer').disabled = false;
+      updateStats();
+    })
+    .on('broadcast', { event: 'round_heartbeat' }, ({ payload }) => {
+      if (!currentRound || currentRound.question_index !== payload.question_index) {
+        currentRound = payload;
+        log(`🔄 Heartbeat — runda ${payload.question_index + 1}`, 'info');
+        document.getElementById('btn-answer').disabled = false;
+        updateStats();
+      }
+    })
+    .on('broadcast', { event: 'round_end' }, () => {
+      log('⏹️ Runda zakończona', 'warn');
+      currentRound = null;
+      document.getElementById('btn-answer').disabled = true;
+      updateStats();
+    })
+    .subscribe();
+
+  players = [];
+  const batch = [];
+  for (let i = 0; i < count; i++) {
+    const name = NAMES[i % NAMES.length] + (i >= NAMES.length ? ` ${Math.floor(i / NAMES.length) + 1}` : '');
+    batch.push({
+      session_id: sessionId,
+      name,
+      initials: getInitials(name),
+      avatar_color: COLORS[i % COLORS.length],
+      avatar_data_url: null,
+    });
+  }
+
+  // Insert in chunks of 10
+  for (let i = 0; i < batch.length; i += 10) {
+    const chunk = batch.slice(i, i + 10);
+    const { data, error } = await sb.from('players').insert(chunk).select('id, name');
+    if (error) {
+      log(`Błąd przy wstawianiu: ${error.message}`, 'err');
+    } else if (data) {
+      data.forEach(p => players.push({ ...p, session_id: sessionId }));
+      log(`Dołączono ${data.length} graczy (${players.length}/${count})`, 'ok');
+    }
+    // Small delay to not overwhelm
+    await new Promise(r => setTimeout(r, 100));
+  }
+
+  log(`✅ Wszyscy ${players.length} gracze dołączyli!`, 'ok');
+  document.getElementById('btn-join').disabled = false;
+  updateStats();
+}
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function answerAll() {
+  if (!currentRound) { log('Brak aktywnej rundy!', 'err'); return; }
+  document.getElementById('btn-answer').disabled = true;
+
+  const trueLat = currentRound.lat;
+  const trueLng = currentRound.lng;
+  const qi = currentRound.question_index;
+  const sessionId = players[0]?.session_id;
+
+  log(`📍 Wysyłam odpowiedzi ${players.length} graczy na rundę ${qi + 1}...`);
+
+  // Each player guesses at a random offset from the true location
+  const pins = players.map(p => {
+    // Random offset: some close, some far — realistic spread
+    const skill = Math.random(); // 0 = bad, 1 = good
+    const maxOffset = skill < 0.1 ? 0.5 : skill < 0.3 ? 5 : skill < 0.6 ? 20 : skill < 0.85 ? 50 : 120;
+    const angle = Math.random() * 2 * Math.PI;
+    const dist = Math.random() * maxOffset;
+    const latOff = (dist / 111) * Math.cos(angle);
+    const lngOff = (dist / (111 * Math.cos(trueLat * Math.PI / 180 || 1))) * Math.sin(angle);
+    const lat = trueLat + latOff;
+    const lng = trueLng + lngOff;
+    const distKm = haversineKm(lat, lng, trueLat, trueLng);
+    const points = Math.max(0, Math.round(5000 - distKm * 2));
+
+    return {
+      session_id: sessionId,
+      player_id: p.id,
+      question_index: qi,
+      lat, lng,
+      distance_km: distKm,
+      points,
+    };
+  });
+
+  // Insert in chunks with staggered timing (simulate real players)
+  const shuffled = [...pins].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < shuffled.length; i += 5) {
+    const chunk = shuffled.slice(i, i + 5);
+    const { error } = await sb.from('pins').insert(chunk);
+    if (error) {
+      log(`Błąd pin: ${error.message}`, 'err');
+    } else {
+      log(`Odpowiedzi ${Math.min(i + 5, shuffled.length)}/${shuffled.length}`, 'ok');
+    }
+    // Update scores
+    for (const pin of chunk) {
+      await sb.rpc('increment_score', { player_id: pin.player_id, amount: pin.points }).catch(() => null);
+    }
+    // Stagger: 300-800ms between chunks
+    await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
+  }
+
+  const avgDist = pins.reduce((s, p) => s + p.distance_km, 0) / pins.length;
+  const bestDist = Math.min(...pins.map(p => p.distance_km));
+  log(`✅ Wszystkie odpowiedzi wysłane! Avg: ${Math.round(avgDist)}km, Best: ${Math.round(bestDist)}km`, 'ok');
+}
+
+async function cleanupAll() {
+  if (!players.length) { log('Brak graczy do usunięcia', 'warn'); return; }
+  if (!confirm(`Usunąć ${players.length} symulowanych graczy?`)) return;
+
+  const ids = players.map(p => p.id);
+  log(`Usuwam ${ids.length} graczy...`);
+
+  for (let i = 0; i < ids.length; i += 10) {
+    const chunk = ids.slice(i, i + 10);
+    await sb.from('pins').delete().in('player_id', chunk).catch(() => null);
+    await sb.from('players').delete().in('id', chunk).catch(() => null);
+    log(`Usunięto ${Math.min(i + 10, ids.length)}/${ids.length}`, 'ok');
+  }
+
+  players = [];
+  log('✅ Wszyscy symulowani gracze usunięci', 'ok');
+  updateStats();
+}
+</script>
+</body>
+</html>
