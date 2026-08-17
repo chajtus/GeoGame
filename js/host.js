@@ -129,7 +129,6 @@ function openKickModal() {
       if (!player) return;
       btn.textContent = '...';
       btn.disabled = true;
-      await broadcast(gameChannel, 'player_kicked', { player_id: id }).catch(() => null);
       await sb.from('players').delete().eq('id', id).catch(() => null);
       await sb.from('pins').delete().eq('player_id', id).catch(() => null);
       players = players.filter(p => p.id !== id);
@@ -247,7 +246,6 @@ function renderPlayerList() {
       const id = btn.dataset.id;
       const player = players.find(p => p.id === id);
       if (!player || !confirm(`Usunąć ${player.name} z gry?`)) return;
-      await broadcast(gameChannel, 'player_kicked', { player_id: id }).catch(() => null);
       await sb.from('players').delete().eq('id', id).catch(() => null);
       players = players.filter(p => p.id !== id);
       renderPlayerList();

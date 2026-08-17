@@ -194,17 +194,6 @@ function subscribeToGame() {
       }
     })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
-    .on('broadcast', { event: 'player_kicked' }, ({ payload }) => {
-      if (payload.player_id === playerState.id) {
-        clearInterval(timerInterval);
-        sessionStorage.removeItem('player');
-        document.body.innerHTML = `<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;">
-          <div style="font-size:48px;">🚫</div>
-          <div style="font-size:22px;font-weight:900;color:#ff5252;">Zostałeś wyrzucony z gry</div>
-          <div style="font-size:14px;color:#aaa;">Host usunął Cię z sesji.<br>Może następnym razem pójdzie lepiej!</div>
-        </div>`;
-      }
-    })
     .on('broadcast', { event: 'session_killed' }, () => {
       // Host killed the session — show a clear message
       document.body.innerHTML = '<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;"><div style="font-size:48px;">🎮</div><div style="font-size:22px;font-weight:900;">Sesja zakończona</div><div style="font-size:14px;color:#aaa;">Host zakończył grę.<br>Dziękujemy za udział!</div></div>';
@@ -231,24 +220,28 @@ function subscribeToGame() {
     .subscribe();
 }
 
-// ── Kick detection via postgres_changes (works in lobby + in-game) ────────
+// ── Kick detection via polling (checks if player record still exists) ─────
+let kickPollInterval = null;
 function subscribeToKick() {
-  sb.channel('kick-watch')
-    .on('postgres_changes', {
-      event: 'DELETE',
-      schema: 'public',
-      table: 'players',
-      filter: `id=eq.${playerState.id}`,
-    }, () => {
-      clearInterval(timerInterval);
-      sessionStorage.removeItem('player');
-      document.body.innerHTML = `<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;">
-        <div style="font-size:48px;">🚫</div>
-        <div style="font-size:22px;font-weight:900;color:#ff5252;">Zostałeś wyrzucony z gry</div>
-        <div style="font-size:14px;color:#aaa;">Host usunął Cię z sesji.<br>Może następnym razem pójdzie lepiej!</div>
-      </div>`;
-    })
-    .subscribe();
+  if (kickPollInterval) return;
+  kickPollInterval = setInterval(async () => {
+    try {
+      const { data } = await sb.from('players')
+        .select('id')
+        .eq('id', playerState.id)
+        .maybeSingle();
+      if (!data) {
+        clearInterval(kickPollInterval);
+        clearInterval(timerInterval);
+        sessionStorage.removeItem('player');
+        document.body.innerHTML = `<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;">
+          <div style="font-size:48px;">🚫</div>
+          <div style="font-size:22px;font-weight:900;color:#ff5252;">Zostałeś wyrzucony z gry</div>
+          <div style="font-size:14px;color:#aaa;">Host usunął Cię z sesji.<br>Może następnym razem pójdzie lepiej!</div>
+        </div>`;
+      }
+    } catch (_) {}
+  }, 3000);
 }
 
 // ── Map state ─────────────────────────────────────────────────────────────
