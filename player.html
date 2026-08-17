@@ -197,30 +197,62 @@
       0%   { opacity: 0; transform: translateX(-50%) translateY(14px); }
       100% { opacity: 1; transform: translateX(-50%) translateY(0); }
     }
-    /* Waiting overlay — dims dark map, bright text */
+    /* Waiting overlay — styled like the rest of the app */
     #map-waiting-overlay {
       position: absolute; inset: 0;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 24px;
+      align-items: center; justify-content: center; gap: 0;
       z-index: 450; pointer-events: none;
-      background: rgba(5,0,20,0.65);
-      backdrop-filter: blur(2px);
+      background: linear-gradient(180deg, rgba(26,0,48,0.88) 0%, rgba(5,0,20,0.92) 100%);
+      backdrop-filter: blur(4px);
+    }
+    #waiting-check-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), #2e7d32);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin-bottom: 18px;
+      box-shadow: 0 0 30px rgba(76,175,80,0.5), 0 0 60px rgba(76,175,80,0.2);
+      animation: check-pop 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes check-pop {
+      0%   { transform: scale(0); opacity: 0; }
+      60%  { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
     }
     #waiting-sent {
-      font-size: 28px; font-weight: 900;
-      color: #fff;
-      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
+      font-size: 24px; font-weight: 900; letter-spacing: 1px;
+      color: #fff; margin-bottom: 24px;
+      animation: wait-text-in 0.4s cubic-bezier(0.16,1,0.3,1) 0.15s both;
     }
+    #waiting-progress-ring {
+      width: 48px; height: 48px; margin-bottom: 16px;
+      border: 4px solid rgba(233,30,140,0.15);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: wait-spin 1s linear infinite, wait-text-in 0.4s ease 0.25s both;
+    }
+    @keyframes wait-spin { to { transform: rotate(360deg); } }
     #waiting-label {
-      font-size: 22px; font-weight: 900;
+      font-size: 18px; font-weight: 800;
       color: var(--primary-light);
-      text-shadow: 0 2px 12px rgba(0,0,0,0.8);
-      text-align: center;
+      text-align: center; line-height: 1.5;
+      animation: wait-text-in 0.4s cubic-bezier(0.16,1,0.3,1) 0.3s both;
+    }
+    #waiting-count {
+      color: #fff; font-size: 22px;
     }
     #waiting-dots {
-      font-size: 20px; font-weight: 800;
-      color: rgba(255,255,255,0.6);
-      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      font-size: 14px; font-weight: 700; letter-spacing: 1px;
+      color: rgba(255,255,255,0.45); margin-top: 12px;
+      animation: wait-text-in 0.4s cubic-bezier(0.16,1,0.3,1) 0.4s both, wait-pulse 2s ease-in-out infinite;
+    }
+    @keyframes wait-text-in {
+      0%   { opacity: 0; transform: translateY(12px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes wait-pulse {
+      0%, 100% { opacity: 0.45; }
+      50%      { opacity: 0.9; }
     }
     #map-waiting-overlay.waiting--in {
       animation: overlay-fade-in 0.35s cubic-bezier(0.16,1,0.3,1) both;
@@ -548,9 +580,11 @@
   <div id="map-hint">Dotknij mapę aby postawić pinezkę 📍</div>
   <!-- Waiting overlay — big centered text like countdown digits -->
   <div id="map-waiting-overlay" class="hidden">
-    <div id="waiting-sent">Odpowiedź wysłana.</div>
-    <div id="waiting-label">Oczekiwanie na innych graczy: <span id="waiting-count"></span></div>
-    <div id="waiting-dots">Czekamy...</div>
+    <div id="waiting-check-icon">✓</div>
+    <div id="waiting-sent">Odpowiedź wysłana</div>
+    <div id="waiting-progress-ring"></div>
+    <div id="waiting-label">Oczekiwanie na innych graczy<br><span id="waiting-count"></span></div>
+    <div id="waiting-dots">czekamy...</div>
   </div>
   <div id="player-countdown-overlay" class="hidden">
     <div class="countdown-num" id="player-countdown-number"></div>
@@ -602,6 +636,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=42"></script>
+<script type="module" src="js/player.js?v=43"></script>
 </body>
 </html>
