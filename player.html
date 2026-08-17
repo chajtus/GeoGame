@@ -144,13 +144,17 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* MAP */
-    /* Bar is a plain flex child of body — NOT position:fixed/absolute.
-       Leaflet has zero access to it. When visible it takes 56px, screen-map
-       gets the remaining height automatically via flex:1. */
+    /* Bar is a plain flex child of body — no position tricks.
+       position:relative + z-index:1 creates a stacking context so that
+       Leaflet's GPU-composited zoom layers (which can break out of
+       overflow:hidden on Android Chrome) can never paint above it.
+       isolation:isolate on screen-map keeps its stacking context self-contained. */
     #map-top-bar {
-      display: none;          /* hidden on non-map screens */
+      display: none;
       flex-shrink: 0;
       height: 56px;
+      position: relative;   /* establishes stacking context … */
+      z-index: 1;           /* … above everything inside screen-map          */
       background: #1a0030;
       padding: 0 16px;
       align-items: center;
@@ -162,6 +166,7 @@
     #screen-map:not(.hidden) {
       flex: 1;
       position: relative;
+      isolation: isolate;   /* contains Leaflet's stacking contexts */
       overflow: hidden;
     }
     /* BOLDER: round label — bigger, stronger */
