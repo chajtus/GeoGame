@@ -217,6 +217,10 @@ function subscribeToGame() {
         hide('screen-waiting');
         $('finale-player-name').textContent = playerState.name;
         show('screen-player-finale');
+        // Fetch final rank and display it
+        fetchPlayerRank().then(() => {
+          $('finale-rank-num').textContent = playerRank ? `#${playerRank}` : '—';
+        });
       } else {
         show('screen-waiting');
         document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
