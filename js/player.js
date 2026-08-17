@@ -227,6 +227,7 @@ let currentQuestion = null;
 let timerInterval = null;
 let submitted = false;
 let manuallySubmitted = false; // true only when player clicked Zatwierdź
+let autoSubmitted = false; // true when pin was auto-submitted on timeout
 let playerResultMap = null;
 
 let lastPlayerCountdownSec = -1;
@@ -275,6 +276,7 @@ async function handleRoundStart(payload, showFlash = false) {
   playerPinLatLng = null;
   submitted = false;
   manuallySubmitted = false;
+  autoSubmitted = false;
   leaderboardShown = false;
   lastDistanceKm = 0;
   lastPoints = 0;
@@ -531,6 +533,9 @@ function showPlayerResult() {
   if (notSubmitted) {
     statusEl.textContent = '⚠ ODPOWIEDŹ NIEZATWIERDZONA';
     statusEl.style.color = 'var(--red)';
+  } else if (autoSubmitted) {
+    statusEl.innerHTML = '✓ ODPOWIEDŹ WYSŁANA<br><span style="font-size:11px;color:var(--orange);">Następnym razem zatwierdź, łajdaku, bo będą problemy! 😤</span>';
+    statusEl.style.color = 'var(--green)';
   } else {
     statusEl.textContent = '✓ ODPOWIEDŹ WYSŁANA';
     statusEl.style.color = 'var(--green)';
@@ -589,6 +594,7 @@ async function handleRoundEnd() {
   if (!submitted) {
     if (playerPinLatLng) {
       // Pin placed but not confirmed — auto-submit as valid answer
+      autoSubmitted = true;
       await autoSubmit();
     } else {
       // No pin at all — 0 pts, no DB write
