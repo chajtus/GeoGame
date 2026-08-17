@@ -363,6 +363,7 @@ function showHintAnimated() {
 }
 
 function onMapClick(e) {
+  if (submitted) return;
   playerPinLatLng = [e.latlng.lat, e.latlng.lng];
   if (playerPin) leafletMap.removeLayer(playerPin);
 
@@ -477,8 +478,8 @@ async function submitAnswer() {
   $('overlay-distance').textContent = distLabel;
   $('overlay-location').textContent = currentQuestion.location_name || '';
 
-  // Show waiting phase first
-  $('overlay-waiting-phase').style.display = '';
+  // Show waiting phase first, hide results
+  $('overlay-waiting-phase').style.display = 'flex';
   $('overlay-results').classList.remove('visible');
   $('overlay-count').textContent = '';
   $('overlay-countdown').textContent = '';

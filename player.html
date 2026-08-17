@@ -229,6 +229,7 @@
       100% { opacity: 1; transform: scale(1); box-shadow: 0 8px 40px rgba(233,30,140,0.5), 0 0 0 2px rgba(233,30,140,0.15); }
     }
     #overlay-check { color: var(--green); font-size: 18px; font-weight: 800; letter-spacing: 1.5px; }
+    #overlay-waiting-phase { display: flex; flex-direction: column; align-items: center; gap: 6px; }
     #overlay-waiting { color: var(--text-muted); font-size: 14px; }
     /* Results revealed after all players answered */
     #overlay-results { display: none; flex-direction: column; align-items: center; gap: 10px; }
@@ -578,10 +579,10 @@
       <div id="overlay-check">✓ ODPOWIEDŹ ZATWIERDZONA</div>
       <!-- Waiting phase -->
       <div id="overlay-waiting-phase">
-        <div class="spinner" style="margin:0 auto;"></div>
-        <div id="overlay-waiting" style="margin-top:10px;">Czekam na pozostałych graczy...</div>
-        <div id="overlay-count" style="color:var(--primary-light);font-size:16px;font-weight:800;margin-top:6px;"></div>
-        <div id="overlay-countdown" style="color:var(--text-muted);font-size:13px;margin-top:2px;"></div>
+        <div class="spinner"></div>
+        <div id="overlay-waiting">Czekam na pozostałych graczy...</div>
+        <div id="overlay-count" style="color:var(--primary-light);font-size:16px;font-weight:800;"></div>
+        <div id="overlay-countdown" style="color:var(--text-muted);font-size:13px;"></div>
       </div>
       <!-- Results phase — shown when all answered -->
       <div id="overlay-results">
@@ -641,6 +642,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=29"></script>
+<script type="module" src="js/player.js?v=30"></script>
 </body>
 </html>
