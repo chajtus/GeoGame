@@ -36,8 +36,6 @@ let playerState = {
 };
 let cameraStream = null;
 
-// ── AGA FACT ──────────────────────────────────────────────────────────────
-$('fact-text').textContent = AGA_FACTS[Math.floor(Math.random() * AGA_FACTS.length)];
 
 // ── Name input ────────────────────────────────────────────────────────────
 $('name-input').addEventListener('input', () => {
@@ -573,9 +571,6 @@ function showPlayerResult() {
   $('submit-countdown-secs').textContent = '';
 
   // Random Aga quote while waiting for next round
-  const quote = AGA_FACTS[Math.floor(Math.random() * AGA_FACTS.length)];
-  $('aga-quote-text').textContent = `„${quote}"`;
-  $('aga-quote-author').textContent = '— z archiwum życia Agi 🎂';
 
   hideMap();
   show('screen-submitted');
