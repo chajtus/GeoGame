@@ -499,6 +499,7 @@ async function showResults(questionIndex) {
   hide('screen-round');
   show('screen-results');
   $('phase-label').textContent = `WYNIKI ${questionIndex + 1}/${questions.length}`;
+  $('global-stat').textContent = '';
   $('location-name-text').textContent = q.location_name;
   $('results-file-label').textContent = `📷 Lokalizacja z EXIF GPS`;
 
