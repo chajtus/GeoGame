@@ -230,7 +230,6 @@ function subscribeToKick() {
         .select('id')
         .eq('id', playerState.id)
         .maybeSingle();
-      console.log('[kick-poll]', { id: playerState.id, data, error });
       if (!data && !error) {
         clearInterval(kickPollInterval);
         clearInterval(timerInterval);

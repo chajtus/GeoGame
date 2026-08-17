@@ -129,8 +129,7 @@ function openKickModal() {
       if (!player) return;
       btn.textContent = '...';
       btn.disabled = true;
-      const { error: delErr } = await sb.from('players').delete().eq('id', id);
-      if (delErr) { alert('Błąd usuwania: ' + delErr.message); btn.textContent = 'Usuń'; btn.disabled = false; return; }
+      await sb.from('players').delete().eq('id', id);
       await sb.from('pins').delete().eq('player_id', id).catch(() => null);
       players = players.filter(p => p.id !== id);
       $('player-total').textContent = players.length;
@@ -247,8 +246,7 @@ function renderPlayerList() {
       const id = btn.dataset.id;
       const player = players.find(p => p.id === id);
       if (!player || !confirm(`Usunąć ${player.name} z gry?`)) return;
-      const { error } = await sb.from('players').delete().eq('id', id);
-      if (error) { alert('Błąd usuwania: ' + error.message); return; }
+      await sb.from('players').delete().eq('id', id);
       players = players.filter(p => p.id !== id);
       renderPlayerList();
     });
