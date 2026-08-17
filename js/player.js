@@ -316,6 +316,7 @@ async function handleRoundStart(payload, showFlash = false) {
   }
 
   showMap();
+  show('map-submit-bar');
   $('round-label').textContent = `RUNDA ${payload.question_index + 1}`;
   $('btn-submit').disabled = true;
   $('btn-submit').textContent = '✅ ZATWIERDŹ ODPOWIEDŹ';
@@ -324,6 +325,9 @@ async function handleRoundStart(payload, showFlash = false) {
   if (!leafletMap) {
     await initPlayerMap();
   } else {
+    // Restore map interaction for new round
+    leafletMap.dragging.enable();
+    leafletMap.touchZoom.enable();
     // Remove previous pin, reset view to world
     if (playerPin) { leafletMap.removeLayer(playerPin); playerPin = null; }
     leafletMap.setView([20, 0], 2);
@@ -484,14 +488,14 @@ async function submitAnswer() {
   $('overlay-count').textContent = '';
   $('overlay-countdown').textContent = '';
 
+  // Hide submit bar and block map interaction
+  hide('map-submit-bar');
+  if (leafletMap) leafletMap.dragging.disable();
+  if (leafletMap) leafletMap.touchZoom.disable();
+
   show('map-submitted-overlay');
   triggerAnim('map-submitted-overlay', 'overlay--in');
   triggerAnim('map-submitted-card', 'card--in');
-
-  // btn-submit confirmation bounce
-  triggerAnim('btn-submit', 'btn--confirmed');
-  $('btn-submit').textContent = '✓ Wysłano';
-  $('btn-submit').disabled = true;
 
   startSubmittedCountdown();
 }
