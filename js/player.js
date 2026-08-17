@@ -438,6 +438,15 @@ async function submitAnswer() {
   $('btn-submit').disabled = true;
   $('map-submit-bar').classList.remove('submit-urgent');
 
+  // Immediately show waiting overlay and block interaction
+  hide('map-submit-bar');
+  hide('map-hint');
+  if (leafletMap) leafletMap.dragging.disable();
+  if (leafletMap) leafletMap.touchZoom.disable();
+  $('waiting-count').textContent = '';
+  show('map-waiting-overlay');
+  triggerAnim('map-waiting-overlay', 'waiting--in');
+
   const { haversineKm, calculatePoints } = await import('./scoring.js');
   const distanceKm = haversineKm(
     playerPinLatLng[0], playerPinLatLng[1],
@@ -457,20 +466,8 @@ async function submitAnswer() {
     points,
   });
 
-  // Run SQL in Supabase: CREATE OR REPLACE FUNCTION increment_score(player_id UUID, amount INTEGER) RETURNS void LANGUAGE sql AS $$ UPDATE players SET total_score = total_score + amount WHERE id = player_id; $$;
   await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
     .catch(() => null);
-
-  // Hide submit bar, hint, and block map interaction
-  hide('map-submit-bar');
-  hide('map-hint');
-  if (leafletMap) leafletMap.dragging.disable();
-  if (leafletMap) leafletMap.touchZoom.disable();
-
-  // Show waiting overlay with big count on the map
-  $('waiting-count').textContent = '';
-  show('map-waiting-overlay');
-  triggerAnim('map-waiting-overlay', 'waiting--in');
 }
 
 
