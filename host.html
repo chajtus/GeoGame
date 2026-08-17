@@ -339,31 +339,38 @@
     .top5-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 14px; font-size: 22px; }
     .top5-row:last-child { margin-bottom: 0; }
 
-    /* answer count */
-    #answer-count-badge {
-      position: absolute; bottom: 12px; left: 12px;
-      background: linear-gradient(160deg, rgba(8,0,30,0.96), rgba(18,0,50,0.96));
-      border: 1px solid rgba(255,215,0,0.28);
-      border-radius: 16px; padding: 14px 20px; max-width: 420px;
-      box-shadow: 0 4px 22px rgba(0,0,0,0.7), 0 0 14px rgba(255,215,0,0.07);
+    /* left column: waiting + answer count stacked */
+    #round-left-panel {
+      position: absolute; top: 12px; left: 12px; bottom: 12px; z-index: 200;
+      display: flex; flex-direction: column; gap: 10px;
+      width: 280px; pointer-events: none;
     }
-    #answer-count-line { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+    #round-left-panel > * { pointer-events: auto; }
 
     /* waiting-for panel */
     #waiting-for-panel {
-      position: absolute; top: 12px; left: 12px; z-index: 200;
       background: linear-gradient(160deg, rgba(15,0,45,0.95), rgba(28,0,65,0.95));
       backdrop-filter: blur(12px);
       border: 2px solid rgba(233,30,140,0.35);
-      border-radius: 18px; padding: 14px 18px; min-width: 200px; max-width: 320px;
-      max-height: calc(100vh - 220px); overflow-y: auto;
+      border-radius: 18px; padding: 14px 18px;
+      flex: 1; min-height: 0; overflow: hidden;
+      display: flex; flex-direction: column;
       box-shadow: 0 8px 40px rgba(0,0,0,0.85), 0 0 20px rgba(233,30,140,0.1);
     }
     #waiting-for-panel h4 {
       font-size: 12px; letter-spacing: 2px; margin-bottom: 10px;
       font-weight: 700; text-transform: uppercase;
-      color: rgba(233,30,140,0.8);
+      color: rgba(233,30,140,0.8); flex-shrink: 0;
     }
+    #waiting-for-list {
+      flex: 1; overflow-y: auto; min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(233,30,140,0.3) transparent;
+    }
+    #waiting-for-list::-webkit-scrollbar { width: 5px; }
+    #waiting-for-list::-webkit-scrollbar-track { background: transparent; }
+    #waiting-for-list::-webkit-scrollbar-thumb { background: rgba(233,30,140,0.35); border-radius: 10px; }
+    #waiting-for-list::-webkit-scrollbar-thumb:hover { background: rgba(233,30,140,0.55); }
     .waiting-player {
       display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
       animation: wait-player-in 0.3s ease both;
@@ -389,6 +396,15 @@
     @keyframes wait-player-out {
       to { opacity: 0; transform: translateX(10px) scale(0.9); height: 0; margin: 0; overflow: hidden; }
     }
+
+    /* answer count */
+    #answer-count-badge {
+      background: linear-gradient(160deg, rgba(8,0,30,0.96), rgba(18,0,50,0.96));
+      border: 1px solid rgba(255,215,0,0.28);
+      border-radius: 16px; padding: 14px 18px; flex-shrink: 0;
+      box-shadow: 0 4px 22px rgba(0,0,0,0.7), 0 0 14px rgba(255,215,0,0.07);
+    }
+    #answer-count-line { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
 
     /* bottom bar */
     #round-bottom {
@@ -563,6 +579,41 @@
     }
     #restore-toast.hidden { display: none; }
 
+    /* lobby join flash */
+    #lobby-join-flash {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: none;
+      animation: lobby-flash-in 0.5s cubic-bezier(0.16,1,0.3,1) both,
+                 lobby-flash-out 0.4s ease 1.4s both;
+    }
+    #lobby-join-flash .ljf-avatar {
+      width: 120px; height: 120px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 44px; font-weight: 800; color: #fff;
+      border: 4px solid rgba(255,215,0,0.6);
+      box-shadow: 0 0 60px rgba(233,30,140,0.5), 0 0 120px rgba(255,215,0,0.2);
+      overflow: hidden;
+      animation: ljf-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    #lobby-join-flash .ljf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    #lobby-join-flash .ljf-name {
+      margin-top: 14px; font-size: 28px; font-weight: 900;
+      color: #fff; text-shadow: 0 0 30px rgba(233,30,140,0.6);
+      animation: ljf-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.15s both;
+    }
+    @keyframes ljf-pop {
+      from { opacity: 0; transform: scale(0.3); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes lobby-flash-in {
+      from { background: rgba(0,0,0,0); }
+      to { background: rgba(0,0,0,0.6); }
+    }
+    @keyframes lobby-flash-out {
+      to { opacity: 0; }
+    }
+
     /* ══ SHARED ════════════════════════════════════════════════════════ */
     .bottom-bar {
       background: linear-gradient(90deg, #080020, #130040, #080020);
@@ -591,7 +642,7 @@
   </div>
   <div id="phase-label" style="color:rgba(255,215,0,0.8);font-size:13px;font-weight:800;letter-spacing:2px;font-family:'Cinzel Decorative',serif;"></div>
   <div id="global-stat" style="color:var(--text-muted);font-size:12px;"></div>
-  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v56 · 17.08.26</div>
+  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v57 · 17.08.26</div>
 </div>
 
 <!-- KICK PLAYER MODAL -->
@@ -674,12 +725,14 @@
       <h4>🏆 TOP 5</h4>
       <div id="top5-list"></div>
     </div>
-    <div id="waiting-for-panel" class="hidden">
-      <h4>⏳ Czekamy na:</h4>
-      <div id="waiting-for-list"></div>
-    </div>
-    <div id="answer-count-badge">
-      <div id="answer-count-line">✅ <span id="answer-count-num">0</span> / <span id="player-total">0</span> odpowiedziało</div>
+    <div id="round-left-panel">
+      <div id="waiting-for-panel" class="hidden">
+        <h4>⏳ Czekamy na:</h4>
+        <div id="waiting-for-list"></div>
+      </div>
+      <div id="answer-count-badge">
+        <div id="answer-count-line">✅ <span id="answer-count-num">0</span> / <span id="player-total">0</span> odpowiedziało</div>
+      </div>
     </div>
     <div id="host-countdown-overlay" class="hidden">
       <div class="countdown-num" id="host-countdown-number"></div>
@@ -754,6 +807,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=56"></script>
+<script type="module" src="js/host.js?v=57"></script>
 </body>
 </html>

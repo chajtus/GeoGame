@@ -231,10 +231,28 @@ function subscribeToPlayers() {
       // Avoid duplicates (can happen if subscription fires for pre-existing player on restore)
       if (!players.find(p => p.id === player.id)) {
         players.push(player);
+        showJoinFlash(player);
       }
       renderPlayerList();
     })
     .subscribe();
+}
+
+function showJoinFlash(player) {
+  // Remove previous flash if still visible
+  const prev = document.getElementById('lobby-join-flash');
+  if (prev) prev.remove();
+  const avatarInner = player.avatar_data_url
+    ? `<img src="${player.avatar_data_url}">`
+    : `<span>${player.initials}</span>`;
+  const div = document.createElement('div');
+  div.id = 'lobby-join-flash';
+  div.innerHTML = `
+    <div class="ljf-avatar" style="background:${player.avatar_data_url ? 'transparent' : player.avatar_color}">${avatarInner}</div>
+    <div class="ljf-name">${player.name}</div>
+  `;
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 2000);
 }
 
 function renderPlayerList() {
