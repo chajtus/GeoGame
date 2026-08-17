@@ -347,15 +347,6 @@ async function initPlayerMap() {
   showHintAnimated();
   // Resize when browser chrome hides/shows (e.g. Android address bar)
   window.addEventListener('resize', () => { if (leafletMap) leafletMap.invalidateSize(); });
-  // Safety net: force bar visible after any zoom/move — Android Chrome
-  // GPU compositing can hide the bar during zoom animations
-  leafletMap.on('zoomend moveend', () => {
-    const bar = $('map-top-bar');
-    if (bar && !$('screen-map').classList.contains('hidden')) {
-      bar.classList.add('map-bar--visible');
-      bar.style.display = 'flex';
-    }
-  });
 }
 
 function showHintAnimated() {
