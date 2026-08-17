@@ -144,27 +144,25 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* MAP */
-    :root { --map-bar-h: 56px; }
-    #screen-map:not(.hidden) {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-    /* Fixed to viewport — completely outside Leaflet's DOM so zoom can never touch it */
+    /* Bar is a plain flex child of body — NOT position:fixed/absolute.
+       Leaflet has zero access to it. When visible it takes 56px, screen-map
+       gets the remaining height automatically via flex:1. */
     #map-top-bar {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: var(--map-bar-h);
-      z-index: 10000;
+      display: none;          /* hidden on non-map screens */
+      flex-shrink: 0;
+      height: 56px;
       background: #1a0030;
       padding: 0 16px;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
     }
-    #map-top-bar.map-bar--visible {
-      display: flex;
+    #map-top-bar.map-bar--visible { display: flex; }
+
+    #screen-map:not(.hidden) {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
     }
     /* BOLDER: round label — bigger, stronger */
     #round-label { color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 14px rgba(233,30,140,0.7); }
@@ -179,7 +177,7 @@
     #leader-label { color: var(--text-muted); font-size: 11px; }
     #map {
       position: absolute;
-      top: var(--map-bar-h); bottom: 0; left: 0; right: 0;
+      inset: 0;
       overflow: hidden;
     }
     #map-hint {
