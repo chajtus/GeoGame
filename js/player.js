@@ -189,6 +189,12 @@ function subscribeToGame() {
     .on('broadcast', { event: 'player_answered' }, ({ payload }) => {
       if (!$('map-submitted-overlay').classList.contains('hidden')) {
         $('overlay-count').textContent = `${payload.answered} / ${payload.total} odpowiedziało`;
+        // All players answered — show results
+        if (payload.answered >= payload.total) {
+          $('overlay-waiting-phase').style.display = 'none';
+          $('overlay-results').classList.add('visible');
+          $('overlay-check').textContent = '✓ ODPOWIEDŹ WYSŁANA';
+        }
         // Floating ✅ animation for each new answer
         const icons = ['✅','🎯','✔️','💚'];
         const el = document.createElement('div');
@@ -463,7 +469,17 @@ async function submitAnswer() {
   await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
     .catch(() => null);
 
-  // Show confirmation overlay
+  // Prepare result data (shown later when all players answer)
+  const distLabel = distanceKm < 1
+    ? `${Math.round(distanceKm * 1000)} m od celu`
+    : `${Math.round(distanceKm).toLocaleString('pl')} km od celu`;
+  $('overlay-points').textContent = points > 0 ? `+${points.toLocaleString('pl')}` : '0 pkt';
+  $('overlay-distance').textContent = distLabel;
+  $('overlay-location').textContent = currentQuestion.location_name || '';
+
+  // Show waiting phase first
+  $('overlay-waiting-phase').style.display = '';
+  $('overlay-results').classList.remove('visible');
   $('overlay-count').textContent = '';
   $('overlay-countdown').textContent = '';
 
