@@ -89,6 +89,25 @@ new QRCode($('qr-code'), {
   correctLevel: QRCode.CorrectLevel.H,
 });
 
+// ── Copy link button ──────────────────────────────────────────────────────
+$('btn-copy-link').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(playerUrl);
+    $('btn-copy-link').textContent = '✅ Skopiowano!';
+    setTimeout(() => { $('btn-copy-link').textContent = '📋 Kopiuj link do gry'; }, 2000);
+  } catch {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = playerUrl;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    $('btn-copy-link').textContent = '✅ Skopiowano!';
+    setTimeout(() => { $('btn-copy-link').textContent = '📋 Kopiuj link do gry'; }, 2000);
+  }
+});
+
 // ── Kill-session button ───────────────────────────────────────────────────
 $('btn-kill-session').addEventListener('click', () => {
   $('kill-modal').style.display = 'flex';
