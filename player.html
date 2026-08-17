@@ -142,20 +142,24 @@
     .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* MAP — screen fills body flex slot; top bar is fixed independently */
+    /* MAP */
     :root { --map-bar-h: 56px; }
     #screen-map:not(.hidden) {
       flex: 1;
+      display: flex;
+      flex-direction: column;
       position: relative;
       overflow: hidden;
     }
-    /* Top bar lives OUTSIDE #screen-map so Leaflet can never touch its stacking context */
+    /* Top bar is a normal flex item — same coordinate system as map, never misaligns.
+       transform:translateZ(0) gives it its own compositing layer so it paints above
+       Leaflet's zoom-animation layers regardless of their z-index. */
     #map-top-bar {
-      display: none; /* shown via JS */
-      position: fixed;
-      top: 0; left: 0; right: 0;
+      display: none;
+      flex-shrink: 0;
       height: var(--map-bar-h);
       z-index: 9999;
+      transform: translateZ(0);
       background: #1a0030;
       padding: 0 16px;
       align-items: center;
@@ -177,8 +181,8 @@
     @keyframes pulse { to { opacity: 0.65; } }
     #leader-label { color: var(--text-muted); font-size: 11px; }
     #map {
-      position: absolute;
-      top: var(--map-bar-h); bottom: 0; left: 0; right: 0;
+      flex: 1;
+      position: relative;
       overflow: hidden;
     }
     #map-hint {
@@ -561,15 +565,15 @@
   </div>
 </div>
 
-<!-- MAP TOP BAR — fixed to viewport, outside Leaflet's DOM entirely -->
-<div id="map-top-bar">
-  <div id="round-label">RUNDA 1</div>
-  <div id="player-timer">0:30</div>
-  <div id="leader-label">🏆 —</div>
-</div>
-
 <!-- MAP -->
 <div id="screen-map" class="hidden">
+  <!-- Top bar is a flex item — same coord system as map, no misalignment on viewport changes.
+       transform:translateZ(0) gives it its own compositing layer above Leaflet zoom layers. -->
+  <div id="map-top-bar">
+    <div id="round-label">RUNDA 1</div>
+    <div id="player-timer">0:30</div>
+    <div id="leader-label">🏆 —</div>
+  </div>
   <div id="map"></div>
   <div id="map-hint">Dotknij mapę aby postawić pinezkę 📍</div>
   <!-- Submitted overlay — appears over the dimmed map after answering -->
@@ -638,6 +642,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=22"></script>
+<script type="module" src="js/player.js?v=23"></script>
 </body>
 </html>

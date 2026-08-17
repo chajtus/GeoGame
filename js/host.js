@@ -630,6 +630,8 @@ async function showLeaderboard(isFinal) {
   hide('screen-results');
   hide('screen-round');
   show('screen-leaderboard');
+  $('phase-label').textContent = isFinal ? 'WYNIKI KOŃCOWE' : 'RANKING';
+  $('global-stat').textContent = '';
 
   const nextQ = currentQuestionIndex + 1;
   $('lb-title').textContent = isFinal ? 'WYNIKI KOŃCOWE 🏆' : `RANKING PO PYTANIU ${nextQ} / ${questions.length}`;
@@ -683,12 +685,12 @@ async function showLeaderboard(isFinal) {
       : `<span class="lb-change" style="color:var(--text-muted)">—</span>`;
     const avatarContent = p.avatar_data_url
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
-      : `<span style="font-size:9px;font-weight:700;color:#fff;">${p.initials}</span>`;
+      : `<span style="font-size:16px;font-weight:700;color:#fff;">${p.initials}</span>`;
     return `
       <div class="lb-row" style="animation-delay:${rowDelay};">
         <span class="lb-rank">${rank}.</span>
-        <div class="avatar-circle" style="width:26px;height:26px;background:${p.avatar_color};font-size:9px;">${avatarContent}</div>
-        <span style="flex:1;">${p.name}</span>
+        <div class="avatar-circle" style="width:48px;height:48px;background:${p.avatar_color};font-size:16px;">${avatarContent}</div>
+        <span style="flex:1;font-size:20px;font-weight:700;">${p.name}</span>
         <span class="lb-pts">${p.total_score.toLocaleString('pl')}</span>
         ${changeHtml}
       </div>`;
