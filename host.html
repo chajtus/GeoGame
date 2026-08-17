@@ -532,16 +532,32 @@
 
 <!-- TOP BAR -->
 <div class="top-bar" id="global-top-bar">
-  <div class="top-bar-logo">
-    <span class="cake-icon">🎂</span>
-    <div>
-      <span class="brand-title top-bar-title" style="font-size:18px;background:linear-gradient(90deg,#ffd700,#ff79c6,#ffd700);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;display:block;line-height:1.1;">🏰 Znajdź Agnieszkę!</span>
-      <span class="brand-sub" style="font-size:11px;color:rgba(255,215,0,0.6);display:block;">Kto jest najlepszym stalkerem? 🔍</span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="btn-kill-session" title="Zakończ sesję awaryjnie" style="background:rgba(244,67,54,0.15);border:1px solid rgba(244,67,54,0.4);border-radius:8px;color:rgba(244,67,54,0.8);font-size:11px;font-weight:700;padding:5px 10px;cursor:pointer;letter-spacing:0.5px;white-space:nowrap;">⏹ RESET</button>
+    <div class="top-bar-logo">
+      <span class="cake-icon">🎂</span>
+      <div>
+        <span class="brand-title top-bar-title" style="font-size:18px;background:linear-gradient(90deg,#ffd700,#ff79c6,#ffd700);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 4s linear infinite;display:block;line-height:1.1;">🏰 Znajdź Agnieszkę!</span>
+        <span class="brand-sub" style="font-size:11px;color:rgba(255,215,0,0.6);display:block;">Kto jest najlepszym stalkerem? 🔍</span>
+      </div>
     </div>
   </div>
   <div id="phase-label" style="color:rgba(255,215,0,0.8);font-size:13px;font-weight:800;letter-spacing:2px;font-family:'Cinzel Decorative',serif;"></div>
   <div id="global-stat" style="color:var(--text-muted);font-size:12px;"></div>
   <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v23 · 17.08.26</div>
+</div>
+
+<!-- KILL SESSION MODAL -->
+<div id="kill-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:linear-gradient(160deg,#1a0030,#0d0010);border:2px solid rgba(244,67,54,0.6);border-radius:20px;padding:32px 36px;max-width:400px;width:90%;text-align:center;box-shadow:0 8px 48px rgba(244,67,54,0.3);">
+    <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
+    <div style="font-size:20px;font-weight:900;color:#fff;margin-bottom:8px;">Zakończyć sesję?</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.55;">Wszyscy gracze zostaną rozłączeni.<br>Dane tej sesji zostaną usunięte.<br>Strona przeładuje się do nowej sesji.</div>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button id="btn-kill-cancel" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-size:14px;font-weight:700;padding:12px 24px;cursor:pointer;">Anuluj</button>
+      <button id="btn-kill-confirm" style="background:linear-gradient(135deg,#c62828,#e53935);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:800;padding:12px 24px;cursor:pointer;letter-spacing:0.5px;">⏹ TAK, ZAKOŃCZ</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════ LOBBY ═══════════════════════ -->

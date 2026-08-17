@@ -89,6 +89,30 @@ new QRCode($('qr-code'), {
   correctLevel: QRCode.CorrectLevel.H,
 });
 
+// ── Kill-session button ───────────────────────────────────────────────────
+$('btn-kill-session').addEventListener('click', () => {
+  $('kill-modal').style.display = 'flex';
+});
+$('btn-kill-cancel').addEventListener('click', () => {
+  $('kill-modal').style.display = 'none';
+});
+$('btn-kill-confirm').addEventListener('click', async () => {
+  $('btn-kill-confirm').textContent = 'Usuwam...';
+  $('btn-kill-confirm').disabled = true;
+  try {
+    // Notify players
+    if (gameChannel) await broadcast(gameChannel, 'session_killed', {}).catch(() => null);
+    // Wipe session data from DB
+    await Promise.all([
+      sb.from('pins').delete().eq('session_id', SESSION_ID),
+      sb.from('players').delete().eq('session_id', SESSION_ID),
+      sb.from('game_state').delete().eq('session_id', SESSION_ID),
+    ]);
+  } catch (_) {}
+  clearHostState();
+  location.reload();
+});
+
 if (!_isRestoring) {
   // Fresh session — create game_state record
   saveHostState({ sessionId: SESSION_ID, phase: 'lobby' });
