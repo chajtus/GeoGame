@@ -197,7 +197,7 @@ function subscribeToGame() {
     .on('broadcast', { event: 'player_kicked' }, ({ payload }) => {
       if (payload.player_id === playerState.id) {
         clearInterval(timerInterval);
-        sessionStorage.removeItem('geo_player');
+        sessionStorage.removeItem('player');
         document.body.innerHTML = `<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;">
           <div style="font-size:48px;">🚫</div>
           <div style="font-size:22px;font-weight:900;color:#ff5252;">Zostałeś wyrzucony z gry</div>
@@ -241,7 +241,7 @@ function subscribeToKick() {
       filter: `id=eq.${playerState.id}`,
     }, () => {
       clearInterval(timerInterval);
-      sessionStorage.removeItem('geo_player');
+      sessionStorage.removeItem('player');
       document.body.innerHTML = `<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;">
         <div style="font-size:48px;">🚫</div>
         <div style="font-size:22px;font-weight:900;color:#ff5252;">Zostałeś wyrzucony z gry</div>

@@ -129,9 +129,9 @@ function openKickModal() {
       if (!player) return;
       btn.textContent = '...';
       btn.disabled = true;
+      await broadcast(gameChannel, 'player_kicked', { player_id: id }).catch(() => null);
       await sb.from('players').delete().eq('id', id).catch(() => null);
       await sb.from('pins').delete().eq('player_id', id).catch(() => null);
-      broadcast(gameChannel, 'player_kicked', { player_id: id, player_name: player.name }).catch(() => null);
       players = players.filter(p => p.id !== id);
       $('player-total').textContent = players.length;
       btn.closest('div[style]').remove();
@@ -193,7 +193,9 @@ subscribeToPlayers();
 
 // Create game channel early so kick broadcasts work from lobby
 gameChannel = createChannel(sb, SESSION_ID);
-gameChannel.subscribe();
+await new Promise(resolve => gameChannel.subscribe(status => {
+  if (status === 'SUBSCRIBED') resolve();
+}));
 
 if (_isRestoring) {
   // Re-fetch existing players then jump to the saved screen
@@ -245,8 +247,8 @@ function renderPlayerList() {
       const id = btn.dataset.id;
       const player = players.find(p => p.id === id);
       if (!player || !confirm(`Usunąć ${player.name} z gry?`)) return;
+      await broadcast(gameChannel, 'player_kicked', { player_id: id }).catch(() => null);
       await sb.from('players').delete().eq('id', id).catch(() => null);
-      if (gameChannel) broadcast(gameChannel, 'player_kicked', { player_id: id, player_name: player.name }).catch(() => null);
       players = players.filter(p => p.id !== id);
       renderPlayerList();
     });
