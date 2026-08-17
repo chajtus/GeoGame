@@ -204,6 +204,7 @@ function subscribeToGame() {
     })
     .on('broadcast', { event: 'round_end' }, () => handleRoundEnd())
     .on('broadcast', { event: 'show_leaderboard' }, ({ payload }) => {
+      leaderboardShown = true;
       clearInterval(submittedCountdownInterval);
       hide('screen-submitted');
       hideMap();
@@ -234,6 +235,7 @@ let lastDistanceKm = 0;
 let lastPoints = 0;
 let lastEndedQuestionIndex = -1;
 let playerRank = null;
+let leaderboardShown = false;
 
 async function fetchPlayerRank() {
   try {
@@ -273,6 +275,7 @@ async function handleRoundStart(payload, showFlash = false) {
   currentQuestion = payload;
   playerPinLatLng = null;
   submitted = false;
+  leaderboardShown = false;
   lastDistanceKm = 0;
   lastPoints = 0;
   hide('player-countdown-overlay');
@@ -615,7 +618,8 @@ function handleRoundEnd() {
         }).catch(() => null);
         sb.rpc('increment_score', { player_id: playerState.id, amount: lastPoints }).catch(() => null);
 
-        showPlayerResult();
+        // Guard: show_leaderboard may have arrived while import() was pending
+        if (!leaderboardShown) showPlayerResult();
       });
     }
   } else {
