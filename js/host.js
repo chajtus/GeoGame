@@ -134,9 +134,12 @@ function openKickModal() {
       players = players.filter(p => p.id !== id);
       $('player-total').textContent = players.length;
       btn.closest('div[style]').remove();
-      // If during round, update answer count
-      if (answerCount >= players.length && players.length > 0) {
-        $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
+      // Update stats and auto-end round if all remaining players answered
+      $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
+      broadcast(gameChannel, 'player_answered', { answered: answerCount, total: players.length }).catch(() => null);
+      if (players.length > 0 && answerCount >= players.length) {
+        $('kick-modal').style.display = 'none';
+        endRound();
       }
     });
   });
