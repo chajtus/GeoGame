@@ -5,11 +5,11 @@
  * @param {{ center?: [number, number], zoom?: number }} options
  * @returns {L.Map}
  */
-export function initMap(elementId, { center = [20, 0], zoom = 2, skipTiles = false } = {}) {
+export function initMap(elementId, { center = [20, 0], zoom = 2, skipTiles = false, zoomControl = true } = {}) {
   const map = L.map(elementId, {
     center,
     zoom,
-    zoomControl: true,
+    zoomControl,
     attributionControl: true,
   });
 

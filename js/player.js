@@ -342,7 +342,7 @@ function triggerAnim(el, cls) {
 
 async function initPlayerMap() {
   const { initMap } = await import('./map-utils.js');
-  leafletMap = initMap('map', { center: [20, 0], zoom: 2 });
+  leafletMap = initMap('map', { center: [20, 0], zoom: 2, zoomControl: false });
   leafletMap.on('click', onMapClick);
   showHintAnimated();
   // Resize when browser chrome hides/shows (e.g. Android address bar)
