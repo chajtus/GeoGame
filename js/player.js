@@ -399,12 +399,15 @@ function startPlayerTimer(startedAt, durationMs) {
       $('map-submit-bar').classList.remove('submit-urgent');
     }
 
-    // Countdown overlay 10-9-8-...-1
-    if (secs <= 10 && secs > 0 && remaining > 0) {
+    // Countdown: flash "10" once (orange), then 5-4-3-2-1 (red)
+    const showCountdown = (secs === 10 || secs <= 5) && secs > 0 && remaining > 0;
+    if (showCountdown) {
       if (secs !== lastPlayerCountdownSec) {
         lastPlayerCountdownSec = secs;
         const el = $('player-countdown-number');
         el.textContent = secs;
+        el.style.color = secs > 5 ? 'rgba(255,152,0,0.7)' : 'rgba(244,67,54,0.8)';
+        el.style.textShadow = secs > 5 ? '0 0 12px rgba(255,152,0,0.5)' : '0 0 12px rgba(244,67,54,0.5)';
         el.classList.remove('countdown-num');
         void el.offsetWidth;
         el.classList.add('countdown-num');
