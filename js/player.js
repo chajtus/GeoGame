@@ -226,11 +226,12 @@ function subscribeToKick() {
   if (kickPollInterval) return;
   kickPollInterval = setInterval(async () => {
     try {
-      const { data } = await sb.from('players')
+      const { data, error } = await sb.from('players')
         .select('id')
         .eq('id', playerState.id)
         .maybeSingle();
-      if (!data) {
+      console.log('[kick-poll]', { id: playerState.id, data, error });
+      if (!data && !error) {
         clearInterval(kickPollInterval);
         clearInterval(timerInterval);
         sessionStorage.removeItem('player');
