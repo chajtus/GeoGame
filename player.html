@@ -228,26 +228,8 @@
       60%  { box-shadow: 0 12px 60px rgba(233,30,140,0.7), 0 0 0 4px rgba(233,30,140,0.2); }
       100% { opacity: 1; transform: scale(1); box-shadow: 0 8px 40px rgba(233,30,140,0.5), 0 0 0 2px rgba(233,30,140,0.15); }
     }
-    #overlay-check { color: var(--green); font-size: 13px; font-weight: 700; letter-spacing: 1px; }
-    #overlay-points {
-      font-size: 54px; font-weight: 900; line-height: 1;
-      background: linear-gradient(135deg, var(--primary-light), var(--gold));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    /* ANIMATE: overlay-points slide up */
-    #overlay-points.points--in {
-      animation: points-slide-up 0.38s cubic-bezier(0.16,1,0.3,1) both;
-      animation-delay: 80ms;
-    }
-    @keyframes points-slide-up {
-      0%   { opacity: 0; transform: translateY(20px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-    #overlay-distance { color: #bbb; font-size: 15px; }
-    #overlay-location { color: var(--primary-light); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
-    #overlay-divider { width: 50px; height: 2px; background: var(--border); border-radius: 2px; }
-    #overlay-waiting { color: var(--text-muted); font-size: 13px; }
-    #overlay-countdown { color: var(--primary-light); font-size: 18px; font-weight: 800; min-height: 24px; }
+    #overlay-check { color: var(--green); font-size: 18px; font-weight: 800; letter-spacing: 1.5px; }
+    #overlay-waiting { color: var(--text-muted); font-size: 14px; }
 
     /* Floating vote icons in submitted overlay background */
     #overlay-vote-bg {
@@ -583,15 +565,11 @@
   <div id="map-submitted-overlay" class="hidden">
     <div id="overlay-vote-bg"></div>
     <div id="map-submitted-card">
-      <div id="overlay-check">✓ ODPOWIEDŹ WYSŁANA</div>
-      <div id="overlay-points">—</div>
-      <div id="overlay-distance"></div>
-      <div id="overlay-location"></div>
-      <div id="overlay-divider"></div>
+      <div id="overlay-check">✓ ODPOWIEDŹ ZATWIERDZONA</div>
       <div class="spinner"></div>
-      <div id="overlay-waiting">Czekam na innych graczy...</div>
-      <div id="overlay-countdown"></div>
-      <div id="overlay-count" style="color:var(--text-muted);font-size:12px;margin-top:2px;"></div>
+      <div id="overlay-waiting">Czekam na pozostałych graczy...</div>
+      <div id="overlay-count" style="color:var(--primary-light);font-size:16px;font-weight:800;margin-top:4px;"></div>
+      <div id="overlay-countdown" style="color:var(--text-muted);font-size:13px;margin-top:2px;"></div>
     </div>
   </div>
   <div id="player-countdown-overlay" class="hidden">
@@ -644,6 +622,6 @@
 <script src="js/config.js?v=5"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script type="module" src="js/player.js?v=27"></script>
+<script type="module" src="js/player.js?v=28"></script>
 </body>
 </html>

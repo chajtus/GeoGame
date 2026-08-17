@@ -463,20 +463,13 @@ async function submitAnswer() {
   await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
     .catch(() => null);
 
-  // Show overlay over the (now dimmed) map
-  const distLabel = distanceKm < 1
-    ? `${Math.round(distanceKm * 1000)} m od celu`
-    : `${Math.round(distanceKm).toLocaleString('pl')} km od celu`;
-
-  $('overlay-points').textContent = points > 0 ? `+${points.toLocaleString('pl')}` : '0 pkt';
-  $('overlay-distance').textContent = distLabel;
-  $('overlay-location').textContent = currentQuestion.location_name || '';
+  // Show confirmation overlay
+  $('overlay-count').textContent = '';
   $('overlay-countdown').textContent = '';
 
   show('map-submitted-overlay');
   triggerAnim('map-submitted-overlay', 'overlay--in');
   triggerAnim('map-submitted-card', 'card--in');
-  triggerAnim('overlay-points', 'points--in');
 
   // btn-submit confirmation bounce
   triggerAnim('btn-submit', 'btn--confirmed');
