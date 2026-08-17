@@ -131,7 +131,7 @@ function openKickModal() {
       btn.disabled = true;
       await sb.from('players').delete().eq('id', id).catch(() => null);
       await sb.from('pins').delete().eq('player_id', id).catch(() => null);
-      broadcast(gameChannel, 'player_kicked', { player_id: id, player_name: player.name }).catch(() => null);
+
       players = players.filter(p => p.id !== id);
       $('player-total').textContent = players.length;
       btn.closest('div[style]').remove();
