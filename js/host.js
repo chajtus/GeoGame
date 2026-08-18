@@ -147,7 +147,7 @@ function openKickModal() {
       $('answer-count-num').textContent = answerCount;
       btn.closest('div[style]').remove();
       // Update stats and auto-end round if all remaining players answered
-      $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
+      // answer count shown only in left panel
       broadcast(gameChannel, 'player_answered', { answered: answerCount, total: players.length }).catch(() => null);
       if (players.length > 0 && answerCount >= players.length) {
         $('kick-modal').style.display = 'none';
@@ -229,11 +229,11 @@ function subscribeToPlayers() {
       filter: `session_id=eq.${SESSION_ID}`,
     }, ({ new: player }) => {
       // Avoid duplicates (can happen if subscription fires for pre-existing player on restore)
-      if (!players.find(p => p.id === player.id)) {
-        players.push(player);
-        showJoinFlash(player);
-      }
-      renderPlayerList();
+      if (players.find(p => p.id === player.id)) return;
+      players.push(player);
+      showJoinFlash(player);
+      addPlayerChip(player);
+      updatePlayerCount();
     })
     .subscribe();
 }
@@ -257,35 +257,49 @@ function showJoinFlash(player) {
   setTimeout(() => div.remove(), 2200);
 }
 
-function renderPlayerList() {
+function updatePlayerCount() {
   $('player-count').textContent = `${players.length} gracz${players.length === 1 ? '' : players.length < 5 ? 'e' : 'y'} dołączyło`;
   $('btn-start').disabled = players.length < 2;
   $('btn-start-test').style.display = players.length >= 1 ? 'inline-flex' : 'none';
+}
 
-  $('player-list').innerHTML = players.map((p, i) => {
-    const avatar = p.avatar_data_url
-      ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
-      : `<span style="font-size:10px;font-weight:700;color:#fff;">${p.initials}</span>`;
-    return `
-      <div class="player-chip" style="animation-delay:${i * 0.055}s;">
-        <div class="avatar-circle" style="background:${p.avatar_color};width:28px;height:28px;font-size:10px;">${avatar}</div>
-        <span>${p.name}</span>
-        <button class="btn-kick" data-id="${p.id}" title="Usuń gracza">✕</button>
-      </div>`;
-  }).join('');
+function createChipHtml(p) {
+  const avatar = p.avatar_data_url
+    ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+    : `<span style="font-size:10px;font-weight:700;color:#fff;">${p.initials}</span>`;
+  return `
+    <div class="avatar-circle" style="background:${p.avatar_color};width:28px;height:28px;font-size:10px;">${avatar}</div>
+    <span>${p.name}</span>
+    <button class="btn-kick" data-id="${p.id}" title="Usuń gracza">✕</button>`;
+}
 
-  // Kick buttons
-  document.querySelectorAll('.btn-kick').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const player = players.find(p => p.id === id);
-      if (!player || !confirm(`Usunąć ${player.name} z gry?`)) return;
-      await sb.from('players').delete().eq('id', id).catch(() => null);
-      players = players.filter(p => p.id !== id);
-      renderPlayerList();
-    });
+function bindKickButton(btn) {
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const id = btn.dataset.id;
+    const player = players.find(p => p.id === id);
+    if (!player || !confirm(`Usunąć ${player.name} z gry?`)) return;
+    await sb.from('players').delete().eq('id', id).catch(() => null);
+    players = players.filter(p => p.id !== id);
+    const chip = document.querySelector(`.player-chip[data-id="${id}"]`);
+    if (chip) chip.remove();
+    updatePlayerCount();
   });
+}
+
+function addPlayerChip(p) {
+  const div = document.createElement('div');
+  div.className = 'player-chip';
+  div.dataset.id = p.id;
+  div.innerHTML = createChipHtml(p);
+  $('player-list').appendChild(div);
+  bindKickButton(div.querySelector('.btn-kick'));
+}
+
+function renderPlayerList() {
+  updatePlayerCount();
+  $('player-list').innerHTML = '';
+  players.forEach(p => addPlayerChip(p));
 }
 
 // ── Session restore ───────────────────────────────────────────────────────
@@ -306,7 +320,6 @@ async function restoreHostSession(state) {
     const q = questions[state.questionIndex];
     $('round-photo').src = q.photo_url;
     $('phase-label').textContent = `RUNDA ${state.questionIndex + 1} / ${questions.length}`;
-    $('global-stat').textContent = '';
     $('answer-count-num').textContent = '0';
     hide('host-countdown-overlay');
     lastCountdownSec = -1;
@@ -345,8 +358,7 @@ async function restoreHostSession(state) {
         answerCount = pins.length;
         answeredNames = pins.map(p => players.find(pl => pl.id === p.player_id)?.name).filter(Boolean);
         $('answer-count-num').textContent = answerCount;
-        $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
-        $('answered-names').textContent = answeredNames.join(' · ');
+        // answer count shown only in left panel
       }
 
       // Resume heartbeat
@@ -573,7 +585,7 @@ function subscribeAnswerCount(questionIndex) {
   answeredNames = [];
   answeredIds = new Set();
   $('answer-count-num').textContent = '0';
-  $('global-stat').textContent = `0/${players.length} odpowiedziało`;
+  // answer count shown only in left panel
   renderWaitingList();
 
   answerChannel = sb.channel(`pins:${SESSION_ID}:${questionIndex}`)
@@ -591,7 +603,7 @@ function subscribeAnswerCount(questionIndex) {
       numEl.classList.remove('count-pop-anim');
       void numEl.offsetWidth;
       numEl.classList.add('count-pop-anim');
-      $('global-stat').textContent = `${answerCount}/${players.length} odpowiedziało`;
+      // answer count shown only in left panel
       const player = players.find(p => p.id === pin.player_id);
       if (player) {
         answeredNames.push(player.name);

@@ -105,12 +105,10 @@
       box-shadow: 0 3px 22px rgba(0,0,0,0.6), 0 1px 0 rgba(255,215,0,0.12);
       padding: 14px 28px;
       position: relative;
+      display: flex; align-items: center; justify-content: space-between;
     }
     #phase-label {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
+      flex: 1; text-align: center;
       pointer-events: none;
       font-size: 20px !important;
     }
@@ -141,13 +139,22 @@
     /* ══ LOBBY — enchanted kingdom ════════════════════════════════════ */
     #screen-lobby {
       flex: 1; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 20px; padding: 20px;
-      position: relative; overflow-y: auto; overflow-x: visible;
+      justify-content: flex-start; gap: 20px; padding: 20px;
+      position: relative; overflow-y: auto; overflow-x: hidden;
       background:
         radial-gradient(ellipse at 30% 20%, rgba(80,0,160,0.35) 0%, transparent 55%),
         radial-gradient(ellipse at 70% 80%, rgba(233,30,140,0.2) 0%, transparent 50%),
         radial-gradient(ellipse at 50% 50%, #0e0030 0%, #05000f 100%);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(233,30,140,0.3) transparent;
     }
+    #screen-lobby::-webkit-scrollbar { width: 6px; }
+    #screen-lobby::-webkit-scrollbar-track { background: transparent; }
+    #screen-lobby::-webkit-scrollbar-thumb { background: rgba(233,30,140,0.35); border-radius: 10px; }
+    #screen-lobby::-webkit-scrollbar-thumb:hover { background: rgba(233,30,140,0.55); }
+    /* Auto-center content when it doesn't overflow */
+    #screen-lobby > :first-child { margin-top: auto; }
+    #screen-lobby > :last-child { margin-bottom: auto; }
 
     /* floating particles — clipped by their own layer, not lobby */
     #lobby-sparks {
@@ -652,8 +659,7 @@
     </div>
   </div>
   <div id="phase-label" style="color:rgba(255,215,0,0.8);font-size:13px;font-weight:800;letter-spacing:2px;font-family:'Cinzel Decorative',serif;"></div>
-  <div id="global-stat" style="color:var(--text-muted);font-size:12px;"></div>
-  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v58 · 17.08.26</div>
+  <div style="color:rgba(255,215,0,0.25);font-size:10px;letter-spacing:1px;white-space:nowrap;">v59 · 18.08.26</div>
 </div>
 
 <!-- KICK PLAYER MODAL -->
@@ -818,6 +824,6 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<script type="module" src="js/host.js?v=58"></script>
+<script type="module" src="js/host.js?v=59"></script>
 </body>
 </html>
