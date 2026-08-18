@@ -419,7 +419,6 @@ async function startRound(index) {
   currentQuestionIndex = index;
   const q = questions[index];
   $('phase-label').textContent = `RUNDA ${index + 1} / ${questions.length}`;
-  $('global-stat').textContent = '';
 
   // Show photo
   $('round-photo').src = q.photo_url;
@@ -672,7 +671,6 @@ async function showResults(questionIndex) {
   hide('screen-round');
   show('screen-results');
   $('phase-label').textContent = `WYNIKI ${questionIndex + 1}/${questions.length}`;
-  $('global-stat').textContent = '';
   $('location-name-text').textContent = q.location_name;
   $('results-file-label').textContent = `📷 Lokalizacja z EXIF GPS`;
 
@@ -804,7 +802,6 @@ async function showLeaderboard(isFinal) {
   hide('screen-round');
   show('screen-leaderboard');
   $('phase-label').textContent = isFinal ? 'WYNIKI KOŃCOWE' : 'RANKING';
-  $('global-stat').textContent = '';
 
   const nextQ = currentQuestionIndex + 1;
   $('lb-title').textContent = isFinal ? 'WYNIKI KOŃCOWE 🏆' : `RANKING PO PYTANIU ${nextQ} / ${questions.length}`;
