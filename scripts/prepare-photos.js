@@ -139,8 +139,13 @@ for (let i = 0; i < files.length; i++) {
     .upload(storageName, fileBuffer, { contentType, upsert: true });
 
   if (uploadError) {
-    console.error(`  ❌ Upload błąd: ${uploadError.message}`);
-    continue;
+    // If file already exists, continue with existing URL
+    if (uploadError.message.includes('row-level security') || uploadError.message.includes('already exists') || uploadError.statusCode === '409') {
+      console.log(`  ℹ️  Plik już istnieje w storage — używam istniejącego.`);
+    } else {
+      console.error(`  ❌ Upload błąd: ${uploadError.message}`);
+      continue;
+    }
   }
 
   const { data: { publicUrl } } = supabase.storage

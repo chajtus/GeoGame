@@ -1,23 +1,10 @@
 {
-  "a_17_05.jpg": {
-    "address": "Oatman, Arizona, USA",
-    "name": "Oatman, Arizona, USA"
-  },
-
-  "a_21_01.jpg": {
-    "address": "Zion National Park, Utah, USA",
-    "name": "Zion National Park, Utah, USA"
-  },
-
-  "a_22_01.jpg": {
-    "name": "Zakopane, Poland"
-  },
-
-  "a_22_12.jpg": {
-    "name": "Laganas, Zakynthos, Greece"
-  },
-
-  "a_24_05.jpg": {
-    "name": "Elche, Spain"
-  }
+  "20180725_161146.JPG": { "address": "Florence, Italy", "name": "Florencja, Włochy" },
+  "20221004_090637.jpg": { "address": "Antelope Canyon, Arizona, USA", "name": "Antelope Canyon, Arizona, USA" },
+  "20221210_160958.jpg": { "address": "ABBA The Museum, Stockholm, Sweden", "name": "Muzeum ABBA, Sztokholm, Szwecja" },
+  "20241209_111248.jpg": { "address": "Carlsberg Museum, Copenhagen, Denmark", "name": "Muzeum Carlsberg, Kopenhaga, Dania" },
+  "a_21_01.jpg": { "lat": 37.2692, "lng": -112.9468, "name": "Angels Landing, Zion National Park, Utah, USA" },
+  "F4290006.JPG": { "address": "Georg Brandes Plads, Copenhagen, Denmark", "name": "Georg Brandes Plads, Kopenhaga, Dania" },
+  "IMG_3358.jpeg": { "lat": 35.231112, "lng": -112.589316, "name": "Route 66, Seligman, Arizona, USA" },
+  "IMG_8426.JPG": { "address": "Castillo de Santa Bárbara, Alicante, Spain", "name": "Zamek Santa Barbara, Alicante, Hiszpania" }
 }
