@@ -86,12 +86,6 @@ function stopCamera() {
   hide('camera-overlay');
 }
 
-$('retake-hint').addEventListener('click', () => {
-  playerState.avatarDataUrl = null;
-  renderAvatarPreview();
-  $('btn-selfie').click();
-});
-
 $('btn-skip-avatar').addEventListener('click', () => {
   playerState.avatarDataUrl = null;
   renderAvatarPreview();
@@ -106,15 +100,13 @@ function renderAvatarPreview() {
     el.innerHTML = `<img src="${playerState.avatarDataUrl}" alt="selfie">`;
     el.style.background = 'transparent';
     el.classList.add('has-photo');
-    show('retake-hint');
-    hide('btn-skip-avatar');
+    $('btn-skip-avatar').textContent = '🗑 usuń zdjęcie';
   } else {
     // Show initials circle — feels like a real avatar, not a broken state
     el.style.background = playerState.avatarColor;
     el.innerHTML = `<span style="font-size:28px;font-weight:800;color:#fff;line-height:1;">${initials}</span>`;
     el.classList.remove('has-photo');
-    hide('retake-hint');
-    show('btn-skip-avatar');
+    $('btn-skip-avatar').textContent = 'bez zdjęcia →';
   }
 }
 
