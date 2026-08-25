@@ -5,6 +5,15 @@ const $ = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
+// ── Wake Lock — prevent screen from sleeping ─────────────────────────────
+(async function keepAwake() {
+  if (!('wakeLock' in navigator)) return;
+  let lock = null;
+  const request = async () => { try { lock = await navigator.wakeLock.request('screen'); } catch {} };
+  await request();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') request(); });
+})();
+
 function showMap() {
   show('screen-map');
   $('map-top-bar').classList.add('map-bar--visible');
@@ -61,7 +70,10 @@ $('btn-snap').addEventListener('click', () => {
   const canvas = $('snap-canvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
+  const ctx = canvas.getContext('2d');
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, 0, 0);
   playerState.avatarDataUrl = canvas.toDataURL('image/jpeg', 0.6);
   stopCamera();
   renderAvatarPreview();
@@ -182,7 +194,7 @@ function subscribeToGame() {
     .on('broadcast', { event: 'round_resumed' }, ({ payload }) => {
       $('player-timer').style.opacity = '';
       $('player-timer').style.textDecoration = '';
-      if (currentQuestion && !submitted) {
+      if (currentQuestion) {
         currentQuestion.started_at = payload.started_at;
         currentQuestion.duration_ms = payload.duration_ms;
         startPlayerTimer(payload.started_at, payload.duration_ms);
@@ -490,9 +502,11 @@ async function submitAnswer() {
   hide('map-hint');
   if (leafletMap) leafletMap.dragging.disable();
   if (leafletMap) leafletMap.touchZoom.disable();
-  $('waiting-count').textContent = '';
-  show('map-waiting-overlay');
-  triggerAnim('map-waiting-overlay', 'waiting--in');
+  if (!autoSubmitted) {
+    $('waiting-count').textContent = '';
+    show('map-waiting-overlay');
+    triggerAnim('map-waiting-overlay', 'waiting--in');
+  }
 
   const { haversineKm, calculatePoints } = await import('./scoring.js');
   const distanceKm = haversineKm(
@@ -641,7 +655,22 @@ async function handleRoundEnd() {
     if (playerPinLatLng) {
       // Pin placed but not confirmed — auto-submit as valid answer
       autoSubmitted = true;
-      await autoSubmit();
+      submitted = true;
+      manuallySubmitted = true;
+      // Calculate points immediately so showPlayerResult() has data
+      const { haversineKm, calculatePoints } = await import('./scoring.js');
+      lastDistanceKm = haversineKm(playerPinLatLng[0], playerPinLatLng[1], currentQuestion.lat, currentQuestion.lng);
+      lastPoints = calculatePoints(lastDistanceKm);
+      // Save to DB in background — don't block UI
+      sb.from('pins').insert({
+        session_id: SESSION_ID,
+        player_id: playerState.id,
+        question_index: currentQuestion.question_index,
+        lat: playerPinLatLng[0],
+        lng: playerPinLatLng[1],
+        distance_km: lastDistanceKm,
+        points: lastPoints,
+      }).then(() => sb.rpc('increment_score', { player_id: playerState.id, amount: lastPoints }).catch(() => null));
     } else {
       // No pin at all — 0 pts, no DB write
       submitted = true;
