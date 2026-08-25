@@ -306,6 +306,7 @@ async function handleRoundStart(payload, showFlash = false) {
   submitted = false;
   manuallySubmitted = false;
   autoSubmitted = false;
+  roundEndHandled = false;
   leaderboardShown = false;
   lastDistanceKm = 0;
   lastPoints = 0;
@@ -635,7 +636,10 @@ function showPlayerResult() {
 })();
 
 // ── Round end from host ───────────────────────────────────────────────────
+let roundEndHandled = false;
 async function handleRoundEnd() {
+  if (roundEndHandled) return;
+  roundEndHandled = true;
   if (currentQuestion) lastEndedQuestionIndex = currentQuestion.question_index;
   clearInterval(timerInterval);
 
