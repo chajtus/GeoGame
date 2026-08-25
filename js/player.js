@@ -662,7 +662,7 @@ async function handleRoundEnd() {
       lastDistanceKm = haversineKm(playerPinLatLng[0], playerPinLatLng[1], currentQuestion.lat, currentQuestion.lng);
       lastPoints = calculatePoints(lastDistanceKm);
       // Save to DB in background — don't block UI
-      sb.from('pins').insert({
+      const pinData = {
         session_id: SESSION_ID,
         player_id: playerState.id,
         question_index: currentQuestion.question_index,
@@ -670,7 +670,12 @@ async function handleRoundEnd() {
         lng: playerPinLatLng[1],
         distance_km: lastDistanceKm,
         points: lastPoints,
-      }).then(() => sb.rpc('increment_score', { player_id: playerState.id, amount: lastPoints }).catch(() => null));
+      };
+      const pid = playerState.id;
+      const pts = lastPoints;
+      sb.from('pins').insert(pinData).then(() =>
+        sb.rpc('increment_score', { player_id: pid, amount: pts }).catch(() => null)
+      ).catch(() => null);
     } else {
       // No pin at all — 0 pts, no DB write
       submitted = true;
