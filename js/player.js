@@ -256,10 +256,8 @@ function subscribeToGame() {
 // ── Reconnect channel when phone returns from background ─────────────────
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || !gameChannel) return;
-  // If channel state is not joined, resubscribe
-  const state = gameChannel.state;
-  if (state === 'joined') return; // still connected, nothing to do
-  console.log('[GeoGame] Channel state on resume:', state, '— reconnecting');
+  // Always force-reconnect — channel may report 'joined' but WebSocket is dead
+  console.log('[GeoGame] Returned from background, forcing channel reconnect');
   try { sb.removeChannel(gameChannel); } catch {}
   subscribeToGame();
 });
