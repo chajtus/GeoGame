@@ -676,7 +676,8 @@ async function showResults(questionIndex) {
 
   // Determine next action label
   const isLast = questionIndex + 1 >= questions.length;
-  const isLeaderboard = (questionIndex + 1) % 5 === 0;
+  const halfwayIndex = Math.floor(questions.length / 2) - 1;
+  const isLeaderboard = questionIndex === halfwayIndex;
   $('btn-next-question').textContent = isLast
     ? '🏆 WYNIKI KOŃCOWE'
     : isLeaderboard
