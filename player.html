@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    html, body { height: 100%; overflow: hidden; }
-    body { height: 100dvh; display: flex; flex-direction: column; }
+    html { height: 100%; overflow: hidden; padding-top: env(safe-area-inset-top, 0); box-sizing: border-box; background: #1a0030; }
+    body { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; margin: 0; }
     .leaflet-container { background: #a8c8e8 !important; } /* ocean color instead of grey */
 
     /* ═══ LOGIN ═══════════════════════════════════════════════════════════ */
@@ -158,13 +158,6 @@
     /* Top bar: normal flex child — NOT fixed/absolute.
        Flexbox guarantees the map can never overlap or hide this element,
        regardless of Leaflet zoom transforms or GPU compositing layers. */
-    /* Notch spacer — fills the safe area with background color */
-    #map-notch-spacer {
-      flex-shrink: 0;
-      height: env(safe-area-inset-top, 0);
-      background: #1a0030;
-      z-index: 500;
-    }
     #map-top-bar {
       display: none;
       flex-shrink: 0;
@@ -589,7 +582,6 @@
 <!-- MAP TOP BAR — position:fixed, outside Leaflet DOM entirely, zoom can never touch it -->
 <!-- MAP -->
 <div id="screen-map" class="hidden">
-  <div id="map-notch-spacer"></div>
   <div id="map-top-bar">
     <div id="round-label">RUNDA 1</div>
     <div id="player-timer">0:30</div>
