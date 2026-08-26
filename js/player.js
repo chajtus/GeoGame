@@ -253,47 +253,26 @@ function subscribeToGame() {
     .subscribe();
 }
 
-// ── Reconnect Realtime when phone returns from background ────────────────
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible' || !gameChannel) return;
-  // Reset kick counter — background polls are unreliable
-  kickMissCount = 0;
-  // Give the WebSocket a moment to reconnect on its own, then check
-  setTimeout(() => {
-    if (!gameChannel || gameChannel.state === 'joined') return;
-    console.log('[GeoGame] Channel dead after resume, state:', gameChannel.state, '— resubscribing');
-    try { sb.removeChannel(gameChannel); } catch {}
-    subscribeToGame();
-  }, 2000);
-});
-
 // ── Kick detection via polling (checks if player record still exists) ─────
 let kickPollInterval = null;
-let kickMissCount = 0;
-const KICK_THRESHOLD = 3; // require 3 consecutive misses before declaring kicked
 function subscribeToKick() {
   if (kickPollInterval) return;
   kickPollInterval = setInterval(async () => {
-    // Don't check while page is hidden — network may be unreliable
-    if (document.visibilityState === 'hidden') return;
     try {
       const { data, error } = await sb.from('players')
         .select('id')
         .eq('id', playerState.id)
         .maybeSingle();
-      if (error) { kickMissCount = 0; return; } // network error — don't count
-      if (data) { kickMissCount = 0; return; } // player exists — all good
-      // No data, no error — player might be kicked, but verify
-      kickMissCount++;
-      if (kickMissCount < KICK_THRESHOLD) return;
-      clearInterval(kickPollInterval);
-      clearInterval(timerInterval);
-      sessionStorage.removeItem('player');
-      document.body.innerHTML = `<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;">
-        <div style="font-size:48px;">🚫</div>
-        <div style="font-size:22px;font-weight:900;color:#ff5252;">Zostałeś wyrzucony z gry</div>
-        <div style="font-size:14px;color:#aaa;">Host usunął Cię z sesji.<br>Może następnym razem pójdzie lepiej!</div>
-      </div>`;
+      if (!data && !error) {
+        clearInterval(kickPollInterval);
+        clearInterval(timerInterval);
+        sessionStorage.removeItem('player');
+        document.body.innerHTML = `<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;">
+          <div style="font-size:48px;">🚫</div>
+          <div style="font-size:22px;font-weight:900;color:#ff5252;">Zostałeś wyrzucony z gry</div>
+          <div style="font-size:14px;color:#aaa;">Host usunął Cię z sesji.<br>Może następnym razem pójdzie lepiej!</div>
+        </div>`;
+      }
     } catch (_) {}
   }, 3000);
 }

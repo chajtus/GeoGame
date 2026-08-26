@@ -78,7 +78,6 @@ const _isRestoring = !!(_saved?.sessionId);
 const playerUrl = `${location.origin}${location.pathname.replace('host.html', 'player.html')}?session=${SESSION_ID}`;
 $('lobby-url').textContent = playerUrl;
 $('phase-label').textContent = 'LOBBY';
-$('session-id-label').textContent = SESSION_ID;
 
 // QR Code
 new QRCode($('qr-code'), {
