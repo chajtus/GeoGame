@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="css/theme.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    :root { --safe-top: 0px; }
+    :root { --safe-top: env(safe-area-inset-top, 0px); }
     html, body { height: 100%; overflow: hidden; margin: 0; }
     body { height: 100dvh; display: flex; flex-direction: column; }
     .leaflet-container { background: #a8c8e8 !important; } /* ocean color instead of grey */
@@ -654,24 +654,21 @@
 </div>
 
 <script>
-// iPhone notch detection — set --safe-top CSS variable
+// iPhone notch/Dynamic Island — JS fallback when CSS env() returns 0
 (function() {
-  // Try CSS env() first
-  var div = document.createElement('div');
-  div.style.paddingTop = 'env(safe-area-inset-top, 0px)';
-  document.body.appendChild(div);
-  var safeTop = parseInt(getComputedStyle(div).paddingTop) || 0;
-  document.body.removeChild(div);
-  if (safeTop > 0) {
-    document.documentElement.style.setProperty('--safe-top', safeTop + 'px');
-    return;
-  }
-  // Fallback: detect iPhone with notch by screen dimensions
-  var ua = navigator.userAgent;
-  if (/iPhone/.test(ua)) {
+  // Check if CSS :root --safe-top (set via env()) resolved to a real value
+  var computed = getComputedStyle(document.documentElement).getPropertyValue('--safe-top');
+  var px = parseInt(computed) || 0;
+  if (px > 0) return; // env() worked, CSS handles it
+
+  // Fallback: detect iPhone with notch/Dynamic Island by screen height
+  if (/iPhone/.test(navigator.userAgent)) {
     var h = Math.max(window.screen.height, window.screen.width);
-    // iPhone X/XS/11Pro=812, XR/XSMax/11/12/13/14=844/852/896/926/932, 15/16=852/932
-    if (h >= 812) {
+    if (h >= 852) {
+      // Dynamic Island (iPhone 14 Pro+, 15, 16): ~59px safe area
+      document.documentElement.style.setProperty('--safe-top', '59px');
+    } else if (h >= 812) {
+      // Notch (iPhone X/XS/11 Pro/12 mini/13 mini): ~47px safe area
       document.documentElement.style.setProperty('--safe-top', '47px');
     }
   }
