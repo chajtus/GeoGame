@@ -47,15 +47,27 @@ function generateSessionId() {
 let questions = [];
 async function loadQuestions() {
   const res = await fetch('questions.json');
-  questions = await res.json();
-  if (questions.length === 0) {
+  const allQuestions = await res.json();
+  if (allQuestions.length === 0) {
     alert('questions.json jest puste — uruchom najpierw prepare-photos.js!');
     return;
   }
-  // Shuffle questions randomly each session (Fisher-Yates)
-  for (let i = questions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [questions[i], questions[j]] = [questions[j], questions[i]];
+
+  // Restore saved order on refresh, or shuffle for new session
+  const saved = loadHostState();
+  if (saved?.questionOrder) {
+    // Rebuild questions array in saved order
+    const byId = Object.fromEntries(allQuestions.map(q => [q.id, q]));
+    questions = saved.questionOrder.map(id => byId[id]).filter(Boolean);
+  } else {
+    // Fisher-Yates shuffle for new session
+    questions = allQuestions;
+    for (let i = questions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [questions[i], questions[j]] = [questions[j], questions[i]];
+    }
+    // Persist the shuffled order
+    saveHostState({ questionOrder: questions.map(q => q.id) });
   }
 }
 
