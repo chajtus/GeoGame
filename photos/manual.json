@@ -9,5 +9,12 @@
   "IMG_8426.JPG": { "address": "Castillo de Santa Bárbara, Alicante, Spain", "name": "Zamek Santa Barbara, Alicante, Hiszpania", "premium": true },
   "IMG_0442.JPG": { "lat": 31.625, "lng": -7.988, "name": "Marrakech, Morocco" },
   "20230821_174904.jpg": { "lat": 40.758, "lng": -73.9855, "name": "Times Square, New York, USA" },
-  "20240816_120149.jpg": { "premium": true }
+  "20230328_165411.jpg": { "name": "Palma, Majorka, Hiszpania" },
+  "20231128_145557.jpg": { "name": "Ban Kao Makha, Thailand" },
+  "20240319_065336.jpg": { "name": "Pico do Arieiro, Madera, Portugalia" },
+  "20240507_175406.jpg": { "name": "Londyn, Wielka Brytania" },
+  "20240531_142923.jpg": { "name": "Teide, Teneryfa, Hiszpania" },
+  "20260629_112522.jpg": { "name": "Zakynthos, Grecja" },
+  "20240816_120149.jpg": { "name": "Piła, Polska", "premium": true },
+  "20260821_161358.jpg": { "lat": 55.7346, "lng": 9.1254, "name": "Legoland, Billund, Dania" }
 }

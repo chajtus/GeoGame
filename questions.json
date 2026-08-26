@@ -145,7 +145,14 @@
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q21_20260629_112522.jpg",
     "lat": 37.901400599999995,
     "lng": 20.652955199999997,
-    "location_name": "Δημοτική Ενότητα Ελατίων, Grecja"
+    "location_name": "Zakynthos, Grecja"
+  },
+  {
+    "id": 22,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q22_20260821_161358.jpg",
+    "lat": 55.7346,
+    "lng": 9.1254,
+    "location_name": "Legoland, Billund, Dania"
   },
   {
     "id": 23,
