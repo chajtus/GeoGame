@@ -253,13 +253,17 @@ function subscribeToGame() {
     .subscribe();
 }
 
-// ── Reconnect channel when phone returns from background ─────────────────
+// ── Reconnect Realtime when phone returns from background ────────────────
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || !gameChannel) return;
-  // Always force-reconnect — channel may report 'joined' but WebSocket is dead
-  console.log('[GeoGame] Returned from background, forcing channel reconnect');
-  try { sb.removeChannel(gameChannel); } catch {}
-  subscribeToGame();
+  // Poke the Supabase Realtime connection to ensure it's alive
+  // If the underlying WebSocket died while backgrounded, this reconnects it
+  // without destroying the channel and its event listeners
+  const conn = sb.realtime;
+  if (conn && typeof conn.connect === 'function') {
+    console.log('[GeoGame] Returned from background, poking Realtime connection');
+    conn.connect();
+  }
 });
 
 // ── Kick detection via polling (checks if player record still exists) ─────
