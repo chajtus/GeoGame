@@ -377,11 +377,16 @@ async function restoreHostSession(state) {
 
     const elapsed = Date.now() - roundStartedAt + extraMs;
     if (elapsed >= roundDurationMs) {
+      // Round expired during refresh — show loading then jump to results
       show('screen-round');
+      $('round-loading-overlay').classList.remove('hidden');
       try {
         await showResults(state.questionIndex);
       } catch (e) {
         console.error('Restore showResults failed:', e);
+        // Fallback — re-run the round from scratch
+        $('round-loading-overlay').classList.add('hidden');
+        startRound(state.questionIndex);
       }
     } else {
       show('screen-round');
