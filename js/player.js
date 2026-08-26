@@ -31,32 +31,38 @@ document.addEventListener('visibilitychange', async () => {
       .maybeSingle();
     if (!gs) return;
 
-    if (gs.phase === 'round') {
-      // Active round — if player doesn't have this question, start it
-      if (!currentQuestion || currentQuestion.question_index !== gs.current_question) {
-        // Wait for the next heartbeat (host sends every 2s) — it has the full payload
-        // The resubscribed channel will receive it
-      }
-    } else if (gs.phase === 'results' || gs.phase === 'leaderboard') {
-      // Between rounds — show waiting screen if player is still on map
-      if (currentQuestion && !submitted) {
-        // Player missed round_end — auto-submit with 0 points
-        submitted = true;
-        lastDistanceKm = 0;
-        lastPoints = 0;
-        if (currentQuestion) lastEndedQuestionIndex = currentQuestion.question_index;
-        clearInterval(timerInterval);
-      }
-      hide('screen-map');
-      hide('screen-round-flash');
-      hide('screen-submitted');
-      show('screen-waiting');
-      document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
-    } else if (gs.phase === 'final') {
-      hide('screen-map');
+    const hideAll = () => {
+      hideMap();
       hide('screen-round-flash');
       hide('screen-submitted');
       hide('screen-waiting');
+      hide('screen-player-finale');
+      hide('player-countdown-overlay');
+    };
+
+    if (gs.phase === 'round') {
+      // Active round — if player doesn't have this question or is behind, recover
+      if (!currentQuestion || currentQuestion.question_index !== gs.current_question) {
+        // Heartbeat (every 2s) will deliver full payload via resubscribed channel
+        // Meanwhile show waiting so player isn't stuck on old screen
+        hideAll();
+        show('screen-waiting');
+        document.querySelector('#screen-waiting .waiting-sub').textContent = 'Łączenie ponownie...';
+      }
+    } else if (gs.phase === 'results' || gs.phase === 'leaderboard') {
+      // Host is on results/leaderboard — make sure player isn't stuck
+      if (currentQuestion && !submitted) {
+        submitted = true;
+        lastDistanceKm = 0;
+        lastPoints = 0;
+        lastEndedQuestionIndex = currentQuestion.question_index;
+        clearInterval(timerInterval);
+      }
+      hideAll();
+      show('screen-waiting');
+      document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
+    } else if (gs.phase === 'final') {
+      hideAll();
       $('finale-player-name').textContent = playerState.name;
       show('screen-player-finale');
       fetchPlayerRank().then(() => {
