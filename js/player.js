@@ -651,7 +651,7 @@ async function submitAnswer() {
   lastDistanceKm = distanceKm;
   lastPoints = points;
 
-  dbWritePromise = sb.from('pins').insert({
+  const pinPayload = {
     session_id: SESSION_ID,
     player_id: playerState.id,
     question_index: currentQuestion.question_index,
@@ -659,9 +659,22 @@ async function submitAnswer() {
     lng: playerPinLatLng[1],
     distance_km: distanceKm,
     points,
-  }).then(() =>
-    sb.rpc('increment_score', { player_id: playerState.id, amount: points }).catch(() => null)
-  );
+  };
+  const pid = playerState.id;
+  const pts = points;
+  dbWritePromise = (async () => {
+    const { error } = await sb.from('pins').insert(pinPayload);
+    if (error) {
+      // Retry once after 1s (network hiccup, mobile wake)
+      console.warn('Pin insert failed, retrying...', error.message);
+      await new Promise(r => setTimeout(r, 1000));
+      const { error: e2 } = await sb.from('pins').insert(pinPayload);
+      if (e2) console.error('Pin insert retry failed:', e2.message);
+      else await sb.rpc('increment_score', { player_id: pid, amount: pts }).catch(() => null);
+    } else {
+      await sb.rpc('increment_score', { player_id: pid, amount: pts }).catch(() => null);
+    }
+  })();
   await dbWritePromise;
 }
 
@@ -814,9 +827,18 @@ async function handleRoundEnd() {
       };
       const pid = playerState.id;
       const pts = lastPoints;
-      dbWritePromise = sb.from('pins').insert(pinData).then(() =>
-        sb.rpc('increment_score', { player_id: pid, amount: pts }).catch(() => null)
-      ).catch(() => null);
+      dbWritePromise = (async () => {
+        const { error } = await sb.from('pins').insert(pinData);
+        if (error) {
+          console.warn('Auto-submit pin insert failed, retrying...', error.message);
+          await new Promise(r => setTimeout(r, 1000));
+          const { error: e2 } = await sb.from('pins').insert(pinData);
+          if (e2) console.error('Auto-submit retry failed:', e2.message);
+          else await sb.rpc('increment_score', { player_id: pid, amount: pts }).catch(() => null);
+        } else {
+          await sb.rpc('increment_score', { player_id: pid, amount: pts }).catch(() => null);
+        }
+      })().catch(() => null);
     } else {
       // No pin at all — 0 pts, no DB write
       submitted = true;
