@@ -6,23 +6,27 @@ const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
 // ── Wake Lock — prevent screen from sleeping ─────────────────────────────
-// Native Wake Lock API (Safari 16.4+, Chrome, Edge) with re-acquire on visibility change
-let _wakeLock = null;
+let wakeLock = null;
+
 async function requestWakeLock() {
-  try {
-    if ('wakeLock' in navigator) {
-      _wakeLock = await navigator.wakeLock.request('screen');
-      _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+    } catch (err) {
+      console.log('Wake Lock error:', err);
     }
-  } catch (_) {}
+  }
 }
-// Must be triggered from user gesture on iOS Safari
+
+// Request immediately + on every user interaction + on visibility change
+requestWakeLock();
+
 ['touchend', 'click'].forEach(evt => {
-  document.addEventListener(evt, () => { if (!_wakeLock) requestWakeLock(); }, { passive: true });
+  document.addEventListener(evt, () => requestWakeLock(), { passive: true });
 });
-// Re-acquire when page becomes visible (iOS releases it on tab switch)
+
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && !_wakeLock) requestWakeLock();
+  if (document.visibilityState === 'visible') requestWakeLock();
 });
 
 // ── Visibility recovery — reconnect channel and sync state from DB ────────
