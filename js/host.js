@@ -94,15 +94,25 @@ new QRCode($('qr-code'), {
   correctLevel: QRCode.CorrectLevel.H,
 });
 
-// Mini QR in top bar
-new QRCode($('topbar-qr'), {
-  text: playerUrl,
-  width: 48,
-  height: 48,
-  colorDark: '#ffffff',
-  colorLight: '#1a0030',
-  correctLevel: QRCode.CorrectLevel.L,
+// QR modal
+let qrModalReady = false;
+$('btn-show-qr').addEventListener('click', () => {
+  const modal = $('qr-modal');
+  if (!qrModalReady) {
+    new QRCode($('modal-qr'), {
+      text: playerUrl,
+      width: 360,
+      height: 360,
+      colorDark: '#ffffff',
+      colorLight: '#0d0d1a',
+      correctLevel: QRCode.CorrectLevel.H,
+    });
+    $('modal-qr-url').textContent = playerUrl;
+    qrModalReady = true;
+  }
+  modal.style.display = 'flex';
 });
+$('qr-modal').addEventListener('click', () => { $('qr-modal').style.display = 'none'; });
 
 // ── Copy link button ──────────────────────────────────────────────────────
 $('btn-copy-link').addEventListener('click', async () => {
