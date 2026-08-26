@@ -71,7 +71,7 @@ export function createAvatarIcon(player, size = 36) {
  * @returns {L.Marker}
  */
 export function addPlayerPin(map, player, lat, lng, distanceKm) {
-  const icon = createAvatarIcon(player, 72);
+  const icon = createAvatarIcon(player, 50);
   const distLabel = distanceKm < 1
     ? `${Math.round(distanceKm * 1000)} m`
     : `${Math.round(distanceKm).toLocaleString('pl')} km`;
