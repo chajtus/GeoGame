@@ -60,7 +60,7 @@
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q09_20230328_165411.jpg",
     "lat": 39.56754049972223,
     "lng": 2.646703899722222,
-    "location_name": "Palma, Hiszpania"
+    "location_name": "Palma, Majorka, Hiszpania"
   },
   {
     "id": 10,
@@ -74,14 +74,14 @@
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q11_20231128_145557.jpg",
     "lat": 19.133775799722223,
     "lng": 98.87822439972221,
-    "location_name": "บ้านเก๊ามะค่า, Tajlandia"
+    "location_name": "Ban Kao Makha, Thailand"
   },
   {
     "id": 12,
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q12_20240319_065336.jpg",
     "lat": 32.7374061,
     "lng": -16.932394099722224,
-    "location_name": "Santana, Portugalia"
+    "location_name": "Pico do Arieiro, Madera, Portugalia"
   },
   {
     "id": 13,
