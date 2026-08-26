@@ -418,6 +418,10 @@ async function startRound(index) {
   currentQuestionIndex = index;
   const q = questions[index];
   const isPremium = !!q.premium;
+
+  // Save state IMMEDIATELY so refresh during premium overlay or broadcast can restore
+  saveHostState({ phase: 'round', questionIndex: index });
+
   $('phase-label').textContent = `RUNDA ${index + 1} / ${questions.length}${isPremium ? ' ⭐ PREMIUM' : ''}`;
 
   // Show photo first (so premium overlay appears on new photo, not old one)
