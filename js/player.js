@@ -470,9 +470,17 @@ async function handleRoundStart(payload, showFlash = false) {
     hide('screen-round-flash');
   }
 
+  // Premium round overlay
+  if (payload.premium) {
+    const pov = $('premium-player-overlay');
+    if (pov) { pov.classList.remove('hidden'); }
+    await new Promise(r => setTimeout(r, 3000));
+    if (pov) { pov.classList.add('hidden'); }
+  }
+
   showMap();
   show('map-submit-bar');
-  $('round-label').textContent = `RUNDA ${payload.question_index + 1}`;
+  $('round-label').textContent = `RUNDA ${payload.question_index + 1}${payload.premium ? ' ⭐' : ''}`;
   $('btn-submit').disabled = true;
   $('btn-submit').textContent = '✅ ZATWIERDŹ ODPOWIEDŹ';
 
@@ -643,7 +651,8 @@ async function submitAnswer() {
     playerPinLatLng[0], playerPinLatLng[1],
     currentQuestion.lat, currentQuestion.lng
   );
-  const points = calculatePoints(distanceKm);
+  const basePoints = calculatePoints(distanceKm);
+  const points = currentQuestion.premium ? basePoints * 2 : basePoints;
   lastDistanceKm = distanceKm;
   lastPoints = points;
 
@@ -796,7 +805,8 @@ async function handleRoundEnd() {
       // Calculate points immediately so showPlayerResult() has data
       const { haversineKm, calculatePoints } = await import('./scoring.js');
       lastDistanceKm = haversineKm(playerPinLatLng[0], playerPinLatLng[1], currentQuestion.lat, currentQuestion.lng);
-      lastPoints = calculatePoints(lastDistanceKm);
+      const autoBasePoints = calculatePoints(lastDistanceKm);
+      lastPoints = currentQuestion.premium ? autoBasePoints * 2 : autoBasePoints;
       // Save to DB in background — don't block UI
       const pinData = {
         session_id: SESSION_ID,

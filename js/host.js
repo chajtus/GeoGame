@@ -428,7 +428,15 @@ async function startRound(index) {
   roundEnding = false;
   currentQuestionIndex = index;
   const q = questions[index];
-  $('phase-label').textContent = `RUNDA ${index + 1} / ${questions.length}`;
+  const isPremium = !!q.premium;
+  $('phase-label').textContent = `RUNDA ${index + 1} / ${questions.length}${isPremium ? ' ⭐ PREMIUM' : ''}`;
+
+  // Premium announcement — show overlay for 3s before starting
+  if (isPremium) {
+    $('premium-overlay').classList.remove('hidden');
+    await new Promise(r => setTimeout(r, 3000));
+    $('premium-overlay').classList.add('hidden');
+  }
 
   // Show photo
   $('round-photo').src = q.photo_url;
@@ -445,6 +453,7 @@ async function startRound(index) {
     photo_url: q.photo_url,
     started_at: startedAt,
     duration_ms: durationMs,
+    premium: isPremium,
   };
 
   await broadcast(gameChannel, 'round_start', roundPayload);

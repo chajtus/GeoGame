@@ -154,7 +154,9 @@ for (let i = 0; i < files.length; i++) {
 
   console.log(`  ✅ Wgrano: ${publicUrl}\n`);
 
-  questions.push({ id: i + 1, photo_url: publicUrl, lat, lng, location_name: locationName });
+  const entry = { id: i + 1, photo_url: publicUrl, lat, lng, location_name: locationName };
+  if (override?.premium) entry.premium = true;
+  questions.push(entry);
 }
 
 if (questions.length === 0) {

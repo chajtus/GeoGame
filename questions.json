@@ -102,7 +102,8 @@
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q15_20240816_120149.jpg",
     "lat": 53.1534605,
     "lng": 16.745848899722223,
-    "location_name": "Piła, Polska"
+    "location_name": "Piła, Polska",
+    "premium": true
   },
   {
     "id": 16,
@@ -200,6 +201,7 @@
     "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q30_IMG_8426.JPG",
     "lat": 38.3491127,
     "lng": -0.4775077,
-    "location_name": "Zamek Santa Barbara, Alicante, Hiszpania"
+    "location_name": "Zamek Santa Barbara, Alicante, Hiszpania",
+    "premium": true
   }
 ]
