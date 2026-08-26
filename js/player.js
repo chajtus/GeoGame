@@ -295,6 +295,20 @@ function subscribeToGame() {
       if (!currentQuestion || currentQuestion.question_index !== payload.question_index) {
         handleRoundStart(payload, false); // No flash on heartbeat recovery
       }
+      // Sync pause state (player might have refreshed while paused)
+      if (payload.paused && currentQuestion && !submitted) {
+        clearInterval(timerInterval);
+        $('player-timer').style.opacity = '0.45';
+        $('player-timer').style.textDecoration = 'line-through';
+      } else if (!payload.paused && currentQuestion && !submitted) {
+        $('player-timer').style.opacity = '';
+        $('player-timer').style.textDecoration = '';
+        if (payload.started_at && payload.duration_ms) {
+          currentQuestion.started_at = payload.started_at;
+          currentQuestion.duration_ms = payload.duration_ms;
+          startPlayerTimer(payload.started_at, payload.duration_ms);
+        }
+      }
     })
     .on('broadcast', { event: 'time_extended' }, ({ payload }) => {
       if (currentQuestion) {

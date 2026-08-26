@@ -489,7 +489,7 @@ async function startRound(index) {
     if (roundPayload.started_at !== effectiveStartedAt || roundPayload.duration_ms !== roundDurationMs) {
       roundPayload = { ...roundPayload, started_at: effectiveStartedAt, duration_ms: roundDurationMs };
     }
-    broadcast(gameChannel, 'round_heartbeat', roundPayload).catch(() => null);
+    broadcast(gameChannel, 'round_heartbeat', { ...roundPayload, paused }).catch(() => null);
     saveHostState({ roundStartedAt, roundDurationMs, extraMs });
   }, 2000);
 
