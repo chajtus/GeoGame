@@ -53,6 +53,11 @@ async function loadQuestions() {
   }
 }
 
+// ── Sync game_state to Supabase (so players can poll after background) ────
+function syncGameState(patch) {
+  sb.from('game_state').update(patch).eq('session_id', SESSION_ID).then(null, () => null);
+}
+
 // ── Game state ─────────────────────────────────────────────────────────────
 let gameChannel = null;
 let players = [];
@@ -446,6 +451,7 @@ async function startRound(index) {
 
   // Save state for restore-on-refresh
   saveHostState({ phase: 'round', questionIndex: index, roundStartedAt: startedAt, roundDurationMs: durationMs, extraMs: 0 });
+  syncGameState({ phase: 'round', current_question: index, round_started_at: new Date(startedAt).toISOString(), round_duration_seconds: Math.round(durationMs / 1000) });
 
   // Heartbeat every 2s — catches players who missed round_start (e.g. page refresh)
   // Also saves current timer state so host can restore after their own refresh
@@ -670,6 +676,7 @@ async function endRound() {
 // ── Results ───────────────────────────────────────────────────────────────
 async function showResults(questionIndex) {
   saveHostState({ phase: 'results', questionIndex });
+  syncGameState({ phase: 'results', current_question: questionIndex });
 
   const q = questions[questionIndex];
 
@@ -786,6 +793,7 @@ async function showResults(questionIndex) {
 // ── Leaderboard ───────────────────────────────────────────────────────────
 async function showLeaderboard(isFinal) {
   saveHostState({ phase: 'leaderboard', questionIndex: currentQuestionIndex, isFinal });
+  syncGameState({ phase: isFinal ? 'final' : 'leaderboard', current_question: currentQuestionIndex });
 
   await broadcast(gameChannel, 'show_leaderboard', { isFinal });
 

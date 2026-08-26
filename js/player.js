@@ -14,6 +14,58 @@ const hide = id => $(id).classList.add('hidden');
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') request(); });
 })();
 
+// ── Visibility recovery — reconnect channel and sync state from DB ────────
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible') return;
+  if (!gameChannel || !playerState.id) return;
+
+  // 1) Force resubscribe: remove old channel and create fresh one
+  try { sb.removeChannel(gameChannel); } catch (_) {}
+  subscribeToGame();
+
+  // 2) Poll game_state from Supabase to recover missed transitions
+  try {
+    const { data: gs } = await sb.from('game_state')
+      .select('phase, current_question, round_started_at, round_duration_seconds')
+      .eq('session_id', SESSION_ID)
+      .maybeSingle();
+    if (!gs) return;
+
+    if (gs.phase === 'round') {
+      // Active round — if player doesn't have this question, start it
+      if (!currentQuestion || currentQuestion.question_index !== gs.current_question) {
+        // Wait for the next heartbeat (host sends every 2s) — it has the full payload
+        // The resubscribed channel will receive it
+      }
+    } else if (gs.phase === 'results' || gs.phase === 'leaderboard') {
+      // Between rounds — show waiting screen if player is still on map
+      if (currentQuestion && !submitted) {
+        // Player missed round_end — auto-submit with 0 points
+        submitted = true;
+        lastDistanceKm = 0;
+        lastPoints = 0;
+        if (currentQuestion) lastEndedQuestionIndex = currentQuestion.question_index;
+        clearInterval(timerInterval);
+      }
+      hide('screen-map');
+      hide('screen-round-flash');
+      hide('screen-submitted');
+      show('screen-waiting');
+      document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
+    } else if (gs.phase === 'final') {
+      hide('screen-map');
+      hide('screen-round-flash');
+      hide('screen-submitted');
+      hide('screen-waiting');
+      $('finale-player-name').textContent = playerState.name;
+      show('screen-player-finale');
+      fetchPlayerRank().then(() => {
+        $('finale-rank-num').textContent = playerRank ? `#${playerRank}` : '—';
+      });
+    }
+  } catch (_) {}
+});
+
 function showMap() {
   show('screen-map');
   $('map-top-bar').classList.add('map-bar--visible');
