@@ -826,7 +826,7 @@ async function showLeaderboard(isFinal) {
 
   // Always table (no podium) — podium only in finale
   $('podium').style.display = 'none';
-  $('lb-rest').style.maxWidth = '840px';
+  $('lb-rest').style.maxWidth = '1680px';
   $('lb-rest').style.margin = '0 auto';
 
   const LB_MAX = 30;
