@@ -562,6 +562,27 @@
     .lb-row .lb-change.up { color: var(--green); }
     .lb-row .lb-change.down { color: var(--red); }
 
+    /* ── floating quotes ── */
+    .lb-quotes {
+      width: 220px; flex-shrink: 0; overflow: hidden;
+      display: flex; flex-direction: column; gap: 24px;
+      padding: 12px 8px; position: relative;
+    }
+    .lb-quote {
+      font-style: italic; color: rgba(255,215,0,0.5); font-size: 13px;
+      line-height: 1.4; text-align: center; padding: 10px;
+      animation: quote-float 6s ease-in-out infinite;
+    }
+    .lb-quote .quote-author {
+      display: block; margin-top: 4px; font-style: normal;
+      font-size: 10px; color: rgba(233,30,140,0.5); font-weight: 700;
+      letter-spacing: 1px;
+    }
+    @keyframes quote-float {
+      0%, 100% { transform: translateY(0); opacity: 0.6; }
+      50% { transform: translateY(-8px); opacity: 1; }
+    }
+
     /* ══ FINALE ════════════════════════════════════════════════════════ */
     #screen-finale {
       flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -810,7 +831,11 @@
     <div id="lb-subtitle"></div>
   </div>
   <div id="podium"></div>
-  <div id="lb-rest"></div>
+  <div style="flex:1;display:flex;min-height:0;position:relative;">
+    <div id="lb-quotes-left" class="lb-quotes hidden"></div>
+    <div id="lb-rest"></div>
+    <div id="lb-quotes-right" class="lb-quotes hidden"></div>
+  </div>
   <div class="bottom-bar">
     <div class="bottom-bar-hint">▲▼ zmiana pozycji względem poprzedniego rankingu</div>
     <button class="btn btn--secondary btn-kick-ingame" style="font-size:11px;padding:6px 12px;min-width:auto;">👤✕ Usuń gracza</button>

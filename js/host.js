@@ -829,6 +829,42 @@ async function showLeaderboard(isFinal) {
   $('lb-rest').style.maxWidth = '1680px';
   $('lb-rest').style.margin = '0 auto';
 
+  // Floating quotes — only on final results
+  const quotesL = $('lb-quotes-left');
+  const quotesR = $('lb-quotes-right');
+  if (isFinal) {
+    const QUOTES = [
+      { text: 'Jeżeli przegrałeś to jesteś parówą.', author: 'Mirosław Smrut' },
+      { text: 'Geografia to nie jest sprint, to jest maraton... który przegrałeś.', author: 'Jan Geograf Kowalski' },
+      { text: 'Kto nie umie znaleźć Agnieszki, ten nie znajdzie szczęścia w życiu.', author: 'Konfucjusz (prawie)' },
+      { text: 'Najważniejsze to nie wygrać, ale sprawić żeby inni przegrali.', author: 'Sun Tzu, chyba' },
+      { text: 'Mapy kłamią, ale wyniki nie.', author: 'Aleksander Wielki' },
+      { text: 'Ziemia jest okrągła, ale Twój wynik jest płaski.', author: 'Kopernik 2.0' },
+      { text: 'Nie liczy się czy wygrasz, liczy się ile osób za Tobą.', author: 'Filosopher69' },
+      { text: 'Każda porażka to lekcja geografii.', author: 'Prof. Przegryw' },
+      { text: 'Stalking to sztuka, a Wy jesteście artystami.', author: 'FBI Agent #42' },
+      { text: 'Nie chodzi o to gdzie jesteś, ale gdzie Aga była.', author: 'Budda (po polsku)' },
+      { text: 'GPS to wymysł ludzi, którzy nie potrafią czytać map.', author: 'Mój dziadek' },
+      { text: 'Przegrywasz? To znaczy że żyjesz. Jak parówka.', author: 'Mirosław Smrut' },
+    ];
+    const shuffle = arr => arr.sort(() => Math.random() - 0.5);
+    const half = Math.ceil(QUOTES.length / 2);
+    const leftQ = shuffle([...QUOTES]).slice(0, half);
+    const rightQ = shuffle([...QUOTES]).slice(0, half);
+    const renderQuotes = (arr) => arr.map((q, i) =>
+      `<div class="lb-quote" style="animation-delay:${(i * 0.8).toFixed(1)}s;">
+        "${q.text}"<span class="quote-author">— ${q.author}</span>
+      </div>`
+    ).join('');
+    quotesL.innerHTML = renderQuotes(leftQ);
+    quotesR.innerHTML = renderQuotes(rightQ);
+    quotesL.classList.remove('hidden');
+    quotesR.classList.remove('hidden');
+  } else {
+    quotesL.classList.add('hidden');
+    quotesR.classList.add('hidden');
+  }
+
   const LB_MAX = 30;
   const lbShown = ranked.slice(0, LB_MAX);
   $('lb-rest').innerHTML = lbShown.map((p, i) => {
