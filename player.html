@@ -161,11 +161,11 @@
     #map-top-bar {
       display: none;
       flex-shrink: 0;
-      height: 56px;
+      min-height: 56px;
       z-index: 500;
       position: relative;
       background: #1a0030;
-      padding: 0 16px;
+      padding: env(safe-area-inset-top, 0) 16px 0;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
