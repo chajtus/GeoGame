@@ -6,24 +6,24 @@ const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
 // ── Wake Lock — prevent screen from sleeping ─────────────────────────────
-// Uses NoSleep.js (loaded in HTML) — works on iOS Safari via silent video trick
-let _noSleepEnabled = false;
-function enableNoSleep() {
-  if (_noSleepEnabled) return;
-  if (typeof NoSleep === 'undefined') return;
+// Native Wake Lock API (Safari 16.4+, Chrome, Edge) with re-acquire on visibility change
+let _wakeLock = null;
+async function requestWakeLock() {
   try {
-    if (!window._noSleep) window._noSleep = new NoSleep();
-    window._noSleep.enable().then(() => { _noSleepEnabled = true; }).catch(() => {});
+    if ('wakeLock' in navigator) {
+      _wakeLock = await navigator.wakeLock.request('screen');
+      _wakeLock.addEventListener('release', () => { _wakeLock = null; });
+    }
   } catch (_) {}
 }
-// Try on every user interaction until it succeeds
-['touchstart', 'touchend', 'click', 'pointerdown'].forEach(evt => {
-  document.addEventListener(evt, enableNoSleep, { passive: true });
+// Must be triggered from user gesture on iOS Safari
+['touchend', 'click'].forEach(evt => {
+  document.addEventListener(evt, () => { if (!_wakeLock) requestWakeLock(); }, { passive: true });
 });
+// Re-acquire when page becomes visible (iOS releases it on tab switch)
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { _noSleepEnabled = false; enableNoSleep(); }
+  if (document.visibilityState === 'visible' && !_wakeLock) requestWakeLock();
 });
-window.addEventListener('load', enableNoSleep);
 
 // ── Visibility recovery — reconnect channel and sync state from DB ────────
 function recoverFromGameState() {
