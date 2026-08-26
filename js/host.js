@@ -439,11 +439,12 @@ $('btn-start-test').addEventListener('click', startGame);
 
 // ── Round ─────────────────────────────────────────────────────────────────
 async function startRound(index) {
+  console.log('[startRound] index=', index, 'q=', questions[index]?.id);
   roundEnding = false;
   $('round-loading-overlay').classList.add('hidden');
   currentQuestionIndex = index;
   const q = questions[index];
-  if (!q) { console.error('startRound: no question at index', index); return; }
+  if (!q) { alert('startRound FAIL: no question at index ' + index); return; }
   const isPremium = !!q.premium;
 
   // Save state IMMEDIATELY so refresh during premium overlay or broadcast can restore
@@ -453,6 +454,7 @@ async function startRound(index) {
 
   // Show photo first (so premium overlay appears on new photo, not old one)
   $('round-photo').src = q.photo_url;
+  console.log('[startRound] photo set, premium=', isPremium);
 
   // Premium announcement — overlay on top of new photo for 3s
   if (isPremium) {
@@ -476,7 +478,9 @@ async function startRound(index) {
     premium: isPremium,
   };
 
+  console.log('[startRound] broadcasting round_start...');
   await broadcast(gameChannel, 'round_start', roundPayload);
+  console.log('[startRound] broadcast done');
 
   // Save state for restore-on-refresh
   saveHostState({ phase: 'round', questionIndex: index, questionId: q.id, roundStartedAt: startedAt, roundDurationMs: durationMs, extraMs: 0 });
