@@ -6,33 +6,22 @@ const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
 // ── Wake Lock — prevent screen from sleeping ─────────────────────────────
+// Uses NoSleep.js (loaded in HTML) — works on iOS Safari via silent video trick
 (function keepAwake() {
-  // Method 1: Wake Lock API (Chrome, Edge, etc.)
-  if ('wakeLock' in navigator) {
-    let lock = null;
-    const request = async () => { try { lock = await navigator.wakeLock.request('screen'); } catch {} };
-    request();
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') request(); });
-  }
-  // Method 2: iOS Safari — keep screen on by requesting wake lock via hidden video
-  // iOS Safari does not support Wake Lock API, but won't sleep during media playback
-  if (/iPhone|iPad/.test(navigator.userAgent) && !('wakeLock' in navigator)) {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1; canvas.height = 1;
-    const ctx = canvas.getContext('2d');
-    ctx.fillRect(0, 0, 1, 1);
-    const stream = canvas.captureStream(1);
-    const v = document.createElement('video');
-    v.setAttribute('playsinline', '');
-    v.muted = true;
-    v.loop = true;
-    v.srcObject = stream;
-    v.style.cssText = 'position:fixed;top:-1px;left:-1px;width:1px;height:1px;opacity:0.01;pointer-events:none;';
-    document.body.appendChild(v);
-    const startVideo = () => { v.play().catch(() => {}); };
-    document.addEventListener('touchstart', startVideo, { once: true });
-    document.addEventListener('click', startVideo, { once: true });
-  }
+  const initNoSleep = () => {
+    if (typeof NoSleep === 'undefined') return;
+    const ns = new NoSleep();
+    const enable = () => { ns.enable().catch(() => {}); };
+    document.addEventListener('touchstart', enable, { once: true });
+    document.addEventListener('click', enable, { once: true });
+    // Re-enable after tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') ns.enable().catch(() => {});
+    });
+  };
+  // NoSleep script might not be loaded yet
+  if (typeof NoSleep !== 'undefined') initNoSleep();
+  else window.addEventListener('load', initNoSleep);
 })();
 
 // ── Visibility recovery — reconnect channel and sync state from DB ────────
