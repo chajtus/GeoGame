@@ -852,9 +852,8 @@ async function showLeaderboard(isFinal) {
     let idx = 0;
     const showQuote = (el, q) => {
       el.innerHTML = `"${q.text}"<span class="quote-author">— ${q.author}</span>`;
-      el.classList.remove('hidden');
-      el.classList.add('visible');
-      setTimeout(() => el.classList.remove('visible'), 4000);
+      el.classList.add('quote-visible');
+      setTimeout(() => el.classList.remove('quote-visible'), 4000);
     };
     // Show first pair immediately
     showQuote(ql, shuffled[0]);
@@ -870,8 +869,10 @@ async function showLeaderboard(isFinal) {
       }, 1500);
     }, 5000);
   } else {
-    ql.classList.add('hidden');
-    qr.classList.add('hidden');
+    ql.classList.remove('quote-visible');
+    qr.classList.remove('quote-visible');
+    ql.innerHTML = '';
+    qr.innerHTML = '';
   }
 
   const LB_MAX = 30;

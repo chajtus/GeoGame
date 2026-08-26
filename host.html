@@ -572,8 +572,9 @@
       border: 1px solid rgba(255,215,0,0.15);
       border-radius: 14px;
       opacity: 0; transition: opacity 1s ease;
+      pointer-events: none;
     }
-    .lb-quote-bubble.visible { opacity: 1; }
+    .lb-quote-bubble.quote-visible { opacity: 1; }
     #lb-quote-left { left: 20px; }
     #lb-quote-right { right: 20px; }
     .lb-quote-bubble .quote-author {
@@ -832,8 +833,8 @@
   <div id="podium"></div>
   <div style="flex:1;display:flex;min-height:0;position:relative;">
     <div id="lb-rest"></div>
-    <div id="lb-quote-left" class="lb-quote-bubble hidden"></div>
-    <div id="lb-quote-right" class="lb-quote-bubble hidden"></div>
+    <div id="lb-quote-left" class="lb-quote-bubble"></div>
+    <div id="lb-quote-right" class="lb-quote-bubble"></div>
   </div>
   <div class="bottom-bar">
     <div class="bottom-bar-hint">▲▼ zmiana pozycji względem poprzedniego rankingu</div>
