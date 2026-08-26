@@ -384,37 +384,28 @@ async function restoreHostSession(state) {
     $('recover-round-label').textContent = `Runda ${qi + 1} / ${questions.length} została przerwana`;
     show('screen-recover');
 
-    const doRecover = async (action) => {
-      // Hide EVERYTHING first
+    $('btn-recover-repeat').onclick = async () => {
+      alert('DEBUG repeat: qi=' + qi + ' q=' + JSON.stringify(questions[qi]?.id) + ' len=' + questions.length);
       hide('screen-recover');
       hide('screen-lobby');
-      hide('screen-results');
-      hide('screen-leaderboard');
-      hide('screen-finale');
-
-      try {
-        if (action === 'repeat') {
-          await sb.from('pins').delete().eq('session_id', SESSION_ID).eq('question_index', qi).catch(() => null);
-          show('screen-round');
-          await startRound(qi);
-        } else if (action === 'results') {
-          await broadcast(gameChannel, 'round_end', {}).catch(() => null);
-          show('screen-round');
-          await showResults(qi);
-        } else if (action === 'next') {
-          const nextIdx = qi + 1 < questions.length ? qi + 1 : qi;
-          show('screen-round');
-          await startRound(nextIdx);
-        }
-      } catch (err) {
-        console.error('Recovery action failed:', err);
-        show('screen-recover');
-      }
+      show('screen-round');
+      await sb.from('pins').delete().eq('session_id', SESSION_ID).eq('question_index', qi).catch(() => null);
+      await startRound(qi);
     };
-
-    $('btn-recover-repeat').onclick = () => doRecover('repeat');
-    $('btn-recover-results').onclick = () => doRecover('results');
-    $('btn-recover-next').onclick = () => doRecover('next');
+    $('btn-recover-results').onclick = async () => {
+      hide('screen-recover');
+      hide('screen-lobby');
+      await broadcast(gameChannel, 'round_end', {}).catch(() => null);
+      show('screen-round');
+      await showResults(qi);
+    };
+    $('btn-recover-next').onclick = async () => {
+      hide('screen-recover');
+      hide('screen-lobby');
+      const nextIdx = qi + 1 < questions.length ? qi + 1 : qi;
+      show('screen-round');
+      await startRound(nextIdx);
+    };
     return;
   } else if (state.phase === 'leaderboard') {
     await showLeaderboard(state.isFinal ?? false);
