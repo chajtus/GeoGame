@@ -46,7 +46,7 @@ export function createAvatarIcon(player, size = 36) {
     ">${inner}</div>
     <div style="
       background:rgba(0,0,0,0.82);color:white;
-      font-size:9px;padding:2px 6px;border-radius:4px;
+      font-size:11px;padding:3px 8px;border-radius:5px;
       white-space:nowrap;text-align:center;margin-top:3px;
       max-width:90px;overflow:hidden;text-overflow:ellipsis;
     ">${player.name}</div>
@@ -71,7 +71,7 @@ export function createAvatarIcon(player, size = 36) {
  * @returns {L.Marker}
  */
 export function addPlayerPin(map, player, lat, lng, distanceKm) {
-  const icon = createAvatarIcon(player, 36);
+  const icon = createAvatarIcon(player, 72);
   const distLabel = distanceKm < 1
     ? `${Math.round(distanceKm * 1000)} m`
     : `${Math.round(distanceKm).toLocaleString('pl')} km`;
