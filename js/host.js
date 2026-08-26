@@ -207,6 +207,14 @@ subscribeToPlayers();
 
 // Create game channel early so kick broadcasts work from lobby
 gameChannel = createChannel(sb, SESSION_ID);
+// Listen for player_joined broadcast (reliable fallback for postgres_changes)
+gameChannel.on('broadcast', { event: 'player_joined' }, ({ payload: player }) => {
+  if (players.find(p => p.id === player.id)) return;
+  players.push(player);
+  showJoinFlash(player);
+  addPlayerChip(player);
+  updatePlayerCount();
+});
 await new Promise(resolve => gameChannel.subscribe(status => {
   if (status === 'SUBSCRIBED') resolve();
 }));

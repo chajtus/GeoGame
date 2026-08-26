@@ -167,7 +167,7 @@ $('btn-join').addEventListener('click', async () => {
   playerState.id = data.id;
   sessionStorage.setItem('player', JSON.stringify(playerState));
   showWaiting();
-  subscribeToGame();
+  subscribeToGame(data.id);
   subscribeToKick();
 });
 
@@ -190,7 +190,7 @@ function showWaiting() {
 let gameChannel = null;
 export { gameChannel, playerState, SESSION_ID, sb };
 
-function subscribeToGame() {
+function subscribeToGame(newPlayerId) {
   gameChannel = sb.channel(`game:${SESSION_ID}`, { config: { broadcast: { self: false } } });
   gameChannel
     .on('broadcast', { event: 'round_start' }, ({ payload }) => handleRoundStart(payload, true))
@@ -250,7 +250,15 @@ function subscribeToGame() {
         document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
       }
     })
-    .subscribe();
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED' && newPlayerId) {
+        // Notify host via broadcast (more reliable than postgres_changes)
+        gameChannel.send({ type: 'broadcast', event: 'player_joined', payload: {
+          id: newPlayerId, name: playerState.name, initials: playerState.initials,
+          avatar_color: playerState.avatarColor, avatar_data_url: playerState.avatarDataUrl || null,
+        }});
+      }
+    });
 }
 
 // ── Kick detection via polling (checks if player record still exists) ─────
