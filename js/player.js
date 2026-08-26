@@ -258,6 +258,7 @@ let kickPollInterval = null;
 function subscribeToKick() {
   if (kickPollInterval) return;
   kickPollInterval = setInterval(async () => {
+    if (document.visibilityState === 'hidden') return;
     try {
       const { data, error } = await sb.from('players')
         .select('id')
