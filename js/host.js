@@ -835,7 +835,7 @@ async function showLeaderboard(isFinal) {
 
   // Always table (no podium) — podium only in finale
   $('podium').style.display = 'none';
-  $('lb-rest').style.maxWidth = '1680px';
+  $('lb-rest').style.maxWidth = isFinal ? '1680px' : '840px';
   $('lb-rest').style.margin = '0 auto';
 
   // Floating quotes — only on final results
