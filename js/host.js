@@ -384,21 +384,22 @@ async function restoreHostSession(state) {
     $('recover-round-label').textContent = `Runda ${qi + 1} / ${questions.length} została przerwana`;
     show('screen-recover');
 
+    const hideAllScreens = () => { hide('screen-recover'); hide('screen-lobby'); hide('screen-results'); hide('screen-leaderboard'); hide('screen-finale'); };
+
     $('btn-recover-repeat').onclick = async () => {
-      hide('screen-recover');
+      hideAllScreens();
       show('screen-round');
-      // Delete all answers for this round so players can re-submit
       await sb.from('pins').delete().eq('session_id', SESSION_ID).eq('question_index', qi).catch(() => null);
       startRound(qi);
     };
     $('btn-recover-results').onclick = async () => {
-      hide('screen-recover');
+      hideAllScreens();
       await broadcast(gameChannel, 'round_end', {}).catch(() => null);
       show('screen-round');
       await showResults(qi);
     };
     $('btn-recover-next').onclick = () => {
-      hide('screen-recover');
+      hideAllScreens();
       const nextIdx = qi + 1 < questions.length ? qi + 1 : qi;
       show('screen-round');
       startRound(nextIdx);
