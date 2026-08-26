@@ -211,6 +211,11 @@ await new Promise(resolve => gameChannel.subscribe(status => {
   if (status === 'SUBSCRIBED') resolve();
 }));
 
+// Keepalive — ping every 10s to prevent WebSocket idle disconnect
+setInterval(() => {
+  broadcast(gameChannel, 'keepalive', {}).catch(() => null);
+}, 10_000);
+
 if (_isRestoring) {
   // Re-fetch existing players then jump to the saved screen
   const { data } = await sb.from('players').select('*').eq('session_id', SESSION_ID);
