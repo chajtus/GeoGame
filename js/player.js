@@ -233,6 +233,7 @@ $('btn-join').addEventListener('click', async () => {
 function showWaiting() {
   hide('screen-login');
   show('screen-waiting');
+  startWaitingPoll();
   const el = $('waiting-avatar-display');
   if (playerState.avatarDataUrl) {
     el.innerHTML = `<img src="${playerState.avatarDataUrl}" alt="" style="width:100%;height:100%;object-fit:cover;">`;
@@ -311,6 +312,32 @@ function subscribeToGame() {
     .subscribe();
 }
 
+// ── Waiting-screen poll — detect round start even if WS is dead ──────────
+let waitingPollInterval = null;
+function startWaitingPoll() {
+  stopWaitingPoll();
+  waitingPollInterval = setInterval(async () => {
+    // Only poll while on the waiting screen
+    if ($('screen-waiting').classList.contains('hidden')) { stopWaitingPoll(); return; }
+    try {
+      const { data: gs } = await sb.from('game_state')
+        .select('phase, current_question, round_started_at, round_duration_seconds')
+        .eq('session_id', SESSION_ID)
+        .maybeSingle();
+      if (!gs || gs.phase !== 'round') return;
+      // Round is active but we're still on waiting — reconnect channel
+      if (!currentQuestion || currentQuestion.question_index !== gs.current_question) {
+        try { sb.removeChannel(gameChannel); } catch (_) {}
+        subscribeToGame();
+        // Heartbeat will deliver the full round payload within 2s
+      }
+    } catch (_) {}
+  }, 4000);
+}
+function stopWaitingPoll() {
+  if (waitingPollInterval) { clearInterval(waitingPollInterval); waitingPollInterval = null; }
+}
+
 // ── Kick detection via polling (checks if player record still exists) ─────
 let kickPollInterval = null;
 function subscribeToKick() {
@@ -377,7 +404,7 @@ async function fetchPlayerRank() {
 
 // ── Round start ───────────────────────────────────────────────────────────
 async function handleRoundStart(payload, showFlash = false) {
-
+  stopWaitingPoll();
   if (playerResultMap) { playerResultMap.remove(); playerResultMap = null; }
 
   // Guard: round already ended (late delivery of round_start after round_end)
