@@ -766,18 +766,18 @@
 </div>
 
 <!-- ═══════════════════ ROUND ═══════════════════════ -->
-<!-- Premium round overlay -->
-<div id="premium-overlay" class="hidden" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(255,215,0,0.15),rgba(0,0,0,0.95));flex-direction:column;gap:16px;">
-  <div style="font-size:80px;animation:pulse-star 1s ease-in-out infinite;">⭐</div>
-  <div style="font-family:'Cinzel Decorative',serif;font-size:clamp(28px,5vw,52px);color:gold;font-weight:900;text-shadow:0 0 30px rgba(255,215,0,0.6);letter-spacing:4px;">PYTANIE PREMIUM</div>
-  <div style="font-size:clamp(18px,3vw,28px);color:#fff;font-weight:700;">PUNKTY x2!</div>
-</div>
 <style>
 @keyframes pulse-star { 0%,100%{transform:scale(1);} 50%{transform:scale(1.3);} }
 </style>
 
 <div id="screen-round" class="hidden">
   <div id="round-photo-wrap">
+    <!-- Premium overlay — sits inside photo wrap, on top of the image -->
+    <div id="premium-overlay" class="hidden" style="position:absolute;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);flex-direction:column;gap:16px;">
+      <div style="font-size:80px;animation:pulse-star 1s ease-in-out infinite;">⭐</div>
+      <div style="font-family:'Cinzel Decorative',serif;font-size:clamp(28px,5vw,52px);color:gold;font-weight:900;text-shadow:0 0 30px rgba(255,215,0,0.6),0 4px 12px rgba(0,0,0,0.8);letter-spacing:4px;">PYTANIE PREMIUM</div>
+      <div style="font-size:clamp(18px,3vw,28px);color:#fff;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,0.8);">PUNKTY x2!</div>
+    </div>
     <img id="round-photo" src="" alt="Zdjęcie Agi">
     <div id="top5-panel">
       <h4>🏆 TOP 5</h4>

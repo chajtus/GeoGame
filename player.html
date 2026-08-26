@@ -568,13 +568,12 @@
     <div id="flash-round-num">1</div>
     <div id="flash-sub-text">Gdzie to jest? 📍</div>
   </div>
-</div>
-
-<!-- Premium round overlay (player) -->
-<div id="premium-player-overlay" class="hidden" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(255,215,0,0.15),rgba(0,0,0,0.95));flex-direction:column;gap:12px;">
-  <div style="font-size:64px;animation:pulse-star 1s ease-in-out infinite;">⭐</div>
-  <div style="font-family:'Cinzel Decorative',serif;font-size:clamp(22px,5vw,36px);color:gold;font-weight:900;text-shadow:0 0 30px rgba(255,215,0,0.6);letter-spacing:3px;text-align:center;">PYTANIE PREMIUM</div>
-  <div style="font-size:clamp(16px,3vw,24px);color:#fff;font-weight:700;">PUNKTY x2!</div>
+  <!-- Premium badge — shown on flash screen over the photo -->
+  <div id="flash-premium-badge" style="display:none;position:absolute;bottom:18%;left:50%;transform:translateX(-50%);flex-direction:column;align-items:center;gap:6px;z-index:10;">
+    <div style="font-size:48px;animation:pulse-star 1s ease-in-out infinite;">⭐</div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:clamp(18px,4.5vw,30px);color:gold;font-weight:900;text-shadow:0 0 20px rgba(255,215,0,0.6),0 3px 8px rgba(0,0,0,0.9);letter-spacing:3px;text-align:center;">PYTANIE PREMIUM</div>
+    <div style="font-size:clamp(14px,3vw,20px);color:#fff;font-weight:700;text-shadow:0 2px 6px rgba(0,0,0,0.9);">PUNKTY x2!</div>
+  </div>
 </div>
 <style>
 @keyframes pulse-star { 0%,100%{transform:scale(1);} 50%{transform:scale(1.3);} }

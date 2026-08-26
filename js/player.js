@@ -454,13 +454,16 @@ async function handleRoundStart(payload, showFlash = false) {
   if (showFlash && payload.photo_url) {
     $('flash-round-num').textContent = payload.question_index + 1;
     $('flash-photo').src = payload.photo_url;
+    // Show/hide premium badge on flash screen
+    const premBadge = $('flash-premium-badge');
+    if (premBadge) premBadge.style.display = payload.premium ? 'flex' : 'none';
     hide('screen-waiting');
     hide('screen-submitted');
     hide('map-waiting-overlay');
     hideMap();
     show('screen-round-flash');
     triggerAnim('screen-round-flash', 'flash--in');
-    await new Promise(r => setTimeout(r, 2200));
+    await new Promise(r => setTimeout(r, payload.premium ? 4000 : 2200));
     hide('screen-round-flash');
     if (submitted) return; // host ended round during flash — skip map
   } else {
@@ -468,14 +471,6 @@ async function handleRoundStart(payload, showFlash = false) {
     hide('screen-submitted');
     hide('map-waiting-overlay');
     hide('screen-round-flash');
-  }
-
-  // Premium round overlay
-  if (payload.premium) {
-    const pov = $('premium-player-overlay');
-    if (pov) { pov.classList.remove('hidden'); }
-    await new Promise(r => setTimeout(r, 3000));
-    if (pov) { pov.classList.add('hidden'); }
   }
 
   showMap();

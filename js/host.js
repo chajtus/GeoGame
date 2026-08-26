@@ -431,15 +431,15 @@ async function startRound(index) {
   const isPremium = !!q.premium;
   $('phase-label').textContent = `RUNDA ${index + 1} / ${questions.length}${isPremium ? ' ⭐ PREMIUM' : ''}`;
 
-  // Premium announcement — show overlay for 3s before starting
+  // Show photo first (so premium overlay appears on new photo, not old one)
+  $('round-photo').src = q.photo_url;
+
+  // Premium announcement — overlay on top of new photo for 3s
   if (isPremium) {
     $('premium-overlay').classList.remove('hidden');
     await new Promise(r => setTimeout(r, 3000));
     $('premium-overlay').classList.add('hidden');
   }
-
-  // Show photo
-  $('round-photo').src = q.photo_url;
 
   const durationMs = 30_000;
   const startedAt = Date.now();
@@ -835,7 +835,7 @@ async function showLeaderboard(isFinal) {
 
   // Always table (no podium) — podium only in finale
   $('podium').style.display = 'none';
-  $('lb-rest').style.maxWidth = isFinal ? '1680px' : '840px';
+  $('lb-rest').style.maxWidth = isFinal ? '840px' : '840px';
   $('lb-rest').style.margin = '0 auto';
 
   // Floating quotes — only on final results
