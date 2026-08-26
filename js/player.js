@@ -602,7 +602,7 @@ async function initSubmitMiniMap(distanceKm) {
 }
 
 // ── Show player result map after round ends ───────────────────────────────
-function showPlayerResult() {
+async function showPlayerResult() {
 
   hide('map-waiting-overlay');
 
@@ -647,8 +647,8 @@ function showPlayerResult() {
     initSubmitMiniMap(lastDistanceKm);
   }
 
-  // Fetch rank in background — will show on next round's map screen
-  fetchPlayerRank();
+  // Fetch rank — will show on next round's map screen
+  await fetchPlayerRank();
 }
 
 // ── Session restore (rejoin after accidental refresh) ─────────────────────
