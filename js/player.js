@@ -647,8 +647,11 @@ async function showPlayerResult() {
     initSubmitMiniMap(lastDistanceKm);
   }
 
-  // Fetch rank — will show on next round's map screen
+  // Fetch rank and update display immediately
   await fetchPlayerRank();
+  const rankText = playerRank ? `🏆 #${playerRank}` : '🏆 —';
+  $('leader-label').textContent = rankText;
+  $('submit-countdown-label').textContent = rankText;
 }
 
 // ── Session restore (rejoin after accidental refresh) ─────────────────────
