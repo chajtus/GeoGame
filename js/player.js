@@ -300,12 +300,18 @@ async function fetchPlayerRank() {
   // Wait for any pending DB write to finish before querying rank
   if (dbWritePromise) { await dbWritePromise.catch(() => null); dbWritePromise = null; }
   try {
-    const { data } = await sb.from('players')
-      .select('id, total_score')
-      .eq('session_id', SESSION_ID)
-      .order('total_score', { ascending: false });
-    if (data) {
-      const idx = data.findIndex(p => p.id === playerState.id);
+    // Use pins table (same as host) to calculate ranking from actual round scores
+    const [{ data: playersData }, { data: pinsData }] = await Promise.all([
+      sb.from('players').select('id').eq('session_id', SESSION_ID),
+      sb.from('pins').select('player_id, points').eq('session_id', SESSION_ID),
+    ]);
+    if (playersData) {
+      const byPlayer = {};
+      (pinsData || []).forEach(p => { byPlayer[p.player_id] = (byPlayer[p.player_id] || 0) + (p.points || 0); });
+      const ranked = playersData
+        .map(p => ({ id: p.id, score: byPlayer[p.id] || 0 }))
+        .sort((a, b) => b.score - a.score);
+      const idx = ranked.findIndex(p => p.id === playerState.id);
       playerRank = idx >= 0 ? idx + 1 : null;
     }
   } catch (_) {}
