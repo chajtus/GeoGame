@@ -174,8 +174,10 @@ function openKickModal() {
       btn.disabled = true;
       // Check if kicked player already answered this round
       const hadAnswered = answeredIds.has(id);
-      await sb.from('players').delete().eq('id', id).catch(() => null);
-      await sb.from('pins').delete().eq('player_id', id).catch(() => null);
+      // Notify the kicked player BEFORE deleting from DB
+      await broadcast(gameChannel, 'player_kicked', { player_id: id }).catch(() => null);
+      try { await sb.from('players').delete().eq('id', id); } catch (_) {}
+      try { await sb.from('pins').delete().eq('player_id', id); } catch (_) {}
       players = players.filter(p => p.id !== id);
       if (hadAnswered) {
         answerCount = Math.max(0, answerCount - 1);
@@ -327,7 +329,9 @@ function bindKickButton(btn) {
     const id = btn.dataset.id;
     const player = players.find(p => p.id === id);
     if (!player || !confirm(`Usunąć ${player.name} z gry?`)) return;
-    await sb.from('players').delete().eq('id', id).catch(() => null);
+    await broadcast(gameChannel, 'player_kicked', { player_id: id }).catch(() => null);
+    try { await sb.from('players').delete().eq('id', id); } catch (_) {}
+    try { await sb.from('pins').delete().eq('player_id', id); } catch (_) {}
     players = players.filter(p => p.id !== id);
     const chip = document.querySelector(`.player-chip[data-id="${id}"]`);
     if (chip) chip.remove();
