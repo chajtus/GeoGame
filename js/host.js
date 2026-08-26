@@ -94,6 +94,16 @@ new QRCode($('qr-code'), {
   correctLevel: QRCode.CorrectLevel.H,
 });
 
+// Mini QR in top bar
+new QRCode($('topbar-qr'), {
+  text: playerUrl,
+  width: 48,
+  height: 48,
+  colorDark: '#ffffff',
+  colorLight: '#1a0030',
+  correctLevel: QRCode.CorrectLevel.L,
+});
+
 // ── Copy link button ──────────────────────────────────────────────────────
 $('btn-copy-link').addEventListener('click', async () => {
   try {
