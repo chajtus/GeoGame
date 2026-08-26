@@ -826,64 +826,87 @@ async function showLeaderboard(isFinal) {
   const posMap = {};
   prevRankings.forEach((p, i) => { posMap[p.id] = i + 1; });
 
-  // Podium (TOP 3) — epic sizing
-  const podiumData = [
-    { player: ranked[1], rank: 2, height: 80,  barW: 110, color: 'var(--silver)', avatarSize: 78,  namePx: 15, scorePx: 18, barPx: 36 },
-    { player: ranked[0], rank: 1, height: 115, barW: 130, color: 'var(--gold)',   avatarSize: 100, namePx: 18, scorePx: 22, barPx: 44, crown: true },
-    { player: ranked[2], rank: 3, height: 55,  barW: 100, color: 'var(--bronze)', avatarSize: 70,  namePx: 14, scorePx: 16, barPx: 32 },
-  ].filter(d => d.player);
+  if (isFinal) {
+    // Final results — show full table (no podium), podium comes in finale screen
+    $('podium').style.display = 'none';
+    const LB_MAX = 30;
+    const lbShown = ranked.slice(0, LB_MAX);
+    $('lb-rest').innerHTML = lbShown.map((p, i) => {
+      const rank = i + 1;
+      const rowDelay = `${(i * 0.04).toFixed(2)}s`;
+      const medalHtml = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+      const avatarContent = p.avatar_data_url
+        ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+        : `<span style="font-size:16px;font-weight:700;color:#fff;">${p.initials}</span>`;
+      return `
+        <div class="lb-row" style="animation-delay:${rowDelay};">
+          <span class="lb-rank">${medalHtml}</span>
+          <div class="avatar-circle" style="width:48px;height:48px;background:${p.avatar_color};font-size:16px;">${avatarContent}</div>
+          <span style="flex:1;font-size:20px;font-weight:700;">${p.name}</span>
+          <span class="lb-pts">${p.total_score.toLocaleString('pl')}</span>
+        </div>`;
+    }).join('');
+  } else {
+    // Mid-game leaderboard — podium + rest
+    $('podium').style.display = '';
 
-  $('podium').innerHTML = podiumData.map(({ player: p, rank, height, barW, color, avatarSize, namePx, scorePx, barPx, crown }) => {
-    const avatarContent = p.avatar_data_url
-      ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
-      : `<span style="font-size:${Math.round(avatarSize * 0.38)}px;font-weight:700;color:#fff;">${p.initials}</span>`;
-    return `
-      <div class="podium-place">
-        ${crown ? '<div class="podium-crown">👑</div>' : '<div style="height:36px;"></div>'}
-        <div class="podium-avatar" style="width:${avatarSize}px;height:${avatarSize}px;border:4px solid ${color};background:${p.avatar_color};box-shadow:0 0 28px ${color}66,0 0 60px ${color}22;">
-          ${avatarContent}
-        </div>
-        <div class="podium-name" style="color:${color};font-size:${namePx}px;max-width:${barW + 10}px;">${p.name}</div>
-        <div class="podium-score" style="color:${color};font-size:${scorePx}px;">${p.total_score.toLocaleString('pl')} pkt</div>
-        <div class="podium-bar" style="height:${height}px;width:${barW}px;background:${color};font-size:${barPx}px;animation-delay:${rank === 2 ? '0.05s' : rank === 1 ? '0.2s' : '0.35s'};">${rank}</div>
-      </div>`;
-  }).join('');
+    const podiumData = [
+      { player: ranked[1], rank: 2, height: 80,  barW: 110, color: 'var(--silver)', avatarSize: 78,  namePx: 15, scorePx: 18, barPx: 36 },
+      { player: ranked[0], rank: 1, height: 115, barW: 130, color: 'var(--gold)',   avatarSize: 100, namePx: 18, scorePx: 22, barPx: 44, crown: true },
+      { player: ranked[2], rank: 3, height: 55,  barW: 100, color: 'var(--bronze)', avatarSize: 70,  namePx: 14, scorePx: 16, barPx: 32 },
+    ].filter(d => d.player);
 
-  // Rest of ranking — cap at 20 rows (10 per column) to prevent overflow
-  const LB_MAX = 20;
-  const lbRest = ranked.slice(3);
-  const lbShown = lbRest.slice(0, LB_MAX);
-  const lbExtra = lbRest.length - lbShown.length;
-  $('lb-rest').innerHTML = lbShown.map((p, i) => {
-    const rank = i + 4;
-    const rowDelay = `${(i * 0.04).toFixed(2)}s`;
-    const prev = posMap[p.id];
-    const change = prev ? prev - rank : 0;
-    const changeHtml = change > 0
-      ? `<span class="lb-change up">▲${change}</span>`
-      : change < 0
-      ? `<span class="lb-change down">▼${Math.abs(change)}</span>`
-      : `<span class="lb-change" style="color:var(--text-muted)">—</span>`;
-    const avatarContent = p.avatar_data_url
-      ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
-      : `<span style="font-size:16px;font-weight:700;color:#fff;">${p.initials}</span>`;
-    return `
-      <div class="lb-row" style="animation-delay:${rowDelay};">
-        <span class="lb-rank">${rank}.</span>
-        <div class="avatar-circle" style="width:48px;height:48px;background:${p.avatar_color};font-size:16px;">${avatarContent}</div>
-        <span style="flex:1;font-size:20px;font-weight:700;">${p.name}</span>
-        <span class="lb-pts">${p.total_score.toLocaleString('pl')}</span>
-        ${changeHtml}
-      </div>`;
-  }).join('') + (lbExtra > 0
-    ? `<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:11px;padding:6px 0;">+ ${lbExtra} pozostałych</div>`
-    : '');
+    $('podium').innerHTML = podiumData.map(({ player: p, rank, height, barW, color, avatarSize, namePx, scorePx, barPx, crown }) => {
+      const avatarContent = p.avatar_data_url
+        ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+        : `<span style="font-size:${Math.round(avatarSize * 0.38)}px;font-weight:700;color:#fff;">${p.initials}</span>`;
+      return `
+        <div class="podium-place">
+          ${crown ? '<div class="podium-crown">👑</div>' : '<div style="height:36px;"></div>'}
+          <div class="podium-avatar" style="width:${avatarSize}px;height:${avatarSize}px;border:4px solid ${color};background:${p.avatar_color};box-shadow:0 0 28px ${color}66,0 0 60px ${color}22;">
+            ${avatarContent}
+          </div>
+          <div class="podium-name" style="color:${color};font-size:${namePx}px;max-width:${barW + 10}px;">${p.name}</div>
+          <div class="podium-score" style="color:${color};font-size:${scorePx}px;">${p.total_score.toLocaleString('pl')} pkt</div>
+          <div class="podium-bar" style="height:${height}px;width:${barW}px;background:${color};font-size:${barPx}px;animation-delay:${rank === 2 ? '0.05s' : rank === 1 ? '0.2s' : '0.35s'};">${rank}</div>
+        </div>`;
+    }).join('');
+
+    const LB_MAX = 20;
+    const lbRest = ranked.slice(3);
+    const lbShown = lbRest.slice(0, LB_MAX);
+    const lbExtra = lbRest.length - lbShown.length;
+    $('lb-rest').innerHTML = lbShown.map((p, i) => {
+      const rank = i + 4;
+      const rowDelay = `${(i * 0.04).toFixed(2)}s`;
+      const prev = posMap[p.id];
+      const change = prev ? prev - rank : 0;
+      const changeHtml = change > 0
+        ? `<span class="lb-change up">▲${change}</span>`
+        : change < 0
+        ? `<span class="lb-change down">▼${Math.abs(change)}</span>`
+        : `<span class="lb-change" style="color:var(--text-muted)">—</span>`;
+      const avatarContent = p.avatar_data_url
+        ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+        : `<span style="font-size:16px;font-weight:700;color:#fff;">${p.initials}</span>`;
+      return `
+        <div class="lb-row" style="animation-delay:${rowDelay};">
+          <span class="lb-rank">${rank}.</span>
+          <div class="avatar-circle" style="width:48px;height:48px;background:${p.avatar_color};font-size:16px;">${avatarContent}</div>
+          <span style="flex:1;font-size:20px;font-weight:700;">${p.name}</span>
+          <span class="lb-pts">${p.total_score.toLocaleString('pl')}</span>
+          ${changeHtml}
+        </div>`;
+    }).join('') + (lbExtra > 0
+      ? `<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);font-size:11px;padding:6px 0;">+ ${lbExtra} pozostałych</div>`
+      : '');
+  }
 
   prevRankings = ranked;
 
   if (isFinal) {
-    $('btn-after-lb').textContent = '🎉 FINAŁ';
-    $('btn-after-lb').onclick = () => showFinale(ranked[0]);
+    $('btn-after-lb').textContent = '🏆 FINAŁ';
+    $('btn-after-lb').onclick = () => showFinale(ranked);
   } else {
     $('btn-after-lb').textContent = `▶ PYTANIE ${currentQuestionIndex + 2}`;
     $('btn-after-lb').onclick = () => {
@@ -894,14 +917,15 @@ async function showLeaderboard(isFinal) {
   }
 }
 
-// ── Finale ────────────────────────────────────────────────────────────────
-async function showFinale(winner) {
+// ── Finale — podium + Majusia video ──────────────────────────────────────
+async function showFinale(ranked) {
   clearHostState(); // Game over — clear restore state
 
   hide('screen-leaderboard');
   show('screen-finale');
   $('phase-label').textContent = '🏆 FINAŁ';
 
+  // Video
   const videoEl = $('finale-video');
   videoEl.src = 'assets/maja.mp4';
   const { data: { publicUrl } } = sb.storage.from('photos').getPublicUrl('maja.mp4');
@@ -919,18 +943,31 @@ async function showFinale(winner) {
   setTimeout(burst, 800);
   setTimeout(burst, 1600);
 
-  // Show winner banner
+  // Podium (TOP 3)
+  const podiumData = [
+    { player: ranked[1], rank: 2, height: 80,  barW: 110, color: 'var(--silver)', avatarSize: 78,  namePx: 15, scorePx: 18, barPx: 36 },
+    { player: ranked[0], rank: 1, height: 115, barW: 130, color: 'var(--gold)',   avatarSize: 100, namePx: 18, scorePx: 22, barPx: 44, crown: true },
+    { player: ranked[2], rank: 3, height: 55,  barW: 100, color: 'var(--bronze)', avatarSize: 70,  namePx: 14, scorePx: 16, barPx: 32 },
+  ].filter(d => d.player);
+
   $('finale-lb-wrap').innerHTML = `
-    <div style="text-align:center;padding:24px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-      <div style="font-size:18px;color:var(--primary-light);font-weight:700;letter-spacing:2px;">🥇 ZWYCIĘZCA</div>
-      <div class="avatar-circle" style="width:96px;height:96px;background:${winner.avatar_color};font-size:32px;font-weight:700;border:4px solid var(--gold);box-shadow:0 0 30px var(--gold)44;">
-        ${winner.avatar_data_url
-          ? `<img src="${winner.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
-          : winner.initials}
-      </div>
-      <div style="font-size:32px;font-weight:700;color:var(--gold);">${winner.name}</div>
-      <div style="font-size:22px;color:var(--gold);">${winner.total_score.toLocaleString('pl')} pkt</div>
-      <div style="color:var(--text-muted);font-size:14px;">Brawo! 🎂 Sto lat Aga! 🎂</div>
+    <div style="display:flex;justify-content:center;align-items:flex-end;gap:28px;padding:16px 40px 0;">
+      ${podiumData.map(({ player: p, rank, height, barW, color, avatarSize, namePx, scorePx, barPx, crown }) => {
+        const avatarContent = p.avatar_data_url
+          ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
+          : `<span style="font-size:${Math.round(avatarSize * 0.38)}px;font-weight:700;color:#fff;">${p.initials}</span>`;
+        return `
+          <div class="podium-place">
+            ${crown ? '<div class="podium-crown">👑</div>' : '<div style="height:36px;"></div>'}
+            <div class="podium-avatar" style="width:${avatarSize}px;height:${avatarSize}px;border:4px solid ${color};background:${p.avatar_color};box-shadow:0 0 28px ${color}66,0 0 60px ${color}22;">
+              ${avatarContent}
+            </div>
+            <div class="podium-name" style="color:${color};font-size:${namePx}px;max-width:${barW + 10}px;">${p.name}</div>
+            <div class="podium-score" style="color:${color};font-size:${scorePx}px;">${p.total_score.toLocaleString('pl')} pkt</div>
+            <div class="podium-bar" style="height:${height}px;width:${barW}px;background:${color};font-size:${barPx}px;animation-delay:${rank === 2 ? '0.05s' : rank === 1 ? '0.2s' : '0.35s'};">${rank}</div>
+          </div>`;
+      }).join('')}
     </div>
+    <div style="text-align:center;color:var(--text-muted);font-size:16px;padding:12px 0;">Brawo! 🎂 Sto lat Aga! 🎂</div>
   `;
 }
