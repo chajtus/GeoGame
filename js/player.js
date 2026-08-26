@@ -529,7 +529,14 @@ async function handleRoundStart(payload, showFlash = false) {
   // Show rank from previous round (or placeholder for first round)
   $('leader-label').textContent = playerRank ? `🏆 #${playerRank}` : '🏆 —';
 
-  startPlayerTimer(payload.started_at, payload.duration_ms);
+  // Start timer only if not paused (heartbeat includes paused flag)
+  if (payload.paused) {
+    $('player-timer').textContent = '⏸';
+    $('player-timer').style.opacity = '0.45';
+    $('player-timer').style.textDecoration = 'line-through';
+  } else {
+    startPlayerTimer(payload.started_at, payload.duration_ms);
+  }
 
   // Check if player already submitted answer for this round (e.g. after page refresh)
   try {
