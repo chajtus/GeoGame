@@ -368,10 +368,13 @@ async function restoreHostSession(state) {
   hide('screen-finale');
 
   if (state.phase === 'round' || state.phase === 'results') {
-    const qi = state.questionIndex ?? 0;
-    const q = questions[qi];
-    if (!q) {
-      console.error('Restore: invalid questionIndex', qi, 'questions.length:', questions.length);
+    // Find question by saved index, fallback to finding by saved questionId
+    let qi = state.questionIndex ?? 0;
+    if (!questions[qi] && state.questionId) {
+      qi = questions.findIndex(q => q.id === state.questionId);
+    }
+    if (qi < 0 || !questions[qi]) {
+      console.error('Restore: cannot find question', { qi, questionId: state.questionId, len: questions.length });
       show('screen-lobby');
       showRestoreToast();
       return;
@@ -453,7 +456,7 @@ async function startRound(index) {
   const isPremium = !!q.premium;
 
   // Save state IMMEDIATELY so refresh during premium overlay or broadcast can restore
-  saveHostState({ phase: 'round', questionIndex: index });
+  saveHostState({ phase: 'round', questionIndex: index, questionId: q.id });
 
   $('phase-label').textContent = `RUNDA ${index + 1} / ${questions.length}${isPremium ? ' ⭐ PREMIUM' : ''}`;
 
@@ -485,7 +488,7 @@ async function startRound(index) {
   await broadcast(gameChannel, 'round_start', roundPayload);
 
   // Save state for restore-on-refresh
-  saveHostState({ phase: 'round', questionIndex: index, roundStartedAt: startedAt, roundDurationMs: durationMs, extraMs: 0 });
+  saveHostState({ phase: 'round', questionIndex: index, questionId: q.id, roundStartedAt: startedAt, roundDurationMs: durationMs, extraMs: 0 });
   syncGameState({ phase: 'round', current_question: index, round_started_at: new Date(startedAt).toISOString(), round_duration_seconds: Math.round(durationMs / 1000) });
 
   // Heartbeat every 2s — catches players who missed round_start (e.g. page refresh)
@@ -714,7 +717,7 @@ async function endRound() {
 
 // ── Results ───────────────────────────────────────────────────────────────
 async function showResults(questionIndex) {
-  saveHostState({ phase: 'results', questionIndex });
+  saveHostState({ phase: 'results', questionIndex, questionId: questions[questionIndex]?.id });
   syncGameState({ phase: 'results', current_question: questionIndex });
 
   const q = questions[questionIndex];
