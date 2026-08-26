@@ -349,83 +349,29 @@ async function restoreHostSession(state) {
   hide('screen-leaderboard');
   hide('screen-finale');
 
-  if (state.phase === 'round') {
-    const q = questions[state.questionIndex];
-    if (!q) { console.error('Restore: invalid questionIndex', state.questionIndex); showRestoreToast(); return; }
+  if (state.phase === 'round' || state.phase === 'results') {
+    // Round refreshed — can't reliably resume photo/timer, go straight to results
+    const qi = state.questionIndex ?? 0;
+    const q = questions[qi];
+    if (!q) { console.error('Restore: invalid questionIndex', qi); showRestoreToast(); return; }
 
-    $('round-photo').src = q.photo_url;
+    // Reconstruct roundPayload for heartbeat continuity
     const isPremium = !!q.premium;
-    $('phase-label').textContent = `RUNDA ${state.questionIndex + 1} / ${questions.length}${isPremium ? ' ⭐ PREMIUM' : ''}`;
-    $('answer-count-num').textContent = '0';
-    hide('host-countdown-overlay');
-    lastCountdownSec = -1;
-
-    roundStartedAt = state.roundStartedAt ?? Date.now();
-    roundDurationMs = state.roundDurationMs ?? 30_000;
-    extraMs = state.extraMs ?? 0;
-    paused = false;
-
     roundPayload = {
-      question_index: state.questionIndex,
+      question_index: qi,
       lat: q.lat, lng: q.lng,
       location_name: q.location_name,
       photo_url: q.photo_url,
-      started_at: roundStartedAt - extraMs,
-      duration_ms: roundDurationMs,
+      started_at: Date.now(),
+      duration_ms: 0,
       premium: isPremium,
     };
 
-    const elapsed = Date.now() - roundStartedAt + extraMs;
-    if (elapsed >= roundDurationMs) {
-      // Round expired during refresh — show loading then jump to results
-      show('screen-round');
-      $('round-loading-overlay').classList.remove('hidden');
-      try {
-        await showResults(state.questionIndex);
-      } catch (e) {
-        console.error('Restore showResults failed:', e);
-        // Fallback — re-run the round from scratch
-        $('round-loading-overlay').classList.add('hidden');
-        startRound(state.questionIndex);
-      }
-    } else {
-      show('screen-round');
-      $('round-loading-overlay').classList.add('hidden');
+    // Broadcast round_end so players transition too
+    await broadcast(gameChannel, 'round_end', {}).catch(() => null);
 
-      // Re-fetch already-answered pins
-      const { data: pins } = await sb.from('pins')
-        .select('player_id')
-        .eq('session_id', SESSION_ID)
-        .eq('question_index', state.questionIndex);
-      if (pins) {
-        answerCount = pins.length;
-        answeredNames = pins.map(p => players.find(pl => pl.id === p.player_id)?.name).filter(Boolean);
-        $('answer-count-num').textContent = answerCount;
-        // answer count shown only in left panel
-      }
-
-      // Resume heartbeat
-      clearInterval(heartbeatInterval);
-      heartbeatInterval = setInterval(() => {
-        const effectiveStartedAt = roundStartedAt - extraMs;
-        if (roundPayload.started_at !== effectiveStartedAt || roundPayload.duration_ms !== roundDurationMs) {
-          roundPayload = { ...roundPayload, started_at: effectiveStartedAt, duration_ms: roundDurationMs };
-        }
-        broadcast(gameChannel, 'round_heartbeat', roundPayload).catch(() => null);
-        saveHostState({ roundStartedAt, roundDurationMs, extraMs });
-      }, 2000);
-
-      // Resume timer
-      roundEnding = false;
-      timerRunning = true;
-      clearInterval(timerInterval);
-      timerInterval = setInterval(tickTimer, 100);
-      subscribeAnswerCount(state.questionIndex);
-      refreshTop5();
-    }
-  } else if (state.phase === 'results') {
-    show('screen-round'); // so hide() in showResults works cleanly
-    await showResults(state.questionIndex);
+    show('screen-round'); // needed so hide() in showResults works
+    await showResults(qi);
   } else if (state.phase === 'leaderboard') {
     await showLeaderboard(state.isFinal ?? false);
   }
