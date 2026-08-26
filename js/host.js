@@ -50,6 +50,12 @@ async function loadQuestions() {
   questions = await res.json();
   if (questions.length === 0) {
     alert('questions.json jest puste — uruchom najpierw prepare-photos.js!');
+    return;
+  }
+  // Shuffle questions randomly each session (Fisher-Yates)
+  for (let i = questions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];
   }
 }
 
