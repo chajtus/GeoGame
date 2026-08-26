@@ -35,12 +35,33 @@ const BOT_NAMES = new Set([
   'Karolina','Grzegorz','Izabela','Wojtek','Julia',
 ]);
 
+const AVATAR_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63','#00bcd4','#ff5722'];
+
+function getInitials(name) {
+  return name.slice(0, 2).toUpperCase();
+}
+
 async function loadBots() {
   const { data } = await sb.from('players').select('id, name').eq('session_id', SESSION_ID);
-  // Only control bots — skip real players (those not in the bot name list)
   botPlayers = (data || []).filter(p => BOT_NAMES.has(p.name));
   const skipped = (data || []).length - botPlayers.length;
-  console.log(`Załadowano ${botPlayers.length} botów (pominięto ${skipped} prawdziwych graczy)`);
+
+  if (botPlayers.length === 0) {
+    console.log('Brak botów w sesji — tworzę...');
+    const names = [...BOT_NAMES];
+    const rows = names.map((name, i) => ({
+      session_id: SESSION_ID,
+      name,
+      initials: getInitials(name),
+      avatar_color: AVATAR_COLORS[i % AVATAR_COLORS.length],
+    }));
+    const { data: inserted, error } = await sb.from('players').insert(rows).select('id, name');
+    if (error) { console.error('Błąd tworzenia botów:', error.message); process.exit(1); }
+    botPlayers = inserted;
+    console.log(`Utworzono ${botPlayers.length} botów`);
+  } else {
+    console.log(`Załadowano ${botPlayers.length} botów (pominięto ${skipped} prawdziwych graczy)`);
+  }
 }
 
 async function handleRound(payload) {
