@@ -709,17 +709,14 @@ async function showResults(questionIndex) {
   await new Promise(r => setTimeout(r, 200));
   resultsMap = initMap('results-map', { center: [q.lat, q.lng], zoom: 4, skipTiles: true });
 
-  // Layer control with 3 base maps
-  const voyager = L.tileLayer(window.CONFIG.mapTileUrl, {
-    attribution: window.CONFIG.mapAttribution, subdomains: 'abcd', maxZoom: 19,
+  // Layer control with 2 base maps (no CARTO — requires API key)
+  const osm = L.tileLayer(window.CONFIG.mapTileUrl, {
+    attribution: window.CONFIG.mapAttribution, subdomains: window.CONFIG.mapTileSubdomains, maxZoom: 19,
   }).addTo(resultsMap);
-  const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '© OpenStreetMap © CARTO', subdomains: 'abcd', maxZoom: 19,
+  const osmHot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors, Humanitarian OSM', maxZoom: 19,
   });
-  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors', maxZoom: 19,
-  });
-  L.control.layers({ 'Kolorowa': voyager, 'Ciemna': dark, 'OSM': osm }, {}, { position: 'topleft' }).addTo(resultsMap);
+  L.control.layers({ 'Standard': osm, 'Humanitarian': osmHot }, {}, { position: 'topleft' }).addTo(resultsMap);
 
   setTimeout(() => resultsMap.invalidateSize(), 100);
   setTimeout(() => resultsMap.invalidateSize(), 350);
