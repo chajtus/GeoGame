@@ -20,8 +20,6 @@
     #screen-login {
       flex: 1; min-height: 0; display: flex; flex-direction: column;
       background: #0d0d1a;
-      /* reserve space for fixed button at bottom */
-      padding-bottom: calc(100px + env(safe-area-inset-bottom, 20px));
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
     }
@@ -90,18 +88,15 @@
     .fact-label { color: var(--primary-light); font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 5px; }
     .fact-text { color: #bbb; font-size: 12px; line-height: 1.55; }
 
-    /* FIXED JOIN BUTTON — always above nav bar */
+    /* JOIN BUTTON — scrolls with content */
     #login-footer {
-      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
-      padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 16px));
-      background: linear-gradient(0deg, #0d0d1a 65%, rgba(13,13,26,0));
-      pointer-events: none;
+      flex-shrink: 0;
+      padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 16px));
     }
     #btn-join {
       width: 100%; font-size: 18px; font-weight: 800;
       padding: 18px 24px; border-radius: 14px;
       box-shadow: 0 8px 28px rgba(233,30,140,0.5);
-      pointer-events: all;
     }
     #btn-join:not(:disabled) { animation: glow-pulse 2s ease-in-out infinite; }
     #btn-join:disabled { opacity: 0.3; }
