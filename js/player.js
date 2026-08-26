@@ -87,8 +87,37 @@ function stopCamera() {
 }
 
 $('btn-skip-avatar').addEventListener('click', () => {
-  playerState.avatarDataUrl = null;
-  renderAvatarPreview();
+  if (playerState.avatarDataUrl) {
+    // Already has photo — just remove it
+    playerState.avatarDataUrl = null;
+    renderAvatarPreview();
+    return;
+  }
+  // No photo — show persuasion dialog
+  if (!$('skip-avatar-dialog')) {
+    const d = document.createElement('div');
+    d.id = 'skip-avatar-dialog';
+    d.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;';
+    d.innerHTML = `<div style="background:linear-gradient(160deg,#1a0030,#0a001a);border:2px solid rgba(233,30,140,0.5);border-radius:20px;padding:28px 24px;max-width:320px;text-align:center;">
+      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:12px;">No weź zrób zdjęcie!</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.75);margin-bottom:20px;">I tak każdy widzi Twoją mordę, nie ukryjesz się 😏</div>
+      <div style="font-size:16px;font-weight:700;color:rgba(255,215,0,0.9);margin-bottom:16px;">Zrobisz?</div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button id="skip-dialog-yes" class="btn btn--primary" style="padding:10px 28px;font-size:15px;">📸 Tak!</button>
+        <button id="skip-dialog-no" class="btn btn--secondary" style="padding:10px 28px;font-size:15px;">😤 Nie</button>
+      </div>
+    </div>`;
+    document.body.appendChild(d);
+    $('skip-dialog-yes').addEventListener('click', () => {
+      d.remove();
+      $('btn-selfie').click();
+    });
+    $('skip-dialog-no').addEventListener('click', () => {
+      d.remove();
+      playerState.avatarDataUrl = null;
+      renderAvatarPreview();
+    });
+  }
 });
 
 function renderAvatarPreview() {
