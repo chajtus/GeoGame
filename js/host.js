@@ -457,13 +457,6 @@ async function startRound(index) {
   // Show photo first (so premium overlay appears on new photo, not old one)
   $('round-photo').src = q.photo_url;
 
-  // Premium announcement — overlay on top of new photo for 3s
-  if (isPremium) {
-    $('premium-overlay').classList.remove('hidden');
-    await new Promise(r => setTimeout(r, 3000));
-    $('premium-overlay').classList.add('hidden');
-  }
-
   const durationMs = 30_000;
   const startedAt = Date.now();
 
@@ -479,7 +472,15 @@ async function startRound(index) {
     premium: isPremium,
   };
 
+  // Broadcast FIRST so player shows premium flash at the same time as host
   await broadcast(gameChannel, 'round_start', roundPayload);
+
+  // Premium announcement — overlay on top of new photo (player sees flash simultaneously)
+  if (isPremium) {
+    $('premium-overlay').classList.remove('hidden');
+    await new Promise(r => setTimeout(r, 3000));
+    $('premium-overlay').classList.add('hidden');
+  }
 
   // Save state for restore-on-refresh
   saveHostState({ phase: 'round', questionIndex: index, questionId: q.id, roundStartedAt: startedAt, roundDurationMs: durationMs, extraMs: 0 });
