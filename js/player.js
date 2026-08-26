@@ -167,7 +167,7 @@ $('btn-join').addEventListener('click', async () => {
   playerState.id = data.id;
   sessionStorage.setItem('player', JSON.stringify(playerState));
   showWaiting();
-  subscribeToGame(data.id);
+  subscribeToGame();
   subscribeToKick();
 });
 
@@ -190,7 +190,7 @@ function showWaiting() {
 let gameChannel = null;
 export { gameChannel, playerState, SESSION_ID, sb };
 
-function subscribeToGame(newPlayerId) {
+function subscribeToGame() {
   gameChannel = sb.channel(`game:${SESSION_ID}`, { config: { broadcast: { self: false } } });
   gameChannel
     .on('broadcast', { event: 'round_start' }, ({ payload }) => handleRoundStart(payload, true))
@@ -250,15 +250,7 @@ function subscribeToGame(newPlayerId) {
         document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
       }
     })
-    .subscribe(status => {
-      if (status === 'SUBSCRIBED' && newPlayerId) {
-        // Notify host via broadcast (more reliable than postgres_changes)
-        gameChannel.send({ type: 'broadcast', event: 'player_joined', payload: {
-          id: newPlayerId, name: playerState.name, initials: playerState.initials,
-          avatar_color: playerState.avatarColor, avatar_data_url: playerState.avatarDataUrl || null,
-        }});
-      }
-    });
+    .subscribe();
 }
 
 // ── Kick detection via polling (checks if player record still exists) ─────
@@ -302,8 +294,11 @@ let lastPoints = 0;
 let lastEndedQuestionIndex = -1;
 let playerRank = null;
 let leaderboardShown = false;
+let dbWritePromise = null;
 
 async function fetchPlayerRank() {
+  // Wait for any pending DB write to finish before querying rank
+  if (dbWritePromise) { await dbWritePromise.catch(() => null); dbWritePromise = null; }
   try {
     const { data } = await sb.from('players')
       .select('id, total_score')
@@ -547,7 +542,7 @@ async function submitAnswer() {
   lastDistanceKm = distanceKm;
   lastPoints = points;
 
-  await sb.from('pins').insert({
+  dbWritePromise = sb.from('pins').insert({
     session_id: SESSION_ID,
     player_id: playerState.id,
     question_index: currentQuestion.question_index,
@@ -555,10 +550,10 @@ async function submitAnswer() {
     lng: playerPinLatLng[1],
     distance_km: distanceKm,
     points,
-  });
-
-  await sb.rpc('increment_score', { player_id: playerState.id, amount: points })
-    .catch(() => null);
+  }).then(() =>
+    sb.rpc('increment_score', { player_id: playerState.id, amount: points }).catch(() => null)
+  );
+  await dbWritePromise;
 }
 
 
@@ -706,7 +701,7 @@ async function handleRoundEnd() {
       };
       const pid = playerState.id;
       const pts = lastPoints;
-      sb.from('pins').insert(pinData).then(() =>
+      dbWritePromise = sb.from('pins').insert(pinData).then(() =>
         sb.rpc('increment_score', { player_id: pid, amount: pts }).catch(() => null)
       ).catch(() => null);
     } else {

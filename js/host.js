@@ -205,31 +205,8 @@ if (!_isRestoring) {
 // Always subscribe to player join events (new joins even during restored session)
 subscribeToPlayers();
 
-// Polling fallback — in case Realtime subscriptions fail silently
-setInterval(async () => {
-  try {
-    const { data } = await sb.from('players').select('*').eq('session_id', SESSION_ID);
-    if (!data) return;
-    for (const player of data) {
-      if (players.find(p => p.id === player.id)) continue;
-      players.push(player);
-      showJoinFlash(player);
-      addPlayerChip(player);
-      updatePlayerCount();
-    }
-  } catch (_) {}
-}, 3000);
-
 // Create game channel early so kick broadcasts work from lobby
 gameChannel = createChannel(sb, SESSION_ID);
-// Listen for player_joined broadcast (reliable fallback for postgres_changes)
-gameChannel.on('broadcast', { event: 'player_joined' }, ({ payload: player }) => {
-  if (players.find(p => p.id === player.id)) return;
-  players.push(player);
-  showJoinFlash(player);
-  addPlayerChip(player);
-  updatePlayerCount();
-});
 await new Promise(resolve => gameChannel.subscribe(status => {
   if (status === 'SUBSCRIBED') resolve();
 }));
