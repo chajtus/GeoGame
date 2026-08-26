@@ -7,22 +7,23 @@ const hide = id => $(id).classList.add('hidden');
 
 // ── Wake Lock — prevent screen from sleeping ─────────────────────────────
 // Uses NoSleep.js (loaded in HTML) — works on iOS Safari via silent video trick
-(function keepAwake() {
-  const initNoSleep = () => {
-    if (typeof NoSleep === 'undefined') return;
-    const ns = new NoSleep();
-    const enable = () => { ns.enable().catch(() => {}); };
-    document.addEventListener('touchstart', enable, { once: true });
-    document.addEventListener('click', enable, { once: true });
-    // Re-enable after tab becomes visible again
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') ns.enable().catch(() => {});
-    });
-  };
-  // NoSleep script might not be loaded yet
-  if (typeof NoSleep !== 'undefined') initNoSleep();
-  else window.addEventListener('load', initNoSleep);
-})();
+let _noSleepEnabled = false;
+function enableNoSleep() {
+  if (_noSleepEnabled) return;
+  if (typeof NoSleep === 'undefined') return;
+  try {
+    if (!window._noSleep) window._noSleep = new NoSleep();
+    window._noSleep.enable().then(() => { _noSleepEnabled = true; }).catch(() => {});
+  } catch (_) {}
+}
+// Try on every user interaction until it succeeds
+['touchstart', 'touchend', 'click', 'pointerdown'].forEach(evt => {
+  document.addEventListener(evt, enableNoSleep, { passive: true });
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { _noSleepEnabled = false; enableNoSleep(); }
+});
+window.addEventListener('load', enableNoSleep);
 
 // ── Visibility recovery — reconnect channel and sync state from DB ────────
 function recoverFromGameState() {
