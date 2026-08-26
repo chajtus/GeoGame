@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Znajdź Agnieszkę! 🏰</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,7 +28,9 @@
       position: relative; flex-shrink: 0;
       background: linear-gradient(160deg, #2d0055 0%, #1a0030 60%, #0d0d1a 100%);
       display: flex; align-items: center; gap: 18px;
-      padding: calc(env(safe-area-inset-top, 0px) + 28px) 24px 22px;
+      padding: 28px 24px 22px;
+      padding-top: calc(constant(safe-area-inset-top) + 28px);
+      padding-top: calc(env(safe-area-inset-top) + 28px);
     }
     #login-hero::after {
       content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
@@ -127,7 +128,9 @@
     #screen-waiting {
       flex: 1; background: linear-gradient(180deg, #1a0030 0%, var(--bg) 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 16px; padding: calc(env(safe-area-inset-top, 0px) + 24px) 24px 24px;
+      gap: 16px; padding: 24px 24px 24px;
+      padding-top: calc(constant(safe-area-inset-top) + 24px);
+      padding-top: calc(env(safe-area-inset-top) + 24px);
       overflow-y: auto; -webkit-overflow-scrolling: touch;
     }
     #waiting-avatar { width: 72px; height: 72px; }
@@ -166,7 +169,10 @@
       z-index: 500;
       position: relative;
       background: #1a0030;
-      padding: calc(env(safe-area-inset-top, 0px) + 4px) 16px 0;
+      /* iPhone notch: constant() for iOS 11.0-11.2, env() for iOS 11.3+ */
+      padding: 4px 16px 0;
+      padding-top: calc(constant(safe-area-inset-top) + 4px);
+      padding-top: calc(env(safe-area-inset-top) + 4px);
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
@@ -328,7 +334,9 @@
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-      padding-top: env(safe-area-inset-top, 0px);
+      padding-top: 0;
+      padding-top: constant(safe-area-inset-top);
+      padding-top: env(safe-area-inset-top);
       padding-bottom: calc(40px + env(safe-area-inset-bottom, 20px));
     }
     #submit-result-card {
