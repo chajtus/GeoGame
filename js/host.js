@@ -335,32 +335,36 @@ function renderPlayerList() {
 // ── Session restore ───────────────────────────────────────────────────────
 async function restoreHostSession(state) {
   if (state.phase === 'lobby') {
-    // Already in lobby, players re-fetched — nothing more to do
     showRestoreToast();
     return;
   }
 
-  // gameChannel already created and subscribed at startup
-
   currentQuestionIndex = state.questionIndex ?? 0;
   $('player-total').textContent = players.length;
+
+  // Hide ALL screens first to ensure clean state
   hide('screen-lobby');
+  hide('screen-round');
+  hide('screen-results');
+  hide('screen-leaderboard');
+  hide('screen-finale');
 
   if (state.phase === 'round') {
     const q = questions[state.questionIndex];
+    if (!q) { console.error('Restore: invalid questionIndex', state.questionIndex); showRestoreToast(); return; }
+
     $('round-photo').src = q.photo_url;
-    $('phase-label').textContent = `RUNDA ${state.questionIndex + 1} / ${questions.length}`;
+    const isPremium = !!q.premium;
+    $('phase-label').textContent = `RUNDA ${state.questionIndex + 1} / ${questions.length}${isPremium ? ' ⭐ PREMIUM' : ''}`;
     $('answer-count-num').textContent = '0';
     hide('host-countdown-overlay');
     lastCountdownSec = -1;
 
-    // Reconstruct timer from saved values
     roundStartedAt = state.roundStartedAt ?? Date.now();
     roundDurationMs = state.roundDurationMs ?? 30_000;
     extraMs = state.extraMs ?? 0;
     paused = false;
 
-    // Reconstruct heartbeat payload
     roundPayload = {
       question_index: state.questionIndex,
       lat: q.lat, lng: q.lng,
@@ -368,16 +372,20 @@ async function restoreHostSession(state) {
       photo_url: q.photo_url,
       started_at: roundStartedAt - extraMs,
       duration_ms: roundDurationMs,
+      premium: isPremium,
     };
 
-    // Check if round has already expired during the refresh
     const elapsed = Date.now() - roundStartedAt + extraMs;
     if (elapsed >= roundDurationMs) {
-      // Time ran out while refreshing — go straight to results
-      show('screen-round'); // needed so hide() in showResults works
-      await showResults(state.questionIndex);
+      show('screen-round');
+      try {
+        await showResults(state.questionIndex);
+      } catch (e) {
+        console.error('Restore showResults failed:', e);
+      }
     } else {
       show('screen-round');
+      $('round-loading-overlay').classList.add('hidden');
 
       // Re-fetch already-answered pins
       const { data: pins } = await sb.from('pins')
@@ -446,6 +454,7 @@ $('btn-start-test').addEventListener('click', startGame);
 // ── Round ─────────────────────────────────────────────────────────────────
 async function startRound(index) {
   roundEnding = false;
+  $('round-loading-overlay').classList.add('hidden');
   currentQuestionIndex = index;
   const q = questions[index];
   const isPremium = !!q.premium;
@@ -693,6 +702,10 @@ async function endRound() {
   clearInterval(heartbeatInterval);
   hide('host-countdown-overlay');
   $('waiting-for-panel').classList.add('hidden');
+
+  // Show loading overlay immediately so screen is not blank during transition
+  $('round-loading-overlay').classList.remove('hidden');
+
   if (answerChannel) { answerChannel.unsubscribe(); answerChannel = null; }
   // Broadcast with 2s timeout — showResults must always run even on network hiccup
   await Promise.race([
