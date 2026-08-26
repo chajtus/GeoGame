@@ -144,15 +144,7 @@
       0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px var(--primary), 0 0 20px rgba(233,30,140,0.55), 0 0 40px rgba(156,39,176,0.25); }
       50%       { transform: scale(1.04); box-shadow: 0 0 0 3px var(--primary), 0 0 30px rgba(233,30,140,0.8), 0 0 60px rgba(156,39,176,0.4); }
     }
-    #waiting-spinner {
-      width: 40px; height: 40px; border: 3px solid var(--border);
-      border-top-color: var(--primary); border-radius: 50%;
-      -webkit-animation: wait-spin 0.8s linear infinite;
-      animation: wait-spin 0.8s linear infinite;
-      will-change: transform;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-    }
+    #waiting-spinner { width: 40px; height: 40px; }
 
     /* MAP */
     #screen-map:not(.hidden) {
@@ -374,15 +366,7 @@
     #submit-countdown-bar {
       display: flex; align-items: center; gap: 8px;
     }
-    #submit-spinner {
-      width: 28px; height: 28px; border: 3px solid var(--border);
-      border-top-color: var(--primary); border-radius: 50%;
-      -webkit-animation: wait-spin 0.8s linear infinite;
-      animation: wait-spin 0.8s linear infinite;
-      will-change: transform;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
-    }
+    #submit-spinner { width: 28px; height: 28px; }
     #submit-countdown-label { color: var(--text-muted); font-size: 11px; }
     #submit-countdown-secs { color: var(--primary-light); font-size: 16px; font-weight: 800; min-width: 36px; }
     /* km distance tooltip on maps */
@@ -575,7 +559,7 @@
   <div class="avatar-circle waiting-avatar" id="waiting-avatar-display" style="width:72px;height:72px;font-size:24px;font-weight:700;border:2px solid var(--primary);"></div>
   <div class="waiting-name" id="waiting-name-display"></div>
   <div class="waiting-sub">Czekamy na start gry...</div>
-  <div id="waiting-spinner"></div>
+  <svg id="waiting-spinner" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/><circle cx="20" cy="20" r="17" fill="none" stroke="#e91e8c" stroke-width="3" stroke-linecap="round" stroke-dasharray="80 27"><animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="0.8s" repeatCount="indefinite"/></circle></svg>
 </div>
 
 <!-- ROUND FLASH (brief intro with photo + round number) -->
@@ -652,7 +636,7 @@
       <div id="submit-distance"></div>
       <div id="submit-location"></div>
       <div id="submit-countdown-bar">
-        <div id="submit-spinner"></div>
+        <svg id="submit-spinner" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="17" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="3"/><circle cx="20" cy="20" r="17" fill="none" stroke="#e91e8c" stroke-width="3" stroke-linecap="round" stroke-dasharray="80 27"><animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur="0.8s" repeatCount="indefinite"/></circle></svg>
         <div id="submit-countdown-label">Czekam na innych</div>
         <div id="submit-countdown-secs"></div>
       </div>
