@@ -144,9 +144,15 @@
       0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px var(--primary), 0 0 20px rgba(233,30,140,0.55), 0 0 40px rgba(156,39,176,0.25); }
       50%       { transform: scale(1.04); box-shadow: 0 0 0 3px var(--primary), 0 0 30px rgba(233,30,140,0.8), 0 0 60px rgba(156,39,176,0.4); }
     }
-    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; -webkit-animation: spin 0.8s linear infinite; animation: spin 0.8s linear infinite; }
-    @-webkit-keyframes spin { to { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    #waiting-spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%;
+      -webkit-animation: wait-spin 0.8s linear infinite;
+      animation: wait-spin 0.8s linear infinite;
+      will-change: transform;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+    }
 
     /* MAP */
     #screen-map:not(.hidden) {
@@ -373,6 +379,9 @@
       border-top-color: var(--primary); border-radius: 50%;
       -webkit-animation: wait-spin 0.8s linear infinite;
       animation: wait-spin 0.8s linear infinite;
+      will-change: transform;
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
     }
     #submit-countdown-label { color: var(--text-muted); font-size: 11px; }
     #submit-countdown-secs { color: var(--primary-light); font-size: 16px; font-weight: 800; min-width: 36px; }
@@ -566,7 +575,7 @@
   <div class="avatar-circle waiting-avatar" id="waiting-avatar-display" style="width:72px;height:72px;font-size:24px;font-weight:700;border:2px solid var(--primary);"></div>
   <div class="waiting-name" id="waiting-name-display"></div>
   <div class="waiting-sub">Czekamy na start gry...</div>
-  <div class="spinner"></div>
+  <div id="waiting-spinner"></div>
 </div>
 
 <!-- ROUND FLASH (brief intro with photo + round number) -->

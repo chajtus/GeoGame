@@ -6,12 +6,33 @@ const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
 // ── Wake Lock — prevent screen from sleeping ─────────────────────────────
-(async function keepAwake() {
-  if (!('wakeLock' in navigator)) return;
-  let lock = null;
-  const request = async () => { try { lock = await navigator.wakeLock.request('screen'); } catch {} };
-  await request();
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') request(); });
+(function keepAwake() {
+  // Method 1: Wake Lock API (Chrome, Edge, etc.)
+  if ('wakeLock' in navigator) {
+    let lock = null;
+    const request = async () => { try { lock = await navigator.wakeLock.request('screen'); } catch {} };
+    request();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') request(); });
+  }
+  // Method 2: iOS Safari — keep screen on by requesting wake lock via hidden video
+  // iOS Safari does not support Wake Lock API, but won't sleep during media playback
+  if (/iPhone|iPad/.test(navigator.userAgent) && !('wakeLock' in navigator)) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1; canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    ctx.fillRect(0, 0, 1, 1);
+    const stream = canvas.captureStream(1);
+    const v = document.createElement('video');
+    v.setAttribute('playsinline', '');
+    v.muted = true;
+    v.loop = true;
+    v.srcObject = stream;
+    v.style.cssText = 'position:fixed;top:-1px;left:-1px;width:1px;height:1px;opacity:0.01;pointer-events:none;';
+    document.body.appendChild(v);
+    const startVideo = () => { v.play().catch(() => {}); };
+    document.addEventListener('touchstart', startVideo, { once: true });
+    document.addEventListener('click', startVideo, { once: true });
+  }
 })();
 
 // ── Visibility recovery — reconnect channel and sync state from DB ────────
@@ -422,7 +443,7 @@ async function handleRoundStart(payload, showFlash = false) {
   if (playerResultMap) { playerResultMap.remove(); playerResultMap = null; }
 
   // Guard: round already ended (late delivery of round_start after round_end)
-  if (payload.question_index <= lastEndedQuestionIndex) return;
+  if (payload.question_index < lastEndedQuestionIndex) return;
 
   // Guard: round already expired by the time we received it
   const msRemaining = payload.duration_ms - (Date.now() - new Date(payload.started_at).getTime());
