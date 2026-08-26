@@ -366,9 +366,11 @@ async function restoreHostSession(state) {
     $('recover-round-label').textContent = `Runda ${qi + 1} / ${questions.length} została przerwana`;
     show('screen-recover');
 
-    $('btn-recover-repeat').onclick = () => {
+    $('btn-recover-repeat').onclick = async () => {
       hide('screen-recover');
       show('screen-round');
+      // Delete all answers for this round so players can re-submit
+      await sb.from('pins').delete().eq('session_id', SESSION_ID).eq('question_index', qi).catch(() => null);
       startRound(qi);
     };
     $('btn-recover-results').onclick = async () => {
