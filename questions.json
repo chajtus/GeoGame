@@ -57,133 +57,147 @@
   },
   {
     "id": 9,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q09_20230821_174904.jpg",
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q09_20230328_165411.jpg",
+    "lat": 39.56754049972223,
+    "lng": 2.646703899722222,
+    "location_name": "Palma, Hiszpania"
+  },
+  {
+    "id": 10,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q10_20230821_174904.jpg",
     "lat": 40.758,
     "lng": -73.9855,
     "location_name": "Times Square, New York, USA"
   },
   {
-    "id": 10,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q10_20231128_145557.jpg",
+    "id": 11,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q11_20231128_145557.jpg",
     "lat": 19.133775799722223,
     "lng": 98.87822439972221,
     "location_name": "บ้านเก๊ามะค่า, Tajlandia"
   },
   {
-    "id": 11,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q11_20240319_065336.jpg",
+    "id": 12,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q12_20240319_065336.jpg",
     "lat": 32.7374061,
     "lng": -16.932394099722224,
     "location_name": "Santana, Portugalia"
   },
   {
-    "id": 12,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q12_20240507_175406.jpg",
+    "id": 13,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q13_20240507_175406.jpg",
     "lat": 51.50095759972222,
     "lng": -0.1226233,
     "location_name": "City of Westminster, Wielka Brytania"
   },
   {
-    "id": 13,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q13_20240531_142923.jpg",
+    "id": 14,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q14_20240531_142923.jpg",
     "lat": 28.2700864,
     "lng": -16.6387456,
     "location_name": "La Orotava, Hiszpania"
   },
   {
-    "id": 14,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q14_20240816_120149.jpg",
+    "id": 15,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q15_20240816_120149.jpg",
     "lat": 53.1534605,
     "lng": 16.745848899722223,
     "location_name": "Piła, Polska"
   },
   {
-    "id": 15,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q15_20240901_101552.jpg",
+    "id": 16,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q16_20240901_101552.jpg",
     "lat": 34.969101799722225,
     "lng": 135.78498369972223,
     "location_name": "Kioto, Japonia"
   },
   {
-    "id": 16,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q16_20240903_141817.jpg",
+    "id": 17,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q17_20240903_141817.jpg",
     "lat": 34.6876131,
     "lng": 135.8399794,
     "location_name": "Nara, Japonia"
   },
   {
-    "id": 17,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q17_20241116_180156.jpg",
+    "id": 18,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q18_20241116_180156.jpg",
     "lat": 36.150424,
     "lng": -5.348914199999999,
     "location_name": "Gibraltar, Gibraltar"
   },
   {
-    "id": 18,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q18_20241229_130642.jpg",
+    "id": 19,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q19_20241229_130642.jpg",
     "lat": 49.2280784,
     "lng": 19.988154,
     "location_name": "Zakopane, Polska"
   },
   {
-    "id": 19,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q19_20260523_170927.jpg",
+    "id": 20,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q20_20260523_170927.jpg",
     "lat": 52.2308323,
     "lng": 21.02179489972222,
     "location_name": "Warszawa, Polska"
   },
   {
-    "id": 20,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q20_20260629_112522.jpg",
+    "id": 21,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q21_20260629_112522.jpg",
     "lat": 37.901400599999995,
     "lng": 20.652955199999997,
     "location_name": "Δημοτική Ενότητα Ελατίων, Grecja"
   },
   {
-    "id": 22,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q22_F4290006.JPG",
+    "id": 23,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q23_F4290006.JPG",
     "lat": 55.6874846,
     "lng": 12.5784649,
     "location_name": "Georg Brandes Plads, Kopenhaga, Dania"
   },
   {
-    "id": 23,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q23_IMG_0442.JPG",
+    "id": 24,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q24_IMG_0442.JPG",
     "lat": 31.625,
     "lng": -7.988,
     "location_name": "Marrakech, Morocco"
   },
   {
-    "id": 24,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q24_IMG_1359.JPG",
+    "id": 25,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q25_IMG_1359.JPG",
     "lat": 31.7779,
     "lng": 35.235930555555555,
     "location_name": "Jerozolima, Izrael"
   },
   {
     "id": 26,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q26_IMG_3535.JPG",
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q26_IMG_3358.jpeg",
+    "lat": 35.231112,
+    "lng": -112.589316,
+    "location_name": "Route 66, Seligman, Arizona, USA"
+  },
+  {
+    "id": 27,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q27_IMG_3535.JPG",
     "lat": 48.21463888888889,
     "lng": 16.40138888888889,
     "location_name": "Wiedeń, Austria"
   },
   {
-    "id": 27,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q27_IMG_4187.JPG",
+    "id": 28,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q28_IMG_4187.JPG",
     "lat": 42.374175,
     "lng": -71.11627222222222,
     "location_name": "Cambridge, Stany Zjednoczone"
   },
   {
-    "id": 28,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q28_IMG_6296.JPG",
+    "id": 29,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q29_IMG_6296.JPG",
     "lat": -2.2122222222222225,
     "lng": 34.754444444444445,
     "location_name": "Tanzania"
   },
   {
-    "id": 29,
-    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q29_IMG_8426.JPG",
+    "id": 30,
+    "photo_url": "https://mbhdynfnjfldssrmiqku.supabase.co/storage/v1/object/public/photos/q30_IMG_8426.JPG",
     "lat": 38.3491127,
     "lng": -0.4775077,
     "location_name": "Zamek Santa Barbara, Alicante, Hiszpania"
