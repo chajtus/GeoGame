@@ -713,10 +713,10 @@ async function showResults(questionIndex) {
   const osm = L.tileLayer(window.CONFIG.mapTileUrl, {
     attribution: window.CONFIG.mapAttribution, subdomains: window.CONFIG.mapTileSubdomains, maxZoom: 19,
   }).addTo(resultsMap);
-  const osmHot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors, Humanitarian OSM', maxZoom: 19,
+  const satellite = L.tileLayer('https://api.maptiler.com/maps/satellite/256/{z}/{x}/{y}@2x.jpg?key=08XhqhteQR7440peDz9Y', {
+    attribution: '© MapTiler © OpenStreetMap', maxZoom: 19,
   });
-  L.control.layers({ 'Standard': osm, 'Humanitarian': osmHot }, {}, { position: 'topleft' }).addTo(resultsMap);
+  L.control.layers({ 'Mapa': osm, 'Satelita': satellite }, {}, { position: 'topleft' }).addTo(resultsMap);
 
   setTimeout(() => resultsMap.invalidateSize(), 100);
   setTimeout(() => resultsMap.invalidateSize(), 350);
