@@ -538,8 +538,8 @@
     /* ── table (positions 4+) ── */
     #lb-rest {
       flex: 1; padding: 8px 32px 12px;
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 6px; overflow: hidden; align-content: start;
+      display: flex; flex-direction: column;
+      gap: 6px; overflow-y: auto; align-content: start;
     }
     .lb-row {
       display: flex; align-items: center; gap: 10px;
