@@ -826,7 +826,7 @@ async function showLeaderboard(isFinal) {
 
   // Always table (no podium) — podium only in finale
   $('podium').style.display = 'none';
-  $('lb-rest').style.maxWidth = '600px';
+  $('lb-rest').style.maxWidth = '840px';
   $('lb-rest').style.margin = '0 auto';
 
   const LB_MAX = 30;
@@ -835,6 +835,7 @@ async function showLeaderboard(isFinal) {
     const rank = i + 1;
     const rowDelay = `${(i * 0.04).toFixed(2)}s`;
     const medalHtml = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`;
+    const rankClass = rank === 1 ? 'rank-gold' : rank === 2 ? 'rank-silver' : rank === 3 ? 'rank-bronze' : '';
     const prev = posMap[p.id];
     const change = prev ? prev - rank : 0;
     const changeHtml = !isFinal && prev
@@ -848,7 +849,7 @@ async function showLeaderboard(isFinal) {
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
       : `<span style="font-size:16px;font-weight:700;color:#fff;">${p.initials}</span>`;
     return `
-      <div class="lb-row" style="animation-delay:${rowDelay};">
+      <div class="lb-row ${rankClass}" style="animation-delay:${rowDelay};">
         <span class="lb-rank">${medalHtml}</span>
         <div class="avatar-circle" style="width:48px;height:48px;background:${p.avatar_color};font-size:16px;">${avatarContent}</div>
         <span style="flex:1;font-size:20px;font-weight:700;">${p.name}</span>
