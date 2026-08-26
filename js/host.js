@@ -368,42 +368,16 @@ async function restoreHostSession(state) {
   hide('screen-finale');
 
   if (state.phase === 'round') {
-    // Round interrupted by refresh — show recovery screen with choices
+    // Round interrupted by refresh — restart the same round immediately
     const qi = state.questionIndex ?? 0;
     const q = questions[qi];
     if (!q) { console.error('Restore: invalid questionIndex', qi); showRestoreToast(); return; }
-
-    const isPremium = !!q.premium;
     currentQuestionIndex = qi;
-    roundPayload = {
-      question_index: qi, lat: q.lat, lng: q.lng,
-      location_name: q.location_name, photo_url: q.photo_url,
-      started_at: Date.now(), duration_ms: 0, premium: isPremium,
-    };
-
-    $('recover-round-label').textContent = `Runda ${qi + 1} / ${questions.length} została przerwana`;
-    show('screen-recover');
-
-    const hideAllScreens = () => { hide('screen-recover'); hide('screen-lobby'); hide('screen-results'); hide('screen-leaderboard'); hide('screen-finale'); };
-
-    $('btn-recover-repeat').onclick = async () => {
-      hideAllScreens();
-      show('screen-round');
-      await sb.from('pins').delete().eq('session_id', SESSION_ID).eq('question_index', qi).catch(() => null);
-      startRound(qi);
-    };
-    $('btn-recover-results').onclick = async () => {
-      hideAllScreens();
-      await broadcast(gameChannel, 'round_end', {}).catch(() => null);
-      show('screen-round');
-      await showResults(qi);
-    };
-    $('btn-recover-next').onclick = () => {
-      hideAllScreens();
-      const nextIdx = qi + 1 < questions.length ? qi + 1 : qi;
-      show('screen-round');
-      startRound(nextIdx);
-    };
+    // Delete answers for this round so players can re-submit
+    await sb.from('pins').delete().eq('session_id', SESSION_ID).eq('question_index', qi).catch(() => null);
+    show('screen-round');
+    showRestoreToast();
+    startRound(qi);
   } else if (state.phase === 'results') {
     show('screen-round');
     await showResults(state.questionIndex);
