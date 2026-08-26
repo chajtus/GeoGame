@@ -158,6 +158,13 @@
     /* Top bar: normal flex child — NOT fixed/absolute.
        Flexbox guarantees the map can never overlap or hide this element,
        regardless of Leaflet zoom transforms or GPU compositing layers. */
+    /* Notch spacer — fills the safe area with background color */
+    #map-notch-spacer {
+      flex-shrink: 0;
+      height: env(safe-area-inset-top, 0);
+      background: #1a0030;
+      z-index: 500;
+    }
     #map-top-bar {
       display: none;
       flex-shrink: 0;
@@ -165,7 +172,7 @@
       z-index: 500;
       position: relative;
       background: #1a0030;
-      padding: env(safe-area-inset-top, 0) 16px 0;
+      padding: 0 16px;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid var(--border);
@@ -582,7 +589,7 @@
 <!-- MAP TOP BAR — position:fixed, outside Leaflet DOM entirely, zoom can never touch it -->
 <!-- MAP -->
 <div id="screen-map" class="hidden">
-  <!-- Top bar: position:fixed inside screen-map, same as bottom bar -->
+  <div id="map-notch-spacer"></div>
   <div id="map-top-bar">
     <div id="round-label">RUNDA 1</div>
     <div id="player-timer">0:30</div>
