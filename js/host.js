@@ -830,8 +830,9 @@ async function showLeaderboard(isFinal) {
   $('lb-rest').style.margin = '0 auto';
 
   // Floating quotes — only on final results
-  const quotesL = $('lb-quotes-left');
-  const quotesR = $('lb-quotes-right');
+  if (window._quoteInterval) { clearInterval(window._quoteInterval); window._quoteInterval = null; }
+  const ql = $('lb-quote-left');
+  const qr = $('lb-quote-right');
   if (isFinal) {
     const QUOTES = [
       { text: 'Jeżeli przegrałeś to jesteś parówą.', author: 'Mirosław Smrut' },
@@ -847,22 +848,30 @@ async function showLeaderboard(isFinal) {
       { text: 'GPS to wymysł ludzi, którzy nie potrafią czytać map.', author: 'Mój dziadek' },
       { text: 'Przegrywasz? To znaczy że żyjesz. Jak parówka.', author: 'Mirosław Smrut' },
     ];
-    const shuffle = arr => arr.sort(() => Math.random() - 0.5);
-    const half = Math.ceil(QUOTES.length / 2);
-    const leftQ = shuffle([...QUOTES]).slice(0, half);
-    const rightQ = shuffle([...QUOTES]).slice(0, half);
-    const renderQuotes = (arr) => arr.map((q, i) =>
-      `<div class="lb-quote" style="animation-delay:${(i * 0.8).toFixed(1)}s;">
-        "${q.text}"<span class="quote-author">— ${q.author}</span>
-      </div>`
-    ).join('');
-    quotesL.innerHTML = renderQuotes(leftQ);
-    quotesR.innerHTML = renderQuotes(rightQ);
-    quotesL.classList.remove('hidden');
-    quotesR.classList.remove('hidden');
+    const shuffled = [...QUOTES].sort(() => Math.random() - 0.5);
+    let idx = 0;
+    const showQuote = (el, q) => {
+      el.innerHTML = `"${q.text}"<span class="quote-author">— ${q.author}</span>`;
+      el.classList.remove('hidden');
+      el.classList.add('visible');
+      setTimeout(() => el.classList.remove('visible'), 4000);
+    };
+    // Show first pair immediately
+    showQuote(ql, shuffled[0]);
+    setTimeout(() => showQuote(qr, shuffled[1 % shuffled.length]), 1500);
+    idx = 2;
+    // Cycle every 5s
+    window._quoteInterval = setInterval(() => {
+      showQuote(ql, shuffled[idx % shuffled.length]);
+      idx++;
+      setTimeout(() => {
+        showQuote(qr, shuffled[idx % shuffled.length]);
+        idx++;
+      }, 1500);
+    }, 5000);
   } else {
-    quotesL.classList.add('hidden');
-    quotesR.classList.add('hidden');
+    ql.classList.add('hidden');
+    qr.classList.add('hidden');
   }
 
   const LB_MAX = 30;

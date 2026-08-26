@@ -562,25 +562,24 @@
     .lb-row .lb-change.up { color: var(--green); }
     .lb-row .lb-change.down { color: var(--red); }
 
-    /* ── floating quotes ── */
-    .lb-quotes {
-      width: 220px; flex-shrink: 0; overflow: hidden;
-      display: flex; flex-direction: column; gap: 24px;
-      padding: 12px 8px; position: relative;
+    /* ── floating quote bubbles ── */
+    .lb-quote-bubble {
+      position: absolute; top: 50%; width: 240px;
+      transform: translateY(-50%);
+      font-style: italic; color: rgba(255,215,0,0.7); font-size: 15px;
+      line-height: 1.5; text-align: center; padding: 16px;
+      background: rgba(255,215,0,0.05);
+      border: 1px solid rgba(255,215,0,0.15);
+      border-radius: 14px;
+      opacity: 0; transition: opacity 1s ease;
     }
-    .lb-quote {
-      font-style: italic; color: rgba(255,215,0,0.5); font-size: 13px;
-      line-height: 1.4; text-align: center; padding: 10px;
-      animation: quote-float 6s ease-in-out infinite;
-    }
-    .lb-quote .quote-author {
-      display: block; margin-top: 4px; font-style: normal;
-      font-size: 10px; color: rgba(233,30,140,0.5); font-weight: 700;
+    .lb-quote-bubble.visible { opacity: 1; }
+    #lb-quote-left { left: 20px; }
+    #lb-quote-right { right: 20px; }
+    .lb-quote-bubble .quote-author {
+      display: block; margin-top: 6px; font-style: normal;
+      font-size: 11px; color: rgba(233,30,140,0.6); font-weight: 700;
       letter-spacing: 1px;
-    }
-    @keyframes quote-float {
-      0%, 100% { transform: translateY(0); opacity: 0.6; }
-      50% { transform: translateY(-8px); opacity: 1; }
     }
 
     /* ══ FINALE ════════════════════════════════════════════════════════ */
@@ -832,9 +831,9 @@
   </div>
   <div id="podium"></div>
   <div style="flex:1;display:flex;min-height:0;position:relative;">
-    <div id="lb-quotes-left" class="lb-quotes hidden"></div>
     <div id="lb-rest"></div>
-    <div id="lb-quotes-right" class="lb-quotes hidden"></div>
+    <div id="lb-quote-left" class="lb-quote-bubble hidden"></div>
+    <div id="lb-quote-right" class="lb-quote-bubble hidden"></div>
   </div>
   <div class="bottom-bar">
     <div class="bottom-bar-hint">▲▼ zmiana pozycji względem poprzedniego rankingu</div>
