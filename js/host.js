@@ -490,7 +490,8 @@ async function startRound(index) {
   // Also saves current timer state so host can restore after their own refresh
   clearInterval(heartbeatInterval);
   heartbeatInterval = setInterval(() => {
-    const effectiveStartedAt = roundStartedAt - extraMs;
+    let effectiveStartedAt = roundStartedAt - extraMs;
+    if (paused && pausedAt) effectiveStartedAt += (Date.now() - pausedAt);
     if (roundPayload.started_at !== effectiveStartedAt || roundPayload.duration_ms !== roundDurationMs) {
       roundPayload = { ...roundPayload, started_at: effectiveStartedAt, duration_ms: roundDurationMs };
     }
