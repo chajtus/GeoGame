@@ -15,61 +15,83 @@ const hide = id => $(id).classList.add('hidden');
 })();
 
 // ── Visibility recovery — reconnect channel and sync state from DB ────────
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState !== 'visible') return;
-  if (!gameChannel || !playerState.id) return;
+function recoverFromGameState() {
+  return sb.from('game_state')
+    .select('phase, current_question, round_started_at, round_duration_seconds')
+    .eq('session_id', SESSION_ID)
+    .maybeSingle()
+    .then(({ data: gs }) => {
+      if (!gs) return;
 
-  // 1) Force resubscribe: remove old channel and create fresh one
-  try { sb.removeChannel(gameChannel); } catch (_) {}
-  subscribeToGame();
+      const hideAll = () => {
+        hideMap();
+        hide('screen-round-flash');
+        hide('screen-submitted');
+        hide('screen-waiting');
+        hide('screen-player-finale');
+        hide('player-countdown-overlay');
+      };
 
-  // 2) Poll game_state from Supabase to recover missed transitions
-  try {
-    const { data: gs } = await sb.from('game_state')
-      .select('phase, current_question, round_started_at, round_duration_seconds')
-      .eq('session_id', SESSION_ID)
-      .maybeSingle();
-    if (!gs) return;
-
-    const hideAll = () => {
-      hideMap();
-      hide('screen-round-flash');
-      hide('screen-submitted');
-      hide('screen-waiting');
-      hide('screen-player-finale');
-      hide('player-countdown-overlay');
-    };
-
-    if (gs.phase === 'round') {
-      // Active round — if player doesn't have this question or is behind, recover
-      if (!currentQuestion || currentQuestion.question_index !== gs.current_question) {
-        // Heartbeat (every 2s) will deliver full payload via resubscribed channel
-        // Meanwhile show waiting so player isn't stuck on old screen
+      if (gs.phase === 'round') {
+        if (!currentQuestion || currentQuestion.question_index !== gs.current_question) {
+          hideAll();
+          show('screen-waiting');
+          startWaitingPoll();
+          document.querySelector('#screen-waiting .waiting-sub').textContent = 'Łączenie ponownie...';
+        } else if (currentQuestion && !submitted) {
+          // Same round still active — check if time expired while phone was asleep
+          const elapsed = Date.now() - new Date(gs.round_started_at).getTime();
+          const totalMs = gs.round_duration_seconds * 1000;
+          if (elapsed >= totalMs) {
+            // Round timer expired while asleep — treat as auto-submit
+            submitted = true;
+            lastDistanceKm = 0;
+            lastPoints = 0;
+            lastEndedQuestionIndex = currentQuestion.question_index;
+            clearInterval(timerInterval);
+            hideAll();
+            show('screen-waiting');
+            startWaitingPoll();
+            document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oczekiwanie na wyniki...';
+          }
+        }
+      } else if (gs.phase === 'results' || gs.phase === 'leaderboard') {
+        if (currentQuestion && !submitted) {
+          submitted = true;
+          lastDistanceKm = 0;
+          lastPoints = 0;
+          lastEndedQuestionIndex = currentQuestion.question_index;
+          clearInterval(timerInterval);
+        }
         hideAll();
         show('screen-waiting');
-        document.querySelector('#screen-waiting .waiting-sub').textContent = 'Łączenie ponownie...';
+        startWaitingPoll();
+        document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
+      } else if (gs.phase === 'final') {
+        hideAll();
+        $('finale-player-name').textContent = playerState.name;
+        show('screen-player-finale');
+        fetchPlayerRank().then(() => {
+          $('finale-rank-num').textContent = playerRank ? `#${playerRank}` : '—';
+        });
       }
-    } else if (gs.phase === 'results' || gs.phase === 'leaderboard') {
-      // Host is on results/leaderboard — make sure player isn't stuck
-      if (currentQuestion && !submitted) {
-        submitted = true;
-        lastDistanceKm = 0;
-        lastPoints = 0;
-        lastEndedQuestionIndex = currentQuestion.question_index;
-        clearInterval(timerInterval);
-      }
-      hideAll();
-      show('screen-waiting');
-      document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
-    } else if (gs.phase === 'final') {
-      hideAll();
-      $('finale-player-name').textContent = playerState.name;
-      show('screen-player-finale');
-      fetchPlayerRank().then(() => {
-        $('finale-rank-num').textContent = playerRank ? `#${playerRank}` : '—';
-      });
-    }
-  } catch (_) {}
+    })
+    .catch(() => null);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  if (!playerState.id) return;
+
+  // 1) Force resubscribe: remove old channel and create fresh one
+  if (gameChannel) {
+    try { sb.removeChannel(gameChannel); } catch (_) {}
+    subscribeToGame();
+  }
+
+  // 2) Try immediately, then retry after 1.5s (network may need time to wake)
+  recoverFromGameState();
+  setTimeout(recoverFromGameState, 1500);
 });
 
 function showMap() {
@@ -316,22 +338,14 @@ function subscribeToGame() {
 let waitingPollInterval = null;
 function startWaitingPoll() {
   stopWaitingPoll();
-  waitingPollInterval = setInterval(async () => {
-    // Only poll while on the waiting screen
+  waitingPollInterval = setInterval(() => {
     if ($('screen-waiting').classList.contains('hidden')) { stopWaitingPoll(); return; }
-    try {
-      const { data: gs } = await sb.from('game_state')
-        .select('phase, current_question, round_started_at, round_duration_seconds')
-        .eq('session_id', SESSION_ID)
-        .maybeSingle();
-      if (!gs || gs.phase !== 'round') return;
-      // Round is active but we're still on waiting — reconnect channel
-      if (!currentQuestion || currentQuestion.question_index !== gs.current_question) {
-        try { sb.removeChannel(gameChannel); } catch (_) {}
-        subscribeToGame();
-        // Heartbeat will deliver the full round payload within 2s
-      }
-    } catch (_) {}
+    // Reconnect channel in case WS died silently
+    if (gameChannel) {
+      try { sb.removeChannel(gameChannel); } catch (_) {}
+      subscribeToGame();
+    }
+    recoverFromGameState();
   }, 4000);
 }
 function stopWaitingPoll() {
