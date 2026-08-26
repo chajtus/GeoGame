@@ -258,12 +258,13 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || !gameChannel) return;
   // Reset kick counter — background polls are unreliable
   kickMissCount = 0;
-  // Poke the Supabase Realtime connection to ensure it's alive
-  const conn = sb.realtime;
-  if (conn && typeof conn.connect === 'function') {
-    console.log('[GeoGame] Returned from background, poking Realtime connection');
-    conn.connect();
-  }
+  // Give the WebSocket a moment to reconnect on its own, then check
+  setTimeout(() => {
+    if (!gameChannel || gameChannel.state === 'joined') return;
+    console.log('[GeoGame] Channel dead after resume, state:', gameChannel.state, '— resubscribing');
+    try { sb.removeChannel(gameChannel); } catch {}
+    subscribeToGame();
+  }, 2000);
 });
 
 // ── Kick detection via polling (checks if player record still exists) ─────
