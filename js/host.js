@@ -370,31 +370,48 @@ async function restoreHostSession(state) {
   if (state.phase === 'round' || state.phase === 'results') {
     const qi = state.questionIndex ?? 0;
     const q = questions[qi];
-    if (!q) { console.error('Restore: invalid questionIndex', qi); showRestoreToast(); return; }
+    if (!q) {
+      console.error('Restore: invalid questionIndex', qi, 'questions.length:', questions.length);
+      show('screen-lobby');
+      showRestoreToast();
+      return;
+    }
     currentQuestionIndex = qi;
 
     $('recover-round-label').textContent = `Runda ${qi + 1} / ${questions.length} została przerwana`;
     show('screen-recover');
 
-    $('btn-recover-repeat').onclick = async () => {
+    const doRecover = async (action) => {
+      // Hide EVERYTHING first
       hide('screen-recover');
-      show('screen-round');
-      // Delete answers for this round so players can re-submit
-      await sb.from('pins').delete().eq('session_id', SESSION_ID).eq('question_index', qi).catch(() => null);
-      startRound(qi);
+      hide('screen-lobby');
+      hide('screen-results');
+      hide('screen-leaderboard');
+      hide('screen-finale');
+
+      try {
+        if (action === 'repeat') {
+          await sb.from('pins').delete().eq('session_id', SESSION_ID).eq('question_index', qi).catch(() => null);
+          show('screen-round');
+          await startRound(qi);
+        } else if (action === 'results') {
+          await broadcast(gameChannel, 'round_end', {}).catch(() => null);
+          show('screen-round');
+          await showResults(qi);
+        } else if (action === 'next') {
+          const nextIdx = qi + 1 < questions.length ? qi + 1 : qi;
+          show('screen-round');
+          await startRound(nextIdx);
+        }
+      } catch (err) {
+        console.error('Recovery action failed:', err);
+        show('screen-recover');
+      }
     };
-    $('btn-recover-results').onclick = async () => {
-      hide('screen-recover');
-      await broadcast(gameChannel, 'round_end', {}).catch(() => null);
-      show('screen-round');
-      await showResults(qi);
-    };
-    $('btn-recover-next').onclick = () => {
-      hide('screen-recover');
-      const nextIdx = qi + 1 < questions.length ? qi + 1 : qi;
-      show('screen-round');
-      startRound(nextIdx);
-    };
+
+    $('btn-recover-repeat').onclick = () => doRecover('repeat');
+    $('btn-recover-results').onclick = () => doRecover('results');
+    $('btn-recover-next').onclick = () => doRecover('next');
     return;
   } else if (state.phase === 'leaderboard') {
     await showLeaderboard(state.isFinal ?? false);
@@ -432,6 +449,7 @@ async function startRound(index) {
   $('round-loading-overlay').classList.add('hidden');
   currentQuestionIndex = index;
   const q = questions[index];
+  if (!q) { console.error('startRound: no question at index', index); return; }
   const isPremium = !!q.premium;
 
   // Save state IMMEDIATELY so refresh during premium overlay or broadcast can restore
