@@ -349,29 +349,43 @@ async function restoreHostSession(state) {
   hide('screen-leaderboard');
   hide('screen-finale');
 
-  if (state.phase === 'round' || state.phase === 'results') {
-    // Round refreshed — can't reliably resume photo/timer, go straight to results
+  if (state.phase === 'round') {
+    // Round interrupted by refresh — show recovery screen with choices
     const qi = state.questionIndex ?? 0;
     const q = questions[qi];
     if (!q) { console.error('Restore: invalid questionIndex', qi); showRestoreToast(); return; }
 
-    // Reconstruct roundPayload for heartbeat continuity
     const isPremium = !!q.premium;
+    currentQuestionIndex = qi;
     roundPayload = {
-      question_index: qi,
-      lat: q.lat, lng: q.lng,
-      location_name: q.location_name,
-      photo_url: q.photo_url,
-      started_at: Date.now(),
-      duration_ms: 0,
-      premium: isPremium,
+      question_index: qi, lat: q.lat, lng: q.lng,
+      location_name: q.location_name, photo_url: q.photo_url,
+      started_at: Date.now(), duration_ms: 0, premium: isPremium,
     };
 
-    // Broadcast round_end so players transition too
-    await broadcast(gameChannel, 'round_end', {}).catch(() => null);
+    $('recover-round-label').textContent = `Runda ${qi + 1} / ${questions.length} została przerwana`;
+    show('screen-recover');
 
-    show('screen-round'); // needed so hide() in showResults works
-    await showResults(qi);
+    $('btn-recover-repeat').onclick = () => {
+      hide('screen-recover');
+      show('screen-round');
+      startRound(qi);
+    };
+    $('btn-recover-results').onclick = async () => {
+      hide('screen-recover');
+      await broadcast(gameChannel, 'round_end', {}).catch(() => null);
+      show('screen-round');
+      await showResults(qi);
+    };
+    $('btn-recover-next').onclick = () => {
+      hide('screen-recover');
+      const nextIdx = qi + 1 < questions.length ? qi + 1 : qi;
+      show('screen-round');
+      startRound(nextIdx);
+    };
+  } else if (state.phase === 'results') {
+    show('screen-round');
+    await showResults(state.questionIndex);
   } else if (state.phase === 'leaderboard') {
     await showLeaderboard(state.isFinal ?? false);
   }
