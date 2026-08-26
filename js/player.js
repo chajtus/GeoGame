@@ -256,9 +256,9 @@ function subscribeToGame() {
 // ── Reconnect Realtime when phone returns from background ────────────────
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || !gameChannel) return;
+  // Reset kick counter — background polls are unreliable
+  kickMissCount = 0;
   // Poke the Supabase Realtime connection to ensure it's alive
-  // If the underlying WebSocket died while backgrounded, this reconnects it
-  // without destroying the channel and its event listeners
   const conn = sb.realtime;
   if (conn && typeof conn.connect === 'function') {
     console.log('[GeoGame] Returned from background, poking Realtime connection');
