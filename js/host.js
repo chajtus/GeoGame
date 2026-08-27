@@ -1010,12 +1010,7 @@ async function showFinale(ranked) {
   show('screen-finale');
   $('phase-label').textContent = '🏆 FINAŁ';
 
-  // Video
-  const videoEl = $('finale-video');
-  videoEl.src = 'assets/maja.mp4';
-  const { data: { publicUrl } } = sb.storage.from('photos').getPublicUrl('maja.mp4');
-  if (publicUrl) videoEl.src = publicUrl;
-  videoEl.play().catch(() => null);
+  // Maja GIF — already set in HTML src="maja.gif"
 
   // Confetti burst
   const burst = () => confetti({
