@@ -5,46 +5,6 @@ const $ = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
-// ── Countdown sound effects (Web Audio) ──────────────────────────────────
-let audioCtx = null;
-function getAudioCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  return audioCtx;
-}
-function playCountdownBeep(secs) {
-  try {
-    const ctx = getAudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    if (secs === 10) {
-      osc.frequency.value = 880;
-      osc.type = 'sine';
-      gain.gain.value = 0.18;
-      osc.start(); osc.stop(ctx.currentTime + 0.12);
-    } else if (secs >= 2) {
-      osc.frequency.value = 600 + (6 - secs) * 100;
-      osc.type = 'square';
-      gain.gain.value = 0.12;
-      osc.start(); osc.stop(ctx.currentTime + 0.08);
-    } else {
-      osc.frequency.value = 1200;
-      osc.type = 'square';
-      gain.gain.value = 0.2;
-      osc.start(); osc.stop(ctx.currentTime + 0.06);
-      const osc2 = ctx.createOscillator();
-      const g2 = ctx.createGain();
-      osc2.connect(g2); g2.connect(ctx.destination);
-      osc2.frequency.value = 1400;
-      osc2.type = 'square';
-      g2.gain.value = 0.2;
-      osc2.start(ctx.currentTime + 0.1); osc2.stop(ctx.currentTime + 0.16);
-    }
-  } catch (_) {}
-}
-
 // ── Wake Lock — prevent screen from sleeping ─────────────────────────────
 let wakeLock = null;
 
@@ -62,7 +22,7 @@ async function requestWakeLock() {
 requestWakeLock();
 
 ['touchend', 'click'].forEach(evt => {
-  document.addEventListener(evt, () => { requestWakeLock(); getAudioCtx(); }, { passive: true });
+  document.addEventListener(evt, () => requestWakeLock(), { passive: true });
 });
 
 document.addEventListener('visibilitychange', () => {
@@ -666,7 +626,6 @@ function startPlayerTimer(startedAt, durationMs) {
     if (showCountdown) {
       if (secs !== lastPlayerCountdownSec) {
         lastPlayerCountdownSec = secs;
-        playCountdownBeep(secs);
         const el = $('player-countdown-number');
         el.textContent = secs;
         el.style.color = secs > 5 ? 'rgba(255,152,0,0.7)' : 'rgba(255,255,255,0.13)';
