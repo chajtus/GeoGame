@@ -1012,16 +1012,91 @@ async function showFinale(ranked) {
 
   // Maja GIF — already set in HTML src="maja.gif"
 
-  // Confetti burst
-  const burst = () => confetti({
-    particleCount: 180,
-    spread: 100,
-    origin: { y: 0.4 },
-    colors: ['#ff79c6', '#9c27b0', '#e91e8c', '#ffffff', '#ffd700'],
+  // ── EPIC CONFETTI — continuous bursts from all sides ──
+  const finaleColors = ['#ff79c6', '#9c27b0', '#e91e8c', '#ffffff', '#ffd700', '#00e5ff', '#76ff03', '#ff5252'];
+
+  // Center bursts
+  const centerBurst = () => confetti({
+    particleCount: 200, spread: 120, origin: { y: 0.35 },
+    colors: finaleColors, gravity: 0.8, scalar: 1.2,
   });
-  burst();
-  setTimeout(burst, 800);
-  setTimeout(burst, 1600);
+
+  // Side cannons
+  const leftCannon = () => confetti({
+    particleCount: 80, angle: 60, spread: 55, origin: { x: 0, y: 0.6 },
+    colors: finaleColors, gravity: 0.7,
+  });
+  const rightCannon = () => confetti({
+    particleCount: 80, angle: 120, spread: 55, origin: { x: 1, y: 0.6 },
+    colors: finaleColors, gravity: 0.7,
+  });
+
+  // Stars / sparkle
+  const sparkle = () => confetti({
+    particleCount: 40, spread: 360, startVelocity: 30, ticks: 80,
+    origin: { x: Math.random(), y: Math.random() * 0.5 },
+    colors: ['#ffd700', '#fff'], shapes: ['star'],
+    gravity: 0.5, scalar: 1.5,
+  });
+
+  // Initial big bang
+  centerBurst();
+  setTimeout(leftCannon, 300);
+  setTimeout(rightCannon, 600);
+  setTimeout(centerBurst, 900);
+  setTimeout(sparkle, 1200);
+  setTimeout(leftCannon, 1500);
+  setTimeout(rightCannon, 1800);
+  setTimeout(centerBurst, 2100);
+
+  // Continuous loop every 3s
+  let finaleConfettiInterval = setInterval(() => {
+    centerBurst();
+    setTimeout(leftCannon, 400);
+    setTimeout(rightCannon, 800);
+    setTimeout(sparkle, 1200);
+    setTimeout(sparkle, 1800);
+  }, 3500);
+
+  // Stop after 60 seconds
+  setTimeout(() => clearInterval(finaleConfettiInterval), 60000);
+
+  // ── VICTORY MUSIC — triumphant fanfare via Web Audio ──
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+
+    function playNote(freq, start, dur, type = 'sine', vol = 0.12) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = type;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(vol, ctx.currentTime + start);
+      gain.gain.setTargetAtTime(0, ctx.currentTime + start + dur * 0.7, dur * 0.15);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur);
+    }
+
+    // Fanfare melody (trumpet-like square wave)
+    const melody = [
+      [523, 0, 0.2], [523, 0.2, 0.2], [523, 0.4, 0.2], [659, 0.6, 0.4],
+      [587, 1.0, 0.2], [659, 1.2, 0.2], [784, 1.4, 0.6],
+      [659, 2.2, 0.2], [784, 2.4, 0.2], [880, 2.6, 0.2], [1047, 2.8, 0.8],
+    ];
+    melody.forEach(([f, s, d]) => playNote(f, s, d, 'square', 0.08));
+
+    // Harmony (soft sine pad)
+    const harmony = [
+      [262, 0, 1.0], [330, 0, 1.0], [392, 0, 1.0],
+      [294, 1.0, 1.0], [370, 1.0, 1.0], [440, 1.0, 1.0],
+      [330, 2.2, 1.5], [392, 2.2, 1.5], [523, 2.2, 1.5],
+    ];
+    harmony.forEach(([f, s, d]) => playNote(f, s, d, 'sine', 0.06));
+
+    // Triumphant ending chord
+    [523, 659, 784, 1047].forEach(f => playNote(f, 3.8, 1.5, 'sine', 0.1));
+  } catch (_) {}
 
   // Podium (TOP 3)
   const podiumData = [
