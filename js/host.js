@@ -7,6 +7,47 @@ const $ = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
+// ── Countdown sound effects (Web Audio) ──────────────────────────────────
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playCountdownBeep(secs) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    if (secs === 10) {
+      osc.frequency.value = 880;
+      osc.type = 'sine';
+      gain.gain.value = 0.18;
+      osc.start(); osc.stop(ctx.currentTime + 0.12);
+    } else if (secs >= 2) {
+      osc.frequency.value = 600 + (6 - secs) * 100;
+      osc.type = 'square';
+      gain.gain.value = 0.12;
+      osc.start(); osc.stop(ctx.currentTime + 0.08);
+    } else {
+      // secs === 1: final urgent double-beep
+      osc.frequency.value = 1200;
+      osc.type = 'square';
+      gain.gain.value = 0.2;
+      osc.start(); osc.stop(ctx.currentTime + 0.06);
+      const osc2 = ctx.createOscillator();
+      const g2 = ctx.createGain();
+      osc2.connect(g2); g2.connect(ctx.destination);
+      osc2.frequency.value = 1400;
+      osc2.type = 'square';
+      g2.gain.value = 0.2;
+      osc2.start(ctx.currentTime + 0.1); osc2.stop(ctx.currentTime + 0.16);
+    }
+  } catch (_) {}
+}
+
 // ── Session persist (restore on accidental refresh) ───────────────────────
 const HOST_STATE_KEY = 'aga_host_state_v1';
 const STATE_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours
@@ -539,17 +580,21 @@ function tickTimer() {
     ? 'linear-gradient(90deg,#f44336,#ff5722)'
     : 'linear-gradient(90deg,var(--primary),var(--primary-light))';
 
-  // Countdown overlay 5-4-3-2-1
-  if (secs <= 5 && secs > 0 && remaining > 0) {
+  // Countdown overlay + sound: beep at 10, then 5-4-3-2-1
+  if ((secs === 10 || secs <= 5) && secs > 0 && remaining > 0) {
     if (secs !== lastCountdownSec) {
       lastCountdownSec = secs;
-      const el = $('host-countdown-number');
-      el.textContent = secs;
-      el.classList.remove('countdown-num');
-      void el.offsetWidth; // reflow to restart animation
-      el.classList.add('countdown-num');
+      playCountdownBeep(secs);
+      if (secs <= 5) {
+        const el = $('host-countdown-number');
+        el.textContent = secs;
+        el.classList.remove('countdown-num');
+        void el.offsetWidth; // reflow to restart animation
+        el.classList.add('countdown-num');
+        show('host-countdown-overlay');
+      }
     }
-    show('host-countdown-overlay');
+    if (secs <= 5) show('host-countdown-overlay');
   } else {
     hide('host-countdown-overlay');
     if (remaining > 0) lastCountdownSec = -1;
