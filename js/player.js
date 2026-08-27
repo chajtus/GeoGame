@@ -97,17 +97,27 @@ function recoverFromGameState() {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   if (!playerState.id) return;
+  reconnectPlayer();
+});
 
+// Also reconnect when network comes back online
+window.addEventListener('online', () => {
+  if (!playerState.id) return;
+  reconnectPlayer();
+});
+
+function reconnectPlayer() {
   // 1) Force resubscribe: remove old channel and create fresh one
   if (gameChannel) {
     try { sb.removeChannel(gameChannel); } catch (_) {}
     subscribeToGame();
   }
 
-  // 2) Try immediately, then retry after 1.5s (network may need time to wake)
+  // 2) Try immediately, then retry after 1.5s and 4s (network may need time to wake)
   recoverFromGameState();
   setTimeout(recoverFromGameState, 1500);
-});
+  setTimeout(recoverFromGameState, 4000);
+}
 
 function showMap() {
   show('screen-map');
@@ -364,7 +374,17 @@ function subscribeToGame() {
         document.querySelector('#screen-waiting .waiting-sub').textContent = 'Oglądaj wyniki na ekranie 📺';
       }
     })
-    .subscribe();
+    .subscribe((status) => {
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        // Channel died — reconnect after short delay
+        setTimeout(() => {
+          if (!playerState.id) return;
+          try { sb.removeChannel(gameChannel); } catch (_) {}
+          subscribeToGame();
+          recoverFromGameState();
+        }, 2000);
+      }
+    });
 }
 
 // ── Waiting-screen poll — detect round start even if WS is dead ──────────
@@ -829,6 +849,9 @@ async function showPlayerResult() {
     document.querySelector('#screen-waiting .waiting-sub').textContent = 'Łączenie ponownie...';
     subscribeToGame();
     subscribeToKick();
+    // Immediately sync with current game state from DB
+    recoverFromGameState();
+    startWaitingPoll();
   } catch { /* ignore */ }
 })();
 
