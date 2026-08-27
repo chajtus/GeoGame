@@ -5,6 +5,55 @@ const $ = id => document.getElementById(id);
 const show = id => $(id).classList.remove('hidden');
 const hide = id => $(id).classList.add('hidden');
 
+// ── Finale effects (success sound + fireworks) ──────────────────────────
+function playSuccessSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = 0.15;
+      gain.gain.setTargetAtTime(0, ctx.currentTime + i * 0.15 + 0.2, 0.08);
+      osc.start(ctx.currentTime + i * 0.15);
+      osc.stop(ctx.currentTime + i * 0.15 + 0.4);
+    });
+  } catch (_) {}
+}
+
+function launchFireworks(container) {
+  const colors = ['#ffd700','#ff79c6','#e91e8c','#00e5ff','#76ff03','#ff5252','#ab47bc'];
+  let burst = 0;
+  const interval = setInterval(() => {
+    if (burst >= 6) { clearInterval(interval); return; }
+    burst++;
+    const cx = Math.random() * container.offsetWidth;
+    const cy = Math.random() * container.offsetHeight * 0.6;
+    for (let i = 0; i < 18; i++) {
+      const el = document.createElement('div');
+      el.className = 'firework';
+      el.style.left = cx + 'px';
+      el.style.top = cy + 'px';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      const angle = (Math.PI * 2 / 18) * i + (Math.random() - 0.5) * 0.4;
+      const dist = 60 + Math.random() * 80;
+      el.style.setProperty('--fw-x', Math.cos(angle) * dist + 'px');
+      el.style.setProperty('--fw-y', Math.sin(angle) * dist + 'px');
+      container.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+  }, 700);
+}
+
+function triggerFinaleEffects() {
+  playSuccessSound();
+  const container = $('screen-player-finale');
+  if (container) launchFireworks(container);
+}
+
 // ── Wake Lock — prevent screen from sleeping ─────────────────────────────
 let wakeLock = null;
 
@@ -86,6 +135,7 @@ function recoverFromGameState() {
         hideAll();
         $('finale-player-name').textContent = playerState.name;
         show('screen-player-finale');
+        triggerFinaleEffects();
         fetchPlayerRank().then(() => {
           $('finale-rank-num').textContent = playerRank ? `#${playerRank}` : '—';
         });
@@ -365,6 +415,7 @@ function subscribeToGame() {
         hide('screen-waiting');
         $('finale-player-name').textContent = playerState.name;
         show('screen-player-finale');
+        triggerFinaleEffects();
         // Fetch final rank and display it
         fetchPlayerRank().then(() => {
           $('finale-rank-num').textContent = playerRank ? `#${playerRank}` : '—';

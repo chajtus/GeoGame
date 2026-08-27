@@ -450,9 +450,10 @@
     #screen-player-finale {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center;
-      text-align: center; gap: 20px; padding: 32px 24px;
+      text-align: center; gap: 16px; padding: 24px 24px;
       background: radial-gradient(ellipse at 50% 30%, #2d0055 0%, #0d0d1a 70%);
       overflow-y: auto; -webkit-overflow-scrolling: touch;
+      position: relative;
     }
     .finale-emoji { font-size: 56px; line-height: 1; }
     .finale-thanks {
@@ -466,6 +467,11 @@
     #finale-player-name {
       display: block;
       color: #fff; font-size: 32px; font-weight: 900;
+    }
+    .finale-maja {
+      width: min(200px, 50vw);
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(233,30,140,0.4), 0 0 60px rgba(255,215,0,0.15);
     }
     .finale-divider {
       width: 60px; height: 2px;
@@ -485,6 +491,19 @@
     .finale-promo-cta {
       font-family: 'Dancing Script', cursive;
       font-size: 20px; color: #ffd700; font-weight: 700;
+    }
+    /* Fireworks particles */
+    .firework {
+      position: absolute;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: firework-fly 1.2s ease-out forwards;
+    }
+    @keyframes firework-fly {
+      0% { opacity: 1; transform: translate(0,0) scale(1); }
+      70% { opacity: 1; }
+      100% { opacity: 0; transform: translate(var(--fw-x), var(--fw-y)) scale(0.3); }
     }
 
     /* ═══ REDUCED MOTION ═══════════════════════════════════════════════════ */
@@ -615,6 +634,7 @@
     Dzięki za grę,<br>
     <span id="finale-player-name"></span>
   </div>
+  <img src="maja.gif" alt="Maja bije brawo" class="finale-maja">
   <div id="finale-rank-box" style="background:rgba(255,215,0,0.1);border:2px solid rgba(255,215,0,0.4);border-radius:18px;padding:14px 32px;display:flex;flex-direction:column;align-items:center;gap:4px;">
     <div style="font-size:11px;letter-spacing:2px;color:rgba(255,215,0,0.7);font-weight:700;">TWOJE MIEJSCE</div>
     <div id="finale-rank-num" style="font-size:52px;font-weight:900;line-height:1;color:#ffd700;text-shadow:0 0 24px rgba(255,215,0,0.7);"></div>
