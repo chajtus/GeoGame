@@ -832,7 +832,7 @@ async function showResults(questionIndex) {
     resultsMap.removeLayer(osm);
     osmFallback.addTo(resultsMap);
   });
-  const satellite = L.tileLayer('https://api.maptiler.com/maps/satellite/256/{z}/{x}/{y}@2x.jpg?key=08XhqhteQR7440peDz9Y', {
+  const satellite = L.tileLayer('https://api.maptiler.com/maps/satellite/256/{z}/{x}/{y}@2x.jpg?key=tkRomE4W7PX39FYIXtyM', {
     attribution: '© MapTiler © OpenStreetMap', maxZoom: 19,
   });
   satellite.on('tileerror', function onErr() {

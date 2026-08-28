@@ -413,7 +413,7 @@ function subscribeToGame() {
       }
     })
     .on('broadcast', { event: 'force_maptiler' }, () => {
-      const mtUrl = 'https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}@2x.png?key=08XhqhteQR7440peDz9Y&language=en';
+      const mtUrl = 'https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}@2x.png?key=tkRomE4W7PX39FYIXtyM&language=en';
       const mtAttr = '© <a href="https://www.maptiler.com/">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
       window.CONFIG.mapTileUrl = mtUrl;
       window.CONFIG.mapAttribution = mtAttr;
