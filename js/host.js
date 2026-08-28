@@ -321,6 +321,14 @@ subscribeToPlayers();
 
 // Create game channel early so kick broadcasts work from lobby
 gameChannel = createChannel(sb, SESSION_ID);
+gameChannel.on('broadcast', { event: 'player_joined' }, ({ payload }) => {
+  if (!payload?.id) return;
+  if (players.find(p => p.id === payload.id)) return;
+  players.push(payload);
+  showJoinFlash(payload);
+  addPlayerChip(payload);
+  updatePlayerCount();
+});
 await new Promise(resolve => gameChannel.subscribe(status => {
   if (status === 'SUBSCRIBED') resolve();
 }));
@@ -356,22 +364,6 @@ function subscribeToPlayers() {
     })
     .subscribe();
 
-  // Polling fallback — catch players missed by Realtime
-  setInterval(async () => {
-    try {
-      const { data } = await sb.from('players').select('*').eq('session_id', SESSION_ID);
-      if (!data) return;
-      let changed = false;
-      for (const p of data) {
-        if (!players.find(ex => ex.id === p.id)) {
-          players.push(p);
-          addPlayerChip(p);
-          changed = true;
-        }
-      }
-      if (changed) updatePlayerCount();
-    } catch (_) {}
-  }, 5000);
 }
 
 let ljfSide = 0; // alternates, but first pick is random

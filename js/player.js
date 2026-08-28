@@ -324,6 +324,20 @@ $('btn-join').addEventListener('click', async () => {
   showWaiting();
   subscribeToGame();
   subscribeToKick();
+
+  // Notify host via broadcast (more reliable than postgres_changes)
+  setTimeout(() => {
+    if (gameChannel) {
+      broadcast(gameChannel, 'player_joined', {
+        id: playerState.id,
+        name: playerState.name,
+        avatar_data_url: playerState.avatarDataUrl || null,
+        initials: playerState.initials,
+        avatar_color: playerState.avatarColor,
+        session_id: SESSION_ID,
+      }).catch(() => null);
+    }
+  }, 500);
 });
 
 // ── Waiting screen ────────────────────────────────────────────────────────
