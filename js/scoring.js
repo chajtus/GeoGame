@@ -14,9 +14,17 @@ export function haversineKm(lat1, lng1, lat2, lng2) {
 }
 
 /**
- * Points for a guess. Max 5000, 0 at 2500+ km.
- * Formula: max(0, round(5000 - distanceKm * 2))
+ * Points for a guess based on distance thresholds.
+ * <10km=10, <20km=9, <50km=8, <100km=5, <300km=4, <500km=3, <1000km=2, <5000km=1, >=5000km=0
  */
 export function calculatePoints(distanceKm) {
-  return Math.max(0, Math.round(5000 - distanceKm * 2));
+  if (distanceKm < 10) return 10;
+  if (distanceKm < 20) return 9;
+  if (distanceKm < 50) return 8;
+  if (distanceKm < 100) return 5;
+  if (distanceKm < 300) return 4;
+  if (distanceKm < 500) return 3;
+  if (distanceKm < 1000) return 2;
+  if (distanceKm < 5000) return 1;
+  return 0;
 }
