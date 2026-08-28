@@ -865,18 +865,18 @@ async function showResults(questionIndex) {
     const p = pin.players;
     const avatar = p.avatar_data_url
       ? `<img src="${p.avatar_data_url}" style="width:100%;height:100%;object-fit:cover;">`
-      : `<span style="font-size:22px;font-weight:700;color:#fff;">${p.initials}</span>`;
+      : `<span style="font-size:11px;font-weight:700;color:#fff;">${p.initials}</span>`;
     const dist = pin.distance_km < 1
       ? `${Math.round(pin.distance_km * 1000)} m`
       : `${Math.round(pin.distance_km).toLocaleString('pl')} km`;
     return `
-      <div class="result-row" style="animation-delay:${i * 0.05}s;">
-        <div class="avatar-circle" style="width:72px;height:72px;background:${p.avatar_color};flex-shrink:0;">${avatar}</div>
+      <div class="result-row" style="animation-delay:${i * 0.05}s;padding:6px 12px;">
+        <div class="avatar-circle" style="width:36px;height:36px;background:${p.avatar_color};flex-shrink:0;font-size:11px;">${avatar}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;font-size:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
-          <div class="dist-label" style="font-size:16px;">${dist} w linii prostej</div>
+          <div style="font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.name}</div>
+          <div class="dist-label" style="font-size:10px;">${dist}</div>
         </div>
-        <div class="pts">+${pin.points.toLocaleString('pl')}</div>
+        <div class="pts" style="font-size:14px;">+${pin.points.toLocaleString('pl')}</div>
       </div>`;
   }).join('') + (rest > 0
     ? `<div style="text-align:center;color:var(--text-muted);font-size:13px;padding:10px 0;">+ ${rest} pozostałych graczy</div>`
