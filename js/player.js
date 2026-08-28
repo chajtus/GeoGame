@@ -402,6 +402,16 @@ function subscribeToGame() {
         document.body.innerHTML = '<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;"><div style="font-size:48px;">👋</div><div style="font-size:22px;font-weight:900;">Zostałeś usunięty z gry</div><div style="font-size:14px;color:#aaa;">Host usunął Cię z sesji.</div></div>';
       }
     })
+    .on('broadcast', { event: 'force_osm' }, () => {
+      const osmUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+      const osmAttr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+      window.CONFIG.mapTileUrl = osmUrl;
+      window.CONFIG.mapAttribution = osmAttr;
+      if (leafletMap) {
+        leafletMap.eachLayer(l => { if (l._url && l._url !== osmUrl) leafletMap.removeLayer(l); });
+        L.tileLayer(osmUrl, { attribution: osmAttr, maxZoom: 19 }).addTo(leafletMap);
+      }
+    })
     .on('broadcast', { event: 'session_killed' }, () => {
       document.body.innerHTML = '<div style="height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#0d0d1a;color:#fff;text-align:center;padding:24px;"><div style="font-size:48px;">🎮</div><div style="font-size:22px;font-weight:900;">Sesja zakończona</div><div style="font-size:14px;color:#aaa;">Host zakończył grę.<br>Dziękujemy za udział!</div></div>';
     })

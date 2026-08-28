@@ -254,6 +254,26 @@ document.querySelectorAll('.btn-kick-ingame').forEach(btn => {
 });
 
 // ── Kill-session button ───────────────────────────────────────────────────
+// ── Force OSM tiles ──────────────────────────────────────────────────────
+$('btn-force-osm').addEventListener('click', () => {
+  const osmUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const osmAttr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+  window.CONFIG.mapTileUrl = osmUrl;
+  window.CONFIG.mapAttribution = osmAttr;
+
+  // Swap tiles on host results map if it exists
+  if (resultsMap) {
+    resultsMap.eachLayer(l => { if (l._url && l._url !== osmUrl) resultsMap.removeLayer(l); });
+    L.tileLayer(osmUrl, { attribution: osmAttr, maxZoom: 19 }).addTo(resultsMap);
+  }
+
+  // Tell players to switch too
+  if (gameChannel) broadcast(gameChannel, 'force_osm', {}).catch(() => null);
+
+  $('btn-force-osm').textContent = '✅ OSM';
+  $('btn-force-osm').disabled = true;
+});
+
 $('btn-kill-session').addEventListener('click', () => {
   $('kill-modal').style.display = 'flex';
 });
