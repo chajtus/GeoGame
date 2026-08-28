@@ -14,11 +14,21 @@ export function initMap(elementId, { center = [20, 0], zoom = 2, skipTiles = fal
   });
 
   if (!skipTiles) {
-    L.tileLayer(window.CONFIG.mapTileUrl, {
+    const primary = L.tileLayer(window.CONFIG.mapTileUrl, {
       attribution: window.CONFIG.mapAttribution,
       subdomains: window.CONFIG.mapTileSubdomains || 'abc',
       maxZoom: 19,
     }).addTo(map);
+
+    // Fallback to free OSM tiles if primary (MapTiler) fails
+    primary.on('tileerror', function onErr() {
+      primary.off('tileerror', onErr);
+      map.removeLayer(primary);
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+    });
   }
 
   return map;

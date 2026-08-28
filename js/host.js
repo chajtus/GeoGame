@@ -792,12 +792,25 @@ async function showResults(questionIndex) {
   await new Promise(r => setTimeout(r, 200));
   resultsMap = initMap('results-map', { center: [q.lat, q.lng], zoom: 4, skipTiles: true });
 
-  // Layer control with 2 base maps (no CARTO — requires API key)
+  // Layer control with 2 base maps + OSM fallback
+  const osmFallback = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19,
+  });
   const osm = L.tileLayer(window.CONFIG.mapTileUrl, {
     attribution: window.CONFIG.mapAttribution, subdomains: window.CONFIG.mapTileSubdomains, maxZoom: 19,
   }).addTo(resultsMap);
+  osm.on('tileerror', function onErr() {
+    osm.off('tileerror', onErr);
+    resultsMap.removeLayer(osm);
+    osmFallback.addTo(resultsMap);
+  });
   const satellite = L.tileLayer('https://api.maptiler.com/maps/satellite/256/{z}/{x}/{y}@2x.jpg?key=08XhqhteQR7440peDz9Y', {
     attribution: '© MapTiler © OpenStreetMap', maxZoom: 19,
+  });
+  satellite.on('tileerror', function onErr() {
+    satellite.off('tileerror', onErr);
+    resultsMap.removeLayer(satellite);
+    osmFallback.addTo(resultsMap);
   });
   L.control.layers({ 'Mapa': osm, 'Satelita': satellite }, {}, { position: 'topleft' }).addTo(resultsMap);
 
