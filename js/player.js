@@ -408,8 +408,18 @@ function subscribeToGame() {
       window.CONFIG.mapTileUrl = osmUrl;
       window.CONFIG.mapAttribution = osmAttr;
       if (leafletMap) {
-        leafletMap.eachLayer(l => { if (l._url && l._url !== osmUrl) leafletMap.removeLayer(l); });
+        leafletMap.eachLayer(l => { if (l._url) leafletMap.removeLayer(l); });
         L.tileLayer(osmUrl, { attribution: osmAttr, maxZoom: 19 }).addTo(leafletMap);
+      }
+    })
+    .on('broadcast', { event: 'force_maptiler' }, () => {
+      const mtUrl = 'https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}@2x.png?key=08XhqhteQR7440peDz9Y&language=en';
+      const mtAttr = '© <a href="https://www.maptiler.com/">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+      window.CONFIG.mapTileUrl = mtUrl;
+      window.CONFIG.mapAttribution = mtAttr;
+      if (leafletMap) {
+        leafletMap.eachLayer(l => { if (l._url) leafletMap.removeLayer(l); });
+        L.tileLayer(mtUrl, { attribution: mtAttr, maxZoom: 19 }).addTo(leafletMap);
       }
     })
     .on('broadcast', { event: 'session_killed' }, () => {

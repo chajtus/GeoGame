@@ -254,24 +254,32 @@ document.querySelectorAll('.btn-kick-ingame').forEach(btn => {
 });
 
 // ── Kill-session button ───────────────────────────────────────────────────
-// ── Force OSM tiles ──────────────────────────────────────────────────────
-$('btn-force-osm').addEventListener('click', () => {
-  const osmUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const osmAttr = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-  window.CONFIG.mapTileUrl = osmUrl;
-  window.CONFIG.mapAttribution = osmAttr;
+// ── Toggle OSM / MapTiler tiles ──────────────────────────────────────────
+const MAPTILER_URL = window.CONFIG.mapTileUrl;
+const MAPTILER_ATTR = window.CONFIG.mapAttribution;
+const OSM_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const OSM_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+let usingOsm = false;
 
-  // Swap tiles on host results map if it exists
-  if (resultsMap) {
-    resultsMap.eachLayer(l => { if (l._url && l._url !== osmUrl) resultsMap.removeLayer(l); });
-    L.tileLayer(osmUrl, { attribution: osmAttr, maxZoom: 19 }).addTo(resultsMap);
-  }
+function swapTilesOnMap(map, url, attr) {
+  if (!map) return;
+  map.eachLayer(l => { if (l._url) map.removeLayer(l); });
+  L.tileLayer(url, { attribution: attr, maxZoom: 19 }).addTo(map);
+}
+
+$('btn-force-osm').addEventListener('click', () => {
+  usingOsm = !usingOsm;
+  const url = usingOsm ? OSM_URL : MAPTILER_URL;
+  const attr = usingOsm ? OSM_ATTR : MAPTILER_ATTR;
+  window.CONFIG.mapTileUrl = url;
+  window.CONFIG.mapAttribution = attr;
+
+  swapTilesOnMap(resultsMap, url, attr);
 
   // Tell players to switch too
-  if (gameChannel) broadcast(gameChannel, 'force_osm', {}).catch(() => null);
+  if (gameChannel) broadcast(gameChannel, usingOsm ? 'force_osm' : 'force_maptiler', {}).catch(() => null);
 
-  $('btn-force-osm').textContent = '✅ OSM';
-  $('btn-force-osm').disabled = true;
+  $('btn-force-osm').textContent = usingOsm ? '🗺 MapTiler' : '🗺 OSM';
 });
 
 $('btn-kill-session').addEventListener('click', () => {
