@@ -355,6 +355,23 @@ function subscribeToPlayers() {
       updatePlayerCount();
     })
     .subscribe();
+
+  // Polling fallback — catch players missed by Realtime
+  setInterval(async () => {
+    try {
+      const { data } = await sb.from('players').select('*').eq('session_id', SESSION_ID);
+      if (!data) return;
+      let changed = false;
+      for (const p of data) {
+        if (!players.find(ex => ex.id === p.id)) {
+          players.push(p);
+          addPlayerChip(p);
+          changed = true;
+        }
+      }
+      if (changed) updatePlayerCount();
+    } catch (_) {}
+  }, 5000);
 }
 
 let ljfSide = 0; // alternates, but first pick is random
